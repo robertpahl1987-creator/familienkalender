@@ -2,32 +2,41 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Familienkalender: nur wer den geheimen Familien-Code aus dem Einladungslink kennt
-    match /familien/{code}/eintraege/{eintrag} {
-      allow read, write: if code.size() >= 18;
+    function istMitglied(code) {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/familien/$(code)/mitglieder/$(request.auth.uid));
+    }
+    function beitrittOffen(code) {
+      return !exists(/databases/$(database)/documents/familien/$(code)/eintraege/_config)
+        || get(/databases/$(database)/documents/familien/$(code)/eintraege/_config).data.get('beitritt', 'offen') != 'gesperrt';
     }
 
-    // Familien-Mitglieder (anonyme Anmeldung): wer den Code kennt, darf sich selbst eintragen
+    // Kalendereinträge: nur verbundene Geräte der Familie
+    match /familien/{code}/eintraege/{eintrag} {
+      allow read, delete: if istMitglied(code);
+      allow create, update: if istMitglied(code)
+        && request.resource.data.size() <= 25;
+    }
+
+    // Verbundene Geräte
     match /familien/{code}/mitglieder/{uid} {
-      allow create, update: if code.size() >= 18 && request.auth != null && request.auth.uid == uid;
-      allow read, delete: if false;
+      allow create: if code.size() >= 18 && request.auth != null && request.auth.uid == uid && beitrittOffen(code);
+      allow update: if request.auth != null && request.auth.uid == uid && istMitglied(code);
+      allow read, delete: if istMitglied(code);
     }
 
     // Verknüpfung Nur-Lese-Link -> Familie (für niemanden lesbar)
     match /leselinks/{rc} {
       allow read, update: if false;
-      allow create: if rc.size() >= 18 && request.auth != null
-        && exists(/databases/$(database)/documents/familien/$(request.resource.data.fam)/mitglieder/$(request.auth.uid));
-      allow delete: if request.auth != null
-        && exists(/databases/$(database)/documents/familien/$(resource.data.fam)/mitglieder/$(request.auth.uid));
+      allow create: if rc.size() >= 18 && istMitglied(request.resource.data.fam);
+      allow delete: if istMitglied(resource.data.fam);
     }
 
-    // Nur-Lese-Ansicht: jeder mit dem Link darf lesen, schreiben nur Familien-Mitglieder
+    // Nur-Lese-Ansicht: lesen mit Link, schreiben nur Familien-Geräte
     match /lesen/{rc} {
       allow read: if rc.size() >= 18;
-      allow write: if request.auth != null
-        && exists(/databases/$(database)/documents/leselinks/$(rc))
-        && exists(/databases/$(database)/documents/familien/$(get(/databases/$(database)/documents/leselinks/$(rc)).data.fam)/mitglieder/$(request.auth.uid));
+      allow write: if exists(/databases/$(database)/documents/leselinks/$(rc))
+        && istMitglied(get(/databases/$(database)/documents/leselinks/$(rc)).data.fam);
     }
   }
 }
