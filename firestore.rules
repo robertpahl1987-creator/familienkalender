@@ -2,18 +2,15 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Familienkalender: nur wer den geheimen Familien-Code aus dem Einladungslink kennt
     match /familien/{code}/eintraege/{eintrag} {
       allow read, write: if code.size() >= 18;
     }
 
-    // Familien-Mitglieder (anonyme Anmeldung): wer den Code kennt, darf sich selbst eintragen
     match /familien/{code}/mitglieder/{uid} {
       allow create, update: if code.size() >= 18 && request.auth != null && request.auth.uid == uid;
       allow read, delete: if false;
     }
 
-    // Verknüpfung Nur-Lese-Link -> Familie (für niemanden lesbar)
     match /leselinks/{rc} {
       allow read, update: if false;
       allow create: if rc.size() >= 18 && request.auth != null
@@ -22,12 +19,26 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/familien/$(resource.data.fam)/mitglieder/$(request.auth.uid));
     }
 
-    // Nur-Lese-Ansicht: jeder mit dem Link darf lesen, schreiben nur Familien-Mitglieder
     match /lesen/{rc} {
       allow read: if rc.size() >= 18;
       allow write: if request.auth != null
         && exists(/databases/$(database)/documents/leselinks/$(rc))
         && exists(/databases/$(database)/documents/familien/$(get(/databases/$(database)/documents/leselinks/$(rc)).data.fam)/mitglieder/$(request.auth.uid));
+
+      // Wünsche über den Nur-Lese-Link (z. B. von Papa)
+      match /wuensche/{w} {
+        allow read: if rc.size() >= 18;
+        allow create: if rc.size() >= 18
+          && exists(/databases/$(database)/documents/lesen/$(rc))
+          && request.resource.data.status == "offen"
+          && request.resource.data.size() <= 8
+          && request.resource.data.text is string && request.resource.data.text.size() <= 300
+          && request.resource.data.von is string && request.resource.data.von.size() == 10;
+        allow delete: if rc.size() >= 18 && resource.data.status == "offen";
+        allow update: if request.auth != null
+          && exists(/databases/$(database)/documents/leselinks/$(rc))
+          && exists(/databases/$(database)/documents/familien/$(get(/databases/$(database)/documents/leselinks/$(rc)).data.fam)/mitglieder/$(request.auth.uid));
+      }
     }
   }
 }
