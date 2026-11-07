@@ -125,12 +125,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .ymon{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:4px;text-align:left;min-width:0}
 .ymon h4{margin:0;font-family:var(--f-display);font-size:.95rem}
 .ydays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;font-size:.66rem;text-align:center;font-variant-numeric:tabular-nums}
-.ydays span{padding:2px 0;border-radius:4px;position:relative;line-height:1.3}
+.ydays>span{padding:2px 0;border-radius:4px;position:relative;line-height:1.3}
 .ydays .h{color:var(--muted);font-weight:600}
 .ydays .fer{background:var(--fer);color:var(--fer-fg)}
 .ydays .feier{color:var(--feier);font-weight:700}
 .ydays .today{outline:2px solid var(--accent);outline-offset:-1px}
-.ydays .dot::after{content:"";position:absolute;left:50%;bottom:0;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--accent)}
+.ydays>span{display:flex;flex-direction:column;align-items:center;min-height:22px}
+.pd{display:flex;gap:1px;justify-content:center;height:5px;margin-top:1px}
+.pd i{width:5px;height:5px;border-radius:50%;display:block}
+.pd .christin,.kd.christin{background:var(--c-christin)}.pd .john,.kd.john{background:var(--c-john)}.pd .robert,.kd.robert{background:var(--c-robert)}.pd .gemeinsam,.kd.gemeinsam{background:var(--c-gem)}
+.kd{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:0}
 .key{display:flex;flex-wrap:wrap;gap:12px;font-size:.78rem;color:var(--muted);align-items:center}
 .key i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px}
 .flist{display:flex;flex-direction:column;gap:8px}
@@ -410,17 +414,18 @@ function renderMonth(){
 }
 function renderYear(){
   const y=yearCur;document.getElementById("weekLbl").textContent=String(y);
-  const busy=new Set();
-  for(const e of entries){let d=e.datum;const end=e.endDatum&&e.endDatum>e.datum?e.endDatum:e.datum;let n=0;while(d<=end&&n<400){if(d.startsWith(String(y)))busy.add(d);d=addDays(d,1);n++}}
+  const busy={};
+  for(const e of entries){let d=e.datum;const end=e.endDatum&&e.endDatum>e.datum?e.endDatum:e.datum;let n=0;while(d<=end&&n<400){if(d.startsWith(String(y))){(busy[d]||(busy[d]=new Set())).add(e.person)}d=addDays(d,1);n++}}
   let h=`<div class="ygrid">`;
   for(let m=0;m<12;m++){
     const first=iso(new Date(y,m,1));const off=(parse(first).getDay()+6)%7;const dim=new Date(y,m+1,0).getDate();
     let cells=["M","D","M","D","F","S","S"].map(x=>`<span class="h">${x}</span>`).join("")+"<span></span>".repeat(off);
-    for(let i=1;i<=dim;i++){const day=iso(new Date(y,m,i));const c=[ferienOf(day)?"fer":"",feierOf(day)?"feier":"",day===today?"today":"",busy.has(day)?"dot":""].filter(Boolean).join(" ");
-      cells+=`<span class="${c}"${feierOf(day)?` title="${esc(feierOf(day))}"`:""}>${i}</span>`}
+    for(let i=1;i<=dim;i++){const day=iso(new Date(y,m,i));const c=[ferienOf(day)?"fer":"",feierOf(day)?"feier":"",day===today?"today":"",""].filter(Boolean).join(" ");
+      const ps=busy[day]?PEOPLE.map(([k])=>k).filter(k=>busy[day].has(k)):[];
+      cells+=`<span class="${c}"${feierOf(day)?` title="${esc(feierOf(day))}"`:""}>${i}<span class="pd">${ps.map(k=>`<i class="${k}"></i>`).join("")}</span></span>`}
     h+=`<button class="ymon" data-gomonth="${first}" aria-label="${MONL[m]} ${y} öffnen"><h4>${MONL[m]}</h4><div class="ydays">${cells}</div></button>`;
   }
-  h+=`</div><div class="key"><span><i style="background:var(--fer)"></i>Schulferien</span><span style="color:var(--feier);font-weight:700">Feiertag</span><span>● Termin eingetragen</span></div>`;
+  h+=`</div><div class="key"><span><i style="background:var(--fer)"></i>Schulferien</span><span style="color:var(--feier);font-weight:700">Feiertag</span>${PEOPLE.map(([k,n])=>`<span><span class="kd ${k}"></span>${n}</span>`).join("")}</div>`;
   document.getElementById("vOther").innerHTML=h;
 }
 function renderFerien(){
