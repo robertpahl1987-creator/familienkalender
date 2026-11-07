@@ -195,7 +195,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .cdialog{background:var(--surface);border-radius:16px;padding:18px;max-width:360px;width:100%;display:flex;flex-direction:column;gap:14px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
 .cdialog p{margin:0;font-size:1rem;font-weight:600}
 .btn.danger.solid{background:var(--c-christin);color:#fff;border-color:var(--c-christin)}
-body.ro .fabs,body.ro #gear,body.ro [data-view="sterne"],body.ro .plus,body.ro .empty-note,body.ro #mImg{display:none!important}
+body.ro .foot,body.ro .fabs,body.ro #gear,body.ro [data-view="sterne"],body.ro .plus,body.ro .empty-note,body.ro #mImg{display:none!important}
 body.ro .tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
 body.ro .cell{cursor:default}
 label.pick{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid var(--line);border-radius:9px;font-size:.85rem;font-weight:600}
@@ -382,6 +382,9 @@ async function init(){
   checkJoin();
   render();
   initPhoto();
+  if(IS_READER_SITE){const c=getCfg();document.title="Termine";
+    if(c&&c.lesen){startReader(c);return}
+    READONLY=true;document.body.classList.add("ro");entries=[];applyNames([]);render();setStatus("Bitte den vollständigen Link öffnen, den du bekommen hast.");return}
   const cfg=getCfg();
   if(!cfg){if(!_ln){applyNames([]);render()}store=localStore();setStatus("Noch nicht eingerichtet · tippe oben rechts");render();showSetup();return}
   if(cfg.lesen){startReader(cfg);return}
@@ -744,7 +747,7 @@ function scheduleMirror(){clearTimeout(mirrorTimer);mirrorTimer=setTimeout(syncM
 async function syncMirrors(){
   if(!memberOK||!FS||!LESE.length)return;
   for(const l of LESE){
-    const body={namen:NAMES,spalten:l.spalten,name:l.name||"",eintraege:mirrorData(l)};
+    const body={namen:SLOTS.map((k,i)=>(l.spalten||[]).includes(k)?NAMES[i]:""),spalten:l.spalten,name:l.name||"",eintraege:mirrorData(l)};
     const key=JSON.stringify(body);let last="";try{last=localStorage.getItem("fk-mirror-"+l.rc)||""}catch(e){}
     if(key===last)continue;
     try{await FS.doc(`lesen/${l.rc}`).set({...body,stand:new Date().toISOString()});try{localStorage.setItem("fk-mirror-"+l.rc,key)}catch(e){}}catch(e){console.warn("Spiegel",e)}
@@ -757,7 +760,7 @@ async function createReadLink(name,spalten){
     await FS.doc(`leselinks/${rc}`).set({fam:cfg.code});
     const neu=[...LESE.filter(l=>l.rc!==rc),{rc,name,spalten}];
     await store.conf({lesen:neu});LESE=neu;
-    await FS.doc(`lesen/${rc}`).set({namen:NAMES,spalten,name,eintraege:mirrorData({spalten}),stand:new Date().toISOString()});
+    await FS.doc(`lesen/${rc}`).set({namen:SLOTS.map((k,i)=>spalten.includes(k)?NAMES[i]:""),spalten,name,eintraege:mirrorData({spalten}),stand:new Date().toISOString()});
     toast("Nur-Lese-Link erstellt");showSettings();
   }catch(e){console.warn(e);showAuthHelp()}
 }
@@ -768,7 +771,10 @@ async function removeReadLink(rc){
   try{await FS.doc(`leselinks/${rc}`).delete()}catch(e){}
   LESE=LESE.filter(x=>x.rc!==rc);await store.conf({lesen:LESE});toast("Link gelöscht");showSettings();
 }
-const readLink=rc=>location.origin+location.pathname+"#lesen="+rc;
+// Nur-Lese-Links laufen über eine neutrale Adresse (ohne Namen in der URL)
+const READER_BASE="https://termine-john.github.io/kalender/";
+const IS_READER_SITE=location.hostname==="termine-john.github.io";
+const readLink=rc=>READER_BASE+"#lesen="+rc;
 function showAuthHelp(){
   sheet("Einmalig in Firebase einschalten",`<p>Für Nur-Lese-Links muss in deinem Firebase-Projekt einmal die <b>anonyme Anmeldung</b> eingeschaltet und die Regeln erweitert werden. Das dauert 2 Minuten:</p>
     <ol class="steps"><li>console.firebase.google.com → Projekt <b>familienkalender</b></li>
