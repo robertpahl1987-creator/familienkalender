@@ -70,7 +70,6 @@ service cloud.firestore {
 ## Datenschutz & Impressum
 
 - Die Seite `datenschutz.html` ist in der App unten und unter „Teilen & Einstellungen“ verlinkt.
-- **Wichtig:** Oben im Abschnitt „Anbieter (Impressum)“ müssen noch deine Anschrift und E-Mail-Adresse eingetragen werden (gelb markiert).
 - Die App lädt keine Google-Schriften und nutzt kein Google Analytics.
 - Unter „Teilen & Einstellungen“ gibt es „Alle Termine exportieren (.ics)“ und „Kalender endgültig löschen“.
 
