@@ -11,10 +11,17 @@ service cloud.firestore {
     function darfSchreiben(code) {
       return istMitglied(code) && get(mitglied(code)).data.get('rolle', 'schreiben') != 'lesen';
     }
+    function istAdmin() {
+      return request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    function gesperrt(code) {
+      return exists(/databases/$(database)/documents/gesperrt/$(code));
+    }
 
     match /familien/{code}/eintraege/{eintrag} {
-      allow read: if code.size() >= 18;
-      allow write: if code.size() >= 18 && darfSchreiben(code);
+      allow read: if code.size() >= 18 && !gesperrt(code);
+      allow write: if code.size() >= 18 && darfSchreiben(code) && !gesperrt(code);
+      allow read, delete: if istAdmin();
     }
 
     match /familien/{code}/mitglieder/{uid} {
@@ -36,7 +43,7 @@ service cloud.firestore {
       allow create: if tok.size() >= 18 && darfSchreiben(code);
     }
 
-    // Support-Nachrichten: jeder darf schicken, nur der Betreiber (admins/{uid}) lesen
+    // Support: jeder darf schicken, Absender kann seine eigene Nachricht (über die geheime ID) abrufen
     match /support/{id} {
       allow create: if request.resource.data.keys().hasOnly(['art', 'text', 'name', 'kontakt', 'info', 'zeit', 'status'])
         && request.resource.data.art in ['frage', 'fehler', 'idee']
@@ -46,15 +53,62 @@ service cloud.firestore {
         && request.resource.data.info is string && request.resource.data.info.size() <= 300
         && request.resource.data.zeit is string && request.resource.data.zeit.size() <= 40
         && request.resource.data.status == 'neu';
-      allow read, update, delete: if request.auth != null
-        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      allow get: if id.size() >= 20 || istAdmin();
+      allow list, update, delete: if istAdmin();
     }
-    // Mitteilung an alle: jeder darf lesen, nur der Betreiber schreiben
+
+    // Automatische Fehlerberichte
+    match /fehler/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['msg', 'ort', 'info', 'zeit'])
+        && request.resource.data.msg is string && request.resource.data.msg.size() <= 300
+        && request.resource.data.ort is string && request.resource.data.ort.size() <= 200
+        && request.resource.data.info is string && request.resource.data.info.size() <= 300
+        && request.resource.data.zeit is string && request.resource.data.zeit.size() <= 40;
+      allow read, delete: if istAdmin();
+    }
+
+    // Mitteilungen, Umfrage, Steuerung: jeder liest, nur der Betreiber schreibt
     match /info/{doc} {
       allow read: if true;
-      allow write: if request.auth != null
-        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      allow write: if istAdmin();
     }
+    match /famhinweis/{nr} {
+      allow read: if true;
+      allow write: if istAdmin();
+    }
+    match /gesperrt/{code} {
+      allow read: if true;
+      allow write: if istAdmin();
+    }
+
+    match /umfragen/{pid}/stimmen/{uid} {
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['wahl', 'zeit'])
+        && request.resource.data.wahl is int && request.resource.data.wahl >= 0 && request.resource.data.wahl < 10;
+      allow read, delete: if istAdmin();
+    }
+
+    match /ideen/{id} {
+      allow read: if resource.data.status in ['offen', 'geplant', 'umgesetzt'] || istAdmin();
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['text', 'zeit', 'stimmen', 'status'])
+        && request.resource.data.text is string && request.resource.data.text.size() >= 3 && request.resource.data.text.size() <= 200
+        && request.resource.data.zeit is string && request.resource.data.zeit.size() <= 40
+        && request.resource.data.stimmen == 0 && request.resource.data.status == 'neu';
+      allow update: if istAdmin() || (request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stimmen'])
+        && request.resource.data.stimmen == resource.data.stimmen + 1
+        && !exists(/databases/$(database)/documents/ideen/$(id)/votes/$(request.auth.uid))
+        && existsAfter(/databases/$(database)/documents/ideen/$(id)/votes/$(request.auth.uid)));
+      allow delete: if istAdmin();
+
+      match /votes/{uid} {
+        allow create: if request.auth != null && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['zeit']);
+        allow read, delete: if istAdmin();
+      }
+    }
+
     match /admins/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
       allow write: if false;
@@ -72,7 +126,6 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/leselinks/$(rc))
         && darfSchreiben(get(/databases/$(database)/documents/leselinks/$(rc)).data.fam);
 
-      // Wünsche über den Nur-Lese-Link (z. B. von Papa)
       match /wuensche/{w} {
         allow read: if rc.size() >= 18;
         allow create: if rc.size() >= 18
