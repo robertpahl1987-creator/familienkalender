@@ -80,10 +80,3 @@ service cloud.firestore {
 2. Links **Sicherheit → Authentication** → „Jetzt starten“ → Reiter **Anmeldemethode** → **Anonym** → aktivieren → Speichern
 3. **Firestore Database → Regeln**: alles ersetzen durch den Inhalt von `firestore.rules` → **Veröffentlichen**
 4. In der App: Personen-Symbol → „Nur-Lese-Links“ → Name eingeben, Spalte(n) wählen → „Nur-Lese-Link erstellen“
-
-## Sicherheit
-
-- Firestore-Regeln: immer den aktuellen Inhalt von `firestore.rules` veröffentlichen.
-- Nur verbundene Geräte (anonyme Anmeldung) dürfen lesen und schreiben.
-- In der App unter „Teilen & Einstellungen → Sicherheit“: Beitritt sperren, Geräte entfernen, PIN-Sperre.
-- Empfohlen: API-Schlüssel in der Google Cloud Console auf die beiden Webadressen beschränken.
