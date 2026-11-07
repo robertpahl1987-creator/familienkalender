@@ -238,7 +238,7 @@ textarea.cfg{font:inherit;font-size:.8rem;font-family:ui-monospace,monospace;col
   <p class="empty-note">Tippe in ein Feld, um dort einen Eintrag anzulegen. Arbeitszeiten und Urlaub trägt jeder in seiner eigenen Spalte ein.</p>
   </div>
   <div id="vOther" hidden></div>
-  <footer class="foot"><a href="datenschutz.html">Datenschutz & Impressum</a></footer>
+  <footer class="foot"><a href="datenschutz.html">Datenschutz, Impressum & Nutzungshinweise</a></footer>
 </div>
 
 <div class="fabs">
@@ -363,7 +363,7 @@ function showSetup(){
     ${nameFields(["","",""])}
     <div class="actions"><button class="btn" id="cfgNew">Neuen Kalender starten</button></div>
     <p class="hint">Hast du einen Einladungslink bekommen? Dann schließe dieses Fenster und öffne einfach den Link. So landest du im gemeinsamen Kalender deiner Familie.</p>
-    <p class="hint">Was gespeichert wird, steht in den <a href="datenschutz.html">Datenschutzhinweisen</a>.</p>
+    <p class="hint">Privates, kostenloses Projekt nur zur eigenen Nutzung, kein Verkauf. Mehr dazu und was gespeichert wird: <a href="datenschutz.html">Datenschutz & Nutzungshinweise</a>.</p>
     <div class="actions"><button class="btn ghost" id="cfgLocal">Erst mal nur auf diesem Handy</button><button class="btn ghost" id="cfgLater">Schließen</button></div>`);
   document.getElementById("cfgNew").onclick=()=>{
     const n=readNames();if(!n.some(Boolean)){toast("Bitte mindestens einen Namen eintragen");return}
@@ -395,7 +395,7 @@ function showSettings(){
     <p class="hint">Die Datei kannst du z. B. in Google Kalender importieren oder als Sicherung aufheben.</p>
     <button class="btn danger" id="wipe">Kalender endgültig löschen</button>
     <p class="hint">Löscht alle Einträge und Namen dieses Kalenders für alle Beteiligten. Das lässt sich nicht rückgängig machen.</p>
-    <p class="hint"><a href="datenschutz.html">Datenschutz & Impressum</a></p>
+    <p class="hint"><a href="datenschutz.html">Datenschutz, Impressum & Nutzungshinweise</a></p>
     <div class="actions"><button class="btn danger" id="disc">Auf diesem Handy trennen</button><button class="btn ghost" id="setClose">Schließen</button></div>`);
   document.getElementById("exp").onclick=exportICS;
   document.getElementById("wipe").onclick=()=>{const b=document.getElementById("wipe");if(!b.dataset.sure){b.dataset.sure="1";b.textContent="Sicher? Alles für alle löschen – nochmal tippen";return}wipeAll()};
