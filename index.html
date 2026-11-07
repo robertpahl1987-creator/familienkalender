@@ -10,8 +10,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap">
 <style>
 html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
 /* Layout: Wochenansicht, je Tag eine Zeile mit 4 Spalten (Christin · John · Robert · Gemeinsam), Morgen-Übersicht oben, Eingabe im Bottom-Sheet */
@@ -25,8 +23,9 @@ html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px
   --work:#25343d; --work-bg:#d0d9de;
   --vac:#246b27; --vac-bg:#cbe5c6;
   --today:#f3e2a3; --fer:#bfd8ee; --fer-fg:#164e78; --feier:#b02a1c;
-  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
-  --f-body:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  /* Systemschriften: keine Verbindung zu Google Fonts nötig (Datenschutz) */
+  --f-display:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --f-body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0d1418; --surface:#162026; --fg:#e6edf1; --muted:#97a7b0; --line:#28353e; --accent:#6bb7d6; --band:#1b3442; --on-band:#eef6fa; --on-band-dim:#9ab6c4;
@@ -156,6 +155,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .frow .fam{grid-column:1/-1;font-size:.78rem;color:var(--vac)}
 .row3n{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .sub{font-family:var(--f-display);font-size:1rem;margin:6px 0 -4px}
+.foot{text-align:center;font-size:.85rem;padding:8px 0 4px}.foot a{color:var(--muted)}
 .sec{font-family:var(--f-display);font-size:1.05rem;margin:6px 0 0}
 .empty-note{font-size:.85rem;color:var(--muted);text-align:center;padding:4px}
 
@@ -238,6 +238,7 @@ textarea.cfg{font:inherit;font-size:.8rem;font-family:ui-monospace,monospace;col
   <p class="empty-note">Tippe in ein Feld, um dort einen Eintrag anzulegen. Arbeitszeiten und Urlaub trägt jeder in seiner eigenen Spalte ein.</p>
   </div>
   <div id="vOther" hidden></div>
+  <footer class="foot"><a href="datenschutz.html">Datenschutz & Impressum</a></footer>
 </div>
 
 <div class="fabs">
@@ -294,7 +295,8 @@ function localStore(){
     async add(o){const id="l"+Math.random().toString(36).slice(2,10);entries.push({...o,id});save(entries);render()},
     async set(id,o){entries=entries.map(e=>e.id===id?{...o,id}:e);save(entries);render()},
     async del(id){entries=entries.filter(e=>e.id!==id);save(entries);render()},
-    async names(n){try{localStorage.setItem("fk-namen",JSON.stringify(n))}catch(e){}applyNames(n);render()}};
+    async names(n){try{localStorage.setItem("fk-namen",JSON.stringify(n))}catch(e){}applyNames(n);render()},
+    async wipe(){entries=[];save(entries);try{localStorage.removeItem("fk-namen")}catch(e){}}};
 }
 /* ---------- Verbindung (Firebase) ---------- */
 const CFG_KEY="fk-config";
@@ -334,7 +336,8 @@ async function init(){
     async add(o){await col.add(o)},
     async set(id,o){await col.doc(id).set(o)},
     async del(id){await col.doc(id).delete()},
-    async names(n){await col.doc("_config").set({typ:"config",namen:n})}};
+    async names(n){await col.doc("_config").set({typ:"config",namen:n})},
+    async wipe(){const snap=await col.get();let b=col.firestore.batch(),n=0;for(const d of snap.docs){b.delete(d.ref);if(++n%400===0){await b.commit();b=col.firestore.batch()}}await b.commit()}};
   try{const nn=sessionStorage.getItem("fk-namen-neu");if(nn){sessionStorage.removeItem("fk-namen-neu");await store.names(JSON.parse(nn))}}catch(e){}
   // Einträge, die vorher nur auf diesem Gerät lagen, einmalig hochladen
   try{const loc=JSON.parse(localStorage.getItem("familienkalender-lokal")||"[]");
@@ -360,6 +363,7 @@ function showSetup(){
     ${nameFields(["","",""])}
     <div class="actions"><button class="btn" id="cfgNew">Neuen Kalender starten</button></div>
     <p class="hint">Hast du einen Einladungslink bekommen? Dann schließe dieses Fenster und öffne einfach den Link. So landest du im gemeinsamen Kalender deiner Familie.</p>
+    <p class="hint">Was gespeichert wird, steht in den <a href="datenschutz.html">Datenschutzhinweisen</a>.</p>
     <div class="actions"><button class="btn ghost" id="cfgLocal">Erst mal nur auf diesem Handy</button><button class="btn ghost" id="cfgLater">Schließen</button></div>`);
   document.getElementById("cfgNew").onclick=()=>{
     const n=readNames();if(!n.some(Boolean)){toast("Bitte mindestens einen Namen eintragen");return}
@@ -386,7 +390,15 @@ function showSettings(){
     <div class="linkbox" id="appl">${esc(appLink)}</div>
     <button class="btn ghost" id="applCopy">App-Link kopieren</button>
     <p class="hint">Tipp: Im Browser-Menü „Zum Startbildschirm hinzufügen“ wählen, dann hat jeder die App als Symbol auf dem Handy.</p>
+    <h4 class="sub">Deine Daten</h4>
+    <button class="btn ghost" id="exp">Alle Termine exportieren (.ics)</button>
+    <p class="hint">Die Datei kannst du z. B. in Google Kalender importieren oder als Sicherung aufheben.</p>
+    <button class="btn danger" id="wipe">Kalender endgültig löschen</button>
+    <p class="hint">Löscht alle Einträge und Namen dieses Kalenders für alle Beteiligten. Das lässt sich nicht rückgängig machen.</p>
+    <p class="hint"><a href="datenschutz.html">Datenschutz & Impressum</a></p>
     <div class="actions"><button class="btn danger" id="disc">Auf diesem Handy trennen</button><button class="btn ghost" id="setClose">Schließen</button></div>`);
+  document.getElementById("exp").onclick=exportICS;
+  document.getElementById("wipe").onclick=()=>{const b=document.getElementById("wipe");if(!b.dataset.sure){b.dataset.sure="1";b.textContent="Sicher? Alles für alle löschen – nochmal tippen";return}wipeAll()};
   document.getElementById("invCopy").onclick=async()=>{try{await navigator.clipboard.writeText(link);toast("Link kopiert")}catch(e){const r=document.createRange();r.selectNodeContents(document.getElementById("inv"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Link markiert, jetzt kopieren")}};
   const sh=document.getElementById("invShare");
   if(navigator.share)sh.onclick=()=>navigator.share({title:"Familienkalender",text:"Unser Familienkalender",url:link}).catch(()=>{});else sh.hidden=true;
@@ -396,6 +408,34 @@ function showSettings(){
   document.getElementById("disc").onclick=()=>{if(document.getElementById("disc").dataset.sure){localStorage.removeItem(CFG_KEY);location.reload()}else{document.getElementById("disc").dataset.sure="1";document.getElementById("disc").textContent="Wirklich trennen? Nochmal tippen"}};
 }
 document.getElementById("gear").onclick=showSettings;
+async function wipeAll(){
+  try{await store.wipe()}catch(e){toast("Löschen hat nicht geklappt. Bitte Internetverbindung prüfen.");return}
+  try{localStorage.removeItem(CFG_KEY);localStorage.removeItem("fk-namen")}catch(e){}
+  toast("Kalender gelöscht");setTimeout(()=>location.reload(),900);
+}
+function exportICS(){
+  const pad=n=>String(n).padStart(2,"0");
+  const now=new Date();const stamp=`${now.getUTCFullYear()}${pad(now.getUTCMonth()+1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}00Z`;
+  const icsEsc=t=>String(t||"").replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\n/g,"\\n");
+  const d8=s=>s.replace(/-/g,"");
+  const L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Familienkalender//DE","CALSCALE:GREGORIAN"];
+  for(const e of entries){
+    const end=e.endDatum&&e.endDatum>e.datum?e.endDatum:e.datum;
+    const what=e.typ==="arbeit"?`Arbeit${e.titel?" ("+e.titel+")":""}`:e.typ==="urlaub"?`Urlaub${e.titel?" – "+e.titel:""}`:e.titel;
+    L.push("BEGIN:VEVENT",`UID:${e.id}@familienkalender`,`DTSTAMP:${stamp}`,`SUMMARY:${icsEsc((PNAME[e.person]||"")+": "+what)}`);
+    if(e.von&&e.typ!=="urlaub"){
+      const t=x=>x.replace(":","")+"00";
+      let endDay=end,bis=e.bis||e.von;if(e.bis&&e.bis<e.von&&end===e.datum)endDay=addDays(e.datum,1);
+      if(!e.bis){const[h,m]=e.von.split(":").map(Number);const x=new Date(2000,0,1,h+1,m);bis=pad(x.getHours())+":"+pad(x.getMinutes());if(h===23)endDay=addDays(endDay,1)}
+      L.push(`DTSTART:${d8(e.datum)}T${t(e.von)}`,`DTEND:${d8(endDay)}T${t(bis)}`);
+    }else L.push(`DTSTART;VALUE=DATE:${d8(e.datum)}`,`DTEND;VALUE=DATE:${d8(addDays(end,1))}`);
+    L.push("END:VEVENT");
+  }
+  L.push("END:VCALENDAR");
+  const blob=new Blob([L.join("\r\n")],{type:"text/calendar"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`familienkalender-${today}.ics`;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);toast(`${entries.length} Termine exportiert`);
+}
 function setStatus(t){document.getElementById("status").textContent=t}
 function toast(t){const h=document.getElementById("toastHost");h.innerHTML=`<div class="toast">${esc(t)}</div>`;clearTimeout(toast.t);toast.t=setTimeout(()=>h.innerHTML="",2600)}
 

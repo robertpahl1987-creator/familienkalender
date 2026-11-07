@@ -66,3 +66,10 @@ service cloud.firestore {
 - **Offline:** Termine werden gespeichert und automatisch übertragen, sobald wieder Internet da ist.
 - **6 Uhr morgens:** Der Wecker im Handy erinnert dich. Die Tagesübersicht in der App bleibt stehen,
   bis man auf „Gelesen ✓“ tippt.
+
+## Datenschutz & Impressum
+
+- Die Seite `datenschutz.html` ist in der App unten und unter „Teilen & Einstellungen“ verlinkt.
+- **Wichtig:** Oben im Abschnitt „Anbieter (Impressum)“ müssen noch deine Anschrift und E-Mail-Adresse eingetragen werden (gelb markiert).
+- Die App lädt keine Google-Schriften und nutzt kein Google Analytics.
+- Unter „Teilen & Einstellungen“ gibt es „Alle Termine exportieren (.ics)“ und „Kalender endgültig löschen“.
