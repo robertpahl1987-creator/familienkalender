@@ -36,6 +36,24 @@ service cloud.firestore {
       allow create: if tok.size() >= 18 && darfSchreiben(code);
     }
 
+    // Support-Nachrichten: jeder darf schicken, nur der Betreiber (admins/{uid}) lesen
+    match /support/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['art', 'text', 'name', 'kontakt', 'info', 'zeit', 'status'])
+        && request.resource.data.art in ['frage', 'fehler', 'idee']
+        && request.resource.data.text is string && request.resource.data.text.size() >= 3 && request.resource.data.text.size() <= 1000
+        && request.resource.data.name is string && request.resource.data.name.size() <= 60
+        && request.resource.data.kontakt is string && request.resource.data.kontakt.size() <= 100
+        && request.resource.data.info is string && request.resource.data.info.size() <= 300
+        && request.resource.data.zeit is string && request.resource.data.zeit.size() <= 40
+        && request.resource.data.status == 'neu';
+      allow read, update, delete: if request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
     match /leselinks/{rc} {
       allow read, update: if false;
       allow create: if rc.size() >= 18 && darfSchreiben(request.resource.data.fam);
