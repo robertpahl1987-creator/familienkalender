@@ -34,7 +34,7 @@ service cloud.firestore {
           && request.resource.data.size() <= 8
           && request.resource.data.text is string && request.resource.data.text.size() <= 300
           && request.resource.data.von is string && request.resource.data.von.size() == 10;
-        allow delete: if rc.size() >= 18 && resource.data.status == "offen";
+        allow delete: if rc.size() >= 18;
         allow update: if request.auth != null
           && exists(/databases/$(database)/documents/leselinks/$(rc))
           && exists(/databases/$(database)/documents/familien/$(get(/databases/$(database)/documents/leselinks/$(rc)).data.fam)/mitglieder/$(request.auth.uid));
