@@ -42,6 +42,27 @@ service cloud.firestore {
       allow read, delete: if istAdmin();
     }
 
+    // Private Termine: nur für ausgewählte Mitglieder (Liste "sichtbar") lesbar
+    match /familien/{code}/privat/{id} {
+      allow read: if request.auth != null && request.auth.uid in resource.data.sichtbar && !gesperrt(code);
+      allow create: if code.size() >= 18 && darfSchreiben(code) && !gesperrt(code)
+        && request.resource.data.ersteller == request.auth.uid
+        && request.resource.data.sichtbar is list && request.resource.data.sichtbar.size() <= 30
+        && request.auth.uid in request.resource.data.sichtbar;
+      allow update: if code.size() >= 18 && darfSchreiben(code) && !gesperrt(code)
+        && request.auth.uid in resource.data.sichtbar && (
+          (resource.data.ersteller == request.auth.uid && request.resource.data.ersteller == request.auth.uid
+            && request.resource.data.sichtbar is list && request.resource.data.sichtbar.size() <= 30
+            && request.auth.uid in request.resource.data.sichtbar)
+          || (request.resource.data.sichtbar == resource.data.sichtbar
+            && request.resource.data.ersteller == resource.data.ersteller
+            && request.resource.data.get('geschuetzt', false) == resource.data.get('geschuetzt', false)));
+      allow delete: if code.size() >= 18 && darfSchreiben(code) && request.auth != null
+        && request.auth.uid in resource.data.sichtbar
+        && (resource.data.ersteller == request.auth.uid || !resource.data.get('geschuetzt', false));
+      allow delete: if istAdmin();
+    }
+
     match /familien/{code}/mitglieder/{uid} {
       allow read: if istMitglied(code);
       allow create: if code.size() >= 18 && request.auth != null && request.auth.uid == uid && (
