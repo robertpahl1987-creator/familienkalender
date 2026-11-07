@@ -221,7 +221,7 @@ function getCfg(){let c=null;try{c=JSON.parse(localStorage.getItem(CFG_KEY)||"nu
 function setCfg(c){try{localStorage.setItem(CFG_KEY,JSON.stringify(c))}catch(e){}}
 const b64e=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 const b64d=s=>decodeURIComponent(escape(atob(s.replace(/-/g,"+").replace(/_/g,"/"))));
-function inviteLink(c){return location.origin+location.pathname+"#join="+b64e(JSON.stringify({f:c.firebase,c:c.code}))}
+function inviteLink(c){return location.origin+location.pathname+"#join="+c.code}
 function newCode(){const a=new Uint8Array(18);crypto.getRandomValues(a);return Array.from(a,x=>"abcdefghijkmnpqrstuvwxyz23456789"[x%32]).join("")}
 function parseFirebaseConfig(txt){
   const o={};const re=/(apiKey|authDomain|projectId|storageBucket|messagingSenderId|appId|measurementId)["']?\s*:\s*["']([^"']+)["']/g;let m;
@@ -230,7 +230,7 @@ function parseFirebaseConfig(txt){
 }
 function checkJoin(){
   const h=location.hash;if(!h.startsWith("#join="))return;
-  try{const j=JSON.parse(b64d(h.slice(6)));if(j&&j.f&&j.c){setCfg({firebase:j.f,code:j.c});toast("Mit dem Familienkalender verbunden")}}catch(e){toast("Der Einladungslink ist unvollständig")}
+  const v=h.slice(6);try{if(/^[a-z2-9]{18,}$/.test(v)){setCfg({firebase:DEFAULT_FIREBASE,code:v});toast("Mit dem Familienkalender verbunden")}else{const j=JSON.parse(b64d(v));if(j&&j.c){setCfg({firebase:j.f||DEFAULT_FIREBASE,code:j.c});toast("Mit dem Familienkalender verbunden")}}}catch(e){toast("Der Einladungslink ist unvollständig")}
   history.replaceState(null,"",location.pathname);
 }
 async function init(){
