@@ -215,7 +215,9 @@ function localStore(){
 }
 /* ---------- Verbindung (Firebase) ---------- */
 const CFG_KEY="fk-config";
-function getCfg(){try{return JSON.parse(localStorage.getItem(CFG_KEY)||"null")}catch(e){return null}}
+// Firebase-Projekt "familienkalender-86be9" (diese Werte sind öffentlich, der Schutz liegt im geheimen Familien-Code)
+const DEFAULT_FIREBASE={apiKey:"AIzaSyBZmR5S-vw7b7eAIEisM5UOWsDlBUV_b_o",authDomain:"familienkalender-86be9.firebaseapp.com",projectId:"familienkalender-86be9",storageBucket:"familienkalender-86be9.firebasestorage.app",messagingSenderId:"756379292150",appId:"1:756379292150:web:a86daa4c99db72bdacb7d7"};
+function getCfg(){let c=null;try{c=JSON.parse(localStorage.getItem(CFG_KEY)||"null")}catch(e){}if(c&&c.code&&!c.firebase)c.firebase=DEFAULT_FIREBASE;return c}
 function setCfg(c){try{localStorage.setItem(CFG_KEY,JSON.stringify(c))}catch(e){}}
 const b64e=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 const b64d=s=>decodeURIComponent(escape(atob(s.replace(/-/g,"+").replace(/_/g,"/"))));
@@ -253,6 +255,7 @@ async function init(){
   try{const loc=JSON.parse(localStorage.getItem("familienkalender-lokal")||"[]");
     if(loc.length){for(const e of loc){const{id,...o}=e;await col.add(o)}localStorage.removeItem("familienkalender-lokal");toast(`${loc.length} Einträge übernommen`)}}catch(e){}
   const timer=setTimeout(()=>setStatus("Offline · Änderungen werden später übertragen"),10000);
+  try{if(sessionStorage.getItem("fk-invite")){sessionStorage.removeItem("fk-invite");setTimeout(showSettings,400)}}catch(e){}
   col.onSnapshot({includeMetadataChanges:true},snap=>{
     entries=snap.docs.map(d=>({...d.data(),id:d.id}));
     if(!snap.metadata.fromCache){clearTimeout(timer);setStatus("Gemeinsam gespeichert · alle sehen dieselben Termine")}
@@ -264,20 +267,17 @@ async function init(){
 function sheet(title,html){document.getElementById("sheetHost").innerHTML=`<div class="backdrop" id="bd"><div class="sheet" role="dialog" aria-modal="true" aria-label="${title}"><h3>${title}</h3>${html}</div></div>`;draft={setup:true};
   document.getElementById("bd").onclick=ev=>{if(ev.target.id==="bd")closeSheet()}}
 function showSetup(){
-  sheet("Einrichtung",`<p class="hint">Einmalig auf deinem Handy. Danach schickst du den anderen einen Einladungslink, mehr müssen sie nicht tun.</p>
-    <label class="f">Firebase-Konfiguration einfügen<textarea class="cfg" id="cfgIn" placeholder="const firebaseConfig = {\n  apiKey: &quot;…&quot;,\n  projectId: &quot;…&quot;,\n  appId: &quot;…&quot;\n};"></textarea></label>
-    <p class="hint">Hast du einen Einladungslink bekommen? Dann öffne einfach den Link, hier musst du nichts eintragen.</p>
-    <div class="actions"><button class="btn" id="cfgGo">Verbinden</button><button class="btn ghost" id="cfgLocal">Erst mal nur auf diesem Handy</button></div>`);
-  document.getElementById("cfgGo").onclick=()=>{
-    const f=parseFirebaseConfig(document.getElementById("cfgIn").value);
-    if(!f){toast("Darin fehlen apiKey, projectId oder appId");return}
-    setCfg({firebase:f,code:newCode()});location.reload();
-  };
+  sheet("Willkommen",`<p>Bist du der Erste, der den Kalender einrichtet? Dann tippe auf „Neuen Familienkalender starten“. Danach kannst du über das Personen-Symbol oben rechts einen Einladungslink an die anderen schicken.</p>
+    <p class="hint">Hast du einen Einladungslink bekommen? Dann schließe dieses Fenster und öffne einfach den Link, damit du im gemeinsamen Kalender landest.</p>
+    <div class="actions"><button class="btn" id="cfgNew">Neuen Familienkalender starten</button></div>
+    <div class="actions"><button class="btn ghost" id="cfgLocal">Erst mal nur auf diesem Handy</button><button class="btn ghost" id="cfgLater">Schließen</button></div>`);
+  document.getElementById("cfgNew").onclick=()=>{setCfg({firebase:DEFAULT_FIREBASE,code:newCode()});sessionStorage.setItem("fk-invite","1");location.reload()};
   document.getElementById("cfgLocal").onclick=()=>{setCfg({local:true});closeSheet();location.reload()};
+  document.getElementById("cfgLater").onclick=closeSheet;
 }
 function showSettings(){
   const c=getCfg();
-  if(!c||c.local){showSetup();return}
+  if(!c||c.local){if(c&&c.local){localStorage.removeItem(CFG_KEY)}showSetup();return}
   const link=inviteLink(c);
   sheet("Familie einladen",`<p class="hint">Schick diesen Link an Christin und John. Wer ihn öffnet, ist sofort mit diesem Kalender verbunden. Gib ihn nur an die Familie weiter.</p>
     <div class="linkbox" id="inv">${esc(link)}</div>
