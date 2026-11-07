@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Nur wer den geheimen Familien-Code aus dem Einladungslink kennt, kommt an die Termine.
+    match /familien/{code}/eintraege/{eintrag} {
+      allow read, write: if code.size() >= 18;
+    }
+  }
+}
