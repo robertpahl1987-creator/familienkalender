@@ -24,7 +24,7 @@ html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px
   --c-gem:#5b4bb0; --c-gem-bg:#ebe8fa;
   --work:#33434d; --work-bg:#e4e9ec;
   --vac:#2f7d32; --vac-bg:#e2f2df;
-  --today:#fff7d6;
+  --today:#fff7d6; --fer:#dcecf9; --fer-fg:#1d5a86; --feier:#c0392b;
   --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
   --f-body:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
 }
@@ -32,12 +32,12 @@ html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px
   --bg:#10181d; --surface:#18232a; --fg:#e6edf1; --muted:#97a7b0; --line:#2a3842; --accent:#6bb7d6;
   --c-christin:#f08aaa; --c-christin-bg:#3a1f2a; --c-john:#6fd1c2; --c-john-bg:#16332f;
   --c-robert:#f0b26b; --c-robert-bg:#3a2a17; --c-gem:#a99bf2; --c-gem-bg:#2a2548;
-  --work:#c9d4da; --work-bg:#26333b; --vac:#8bd08e; --vac-bg:#1d3320; --today:#2c2a1a; color-scheme:dark}}
+  --work:#c9d4da; --work-bg:#26333b; --vac:#8bd08e; --vac-bg:#1d3320; --today:#2c2a1a; --fer:#17324a; --fer-fg:#9ccbf0; --feier:#ff8a7a; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#10181d; --surface:#18232a; --fg:#e6edf1; --muted:#97a7b0; --line:#2a3842; --accent:#6bb7d6;
   --c-christin:#f08aaa; --c-christin-bg:#3a1f2a; --c-john:#6fd1c2; --c-john-bg:#16332f;
   --c-robert:#f0b26b; --c-robert-bg:#3a2a17; --c-gem:#a99bf2; --c-gem-bg:#2a2548;
-  --work:#c9d4da; --work-bg:#26333b; --vac:#8bd08e; --vac-bg:#1d3320; --today:#2c2a1a; color-scheme:dark}
+  --work:#c9d4da; --work-bg:#26333b; --vac:#8bd08e; --vac-bg:#1d3320; --today:#2c2a1a; --fer:#17324a; --fer-fg:#9ccbf0; --feier:#ff8a7a; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.4;
   padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:12px 96px}
@@ -95,6 +95,52 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .chip-label{color:var(--fg);font-weight:500}
 .plus{color:var(--muted);font-size:.9rem;opacity:.35;align-self:center;margin-top:auto}
 
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px}
+.tabs button{padding:9px 4px;border-radius:9px;font-weight:600;font-size:.88rem;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--surface)}
+.badge{display:inline-block;font-size:.7rem;font-weight:600;padding:2px 6px;border-radius:6px;margin-left:6px;vertical-align:1px}
+.badge.fer{background:var(--fer);color:var(--fer-fg)}
+.badge.feier{background:color-mix(in srgb,var(--feier) 14%,transparent);color:var(--feier)}
+.day.is-fer .day-head{background:var(--fer)}
+.day.is-today.is-fer .day-head{background:var(--today)}
+.mgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.mhead{font-size:.72rem;font-weight:600;color:var(--muted);text-align:center;padding:2px 0;letter-spacing:.03em}
+.mcell{background:var(--surface);border:1px solid var(--line);border-radius:8px;min-height:74px;padding:3px;display:flex;flex-direction:column;gap:2px;text-align:left;min-width:0;overflow:hidden}
+.mcell.out{opacity:.38}
+.mcell.fer{background:var(--fer)}
+.mcell.today{border:2px solid var(--accent)}
+.mcell .n{font-size:.8rem;font-weight:700;font-variant-numeric:tabular-nums}
+.mcell.feier .n{color:var(--feier)}
+.mcell .fname{font-size:.58rem;color:var(--feier);line-height:1.1;font-weight:600}
+.mbar{font-size:.6rem;line-height:1.2;padding:1px 3px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mbar.christin{background:var(--c-christin-bg);color:var(--c-christin)}
+.mbar.john{background:var(--c-john-bg);color:var(--c-john)}
+.mbar.robert{background:var(--c-robert-bg);color:var(--c-robert)}
+.mbar.gemeinsam{background:var(--c-gem-bg);color:var(--c-gem)}
+.mbar.arbeit{background:var(--work-bg);color:var(--work)}
+.mbar.urlaub{background:var(--vac-bg);color:var(--vac)}
+.more{font-size:.6rem;color:var(--muted)}
+.ygrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:640px){.ygrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.ymon{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:4px;text-align:left;min-width:0}
+.ymon h4{margin:0;font-family:var(--f-display);font-size:.95rem}
+.ydays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;font-size:.66rem;text-align:center;font-variant-numeric:tabular-nums}
+.ydays span{padding:2px 0;border-radius:4px;position:relative;line-height:1.3}
+.ydays .h{color:var(--muted);font-weight:600}
+.ydays .fer{background:var(--fer);color:var(--fer-fg)}
+.ydays .feier{color:var(--feier);font-weight:700}
+.ydays .today{outline:2px solid var(--accent);outline-offset:-1px}
+.ydays .dot::after{content:"";position:absolute;left:50%;bottom:0;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--accent)}
+.key{display:flex;flex-wrap:wrap;gap:12px;font-size:.78rem;color:var(--muted);align-items:center}
+.key i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px}
+.flist{display:flex;flex-direction:column;gap:8px}
+.frow{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:baseline}
+.frow.now{border-color:var(--fer-fg);box-shadow:0 0 0 1px var(--fer-fg)}
+.frow b{font-family:var(--f-display)}
+.frow .when{font-size:.85rem;font-variant-numeric:tabular-nums}
+.frow .cd{font-size:.8rem;font-weight:600;color:var(--fer-fg);text-align:right}
+.frow .fam{grid-column:1/-1;font-size:.78rem;color:var(--vac)}
+.sec{font-family:var(--f-display);font-size:1.05rem;margin:6px 0 0}
 .empty-note{font-size:.85rem;color:var(--muted);text-align:center;padding:4px}
 
 .fabs{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;z-index:8}
@@ -158,17 +204,23 @@ textarea.cfg{font:inherit;font-size:.8rem;font-family:ui-monospace,monospace;col
     <button class="btn" id="mAck">Gelesen ✓</button>
   </section>
 
-  <div class="nav">
-    <button class="arrow" id="prev" aria-label="Vorige Woche">‹</button>
+  <div class="tabs" role="tablist" aria-label="Ansicht">
+    <button role="tab" data-view="woche">Woche</button><button role="tab" data-view="monat">Monat</button><button role="tab" data-view="jahr">Jahr</button><button role="tab" data-view="ferien">Ferien</button>
+  </div>
+  <div class="nav" id="navbar">
+    <button class="arrow" id="prev" aria-label="Zurück">‹</button>
     <div class="lbl" id="weekLbl"></div>
-    <button class="arrow" id="next" aria-label="Nächste Woche">›</button>
+    <button class="arrow" id="next" aria-label="Weiter">›</button>
     <button class="today-btn" id="goToday">Heute</button>
   </div>
+  <div id="vWoche">
   <div class="legend">
     <div class="p-christin">Christin</div><div class="p-john">John</div><div class="p-robert">Robert</div><div class="p-gemeinsam">Gemeinsam</div>
   </div>
   <div class="days" id="days"></div>
   <p class="empty-note">Tippe in ein Feld, um dort einen Eintrag anzulegen. Arbeitszeiten und Urlaub trägt jeder in seiner eigenen Spalte ein.</p>
+  </div>
+  <div id="vOther" hidden></div>
 </div>
 
 <div class="fabs">
@@ -308,8 +360,85 @@ function chipHTML(e,day){
   const rep=e.serie?` <span class="rep">↻</span>`:"";
   return `<button class="chip ${e.typ} ${e.person}" data-id="${esc(e.id)}">${t?`<span class="t">${t}</span>`:""}<span class="chip-label">${esc(label)}</span>${range}${rep}</button>`;
 }
+/* ---------- Ferien & Feiertage Berlin ---------- */
+// Quelle: Ferienordnung Berlin (Senatsverwaltung für Bildung), Stand Nov. 2026
+const FERIEN=[
+["Winterferien","2026-02-02","2026-02-07"],["Osterferien","2026-03-30","2026-04-10"],["Unterrichtsfreier Tag","2026-05-15","2026-05-15"],["Pfingstferien","2026-05-26","2026-05-26"],["Sommerferien","2026-07-09","2026-08-22"],["Herbstferien","2026-10-19","2026-10-31"],["Weihnachtsferien","2026-12-23","2027-01-02"],
+["Winterferien","2027-02-01","2027-02-06"],["Osterferien","2027-03-22","2027-04-02"],["Unterrichtsfreier Tag","2027-05-07","2027-05-07"],["Pfingstferien","2027-05-18","2027-05-19"],["Sommerferien","2027-07-01","2027-08-14"],["Herbstferien","2027-10-11","2027-10-23"],["Weihnachtsferien","2027-12-22","2027-12-31"],
+["Winterferien","2028-01-31","2028-02-05"],["Osterferien","2028-04-10","2028-04-22"],["Unterrichtsfreier Tag","2028-05-26","2028-05-26"],["Pfingstferien","2028-06-01","2028-06-02"],["Sommerferien","2028-07-01","2028-08-12"],["Herbstferien","2028-10-02","2028-10-14"],["Weihnachtsferien","2028-12-22","2029-01-02"]];
+function easter(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return iso(new Date(y,mo-1,da))}
+const _feierCache={};
+function feiertage(y){
+  if(_feierCache[y])return _feierCache[y];
+  const o=easter(y),f={};
+  f[`${y}-01-01`]="Neujahr";f[`${y}-03-08`]="Frauentag";f[addDays(o,-2)]="Karfreitag";f[addDays(o,1)]="Ostermontag";
+  f[`${y}-05-01`]="Tag der Arbeit";f[addDays(o,39)]="Himmelfahrt";f[addDays(o,50)]="Pfingstmontag";
+  f[`${y}-10-03`]="Tag der Deutschen Einheit";f[`${y}-12-25`]="1. Weihnachtstag";f[`${y}-12-26`]="2. Weihnachtstag";
+  if(y===2028)f["2028-06-17"]="Jahrestag 17. Juni 1953";
+  return _feierCache[y]=f;
+}
+const feierOf=day=>feiertage(+day.slice(0,4))[day]||"";
+const ferienOf=day=>{const f=FERIEN.find(([n,a,b])=>a<=day&&day<=b);return f?f[0]:""};
+
+/* ---------- Ansichten ---------- */
+let view="woche";try{view=localStorage.getItem("fk-view")||"woche"}catch(e){}
+let monthCur=iso(new Date()).slice(0,7)+"-01",yearCur=new Date().getFullYear();
+const MONL=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+function setView(v){view=v;try{localStorage.setItem("fk-view",v)}catch(e){}render();window.scrollTo({top:0})}
 function render(){
   today=iso(new Date());
+  document.querySelectorAll(".tabs [data-view]").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.view===view)));
+  document.getElementById("vWoche").hidden=view!=="woche";
+  document.getElementById("vOther").hidden=view==="woche";
+  document.getElementById("navbar").hidden=view==="ferien";
+  if(view==="monat")renderMonth();else if(view==="jahr")renderYear();else if(view==="ferien")renderFerien();else renderWeek();
+  renderMorning();
+}
+function renderMonth(){
+  const m0=parse(monthCur);const y=m0.getFullYear(),m=m0.getMonth();
+  document.getElementById("weekLbl").textContent=`${MONL[m]} ${y}`;
+  let start=mondayOf(monthCur);const last=iso(new Date(y,m+1,0));const end=addDays(mondayOf(last),6);
+  let h=`<div class="mgrid">${["Mo","Di","Mi","Do","Fr","Sa","So"].map(d=>`<div class="mhead">${d}</div>`).join("")}`;
+  for(let day=start;day<=end;day=addDays(day,1)){
+    const d=parse(day),fe=feierOf(day),fr=ferienOf(day);
+    const list=entries.filter(e=>onDay(e,day)).sort(sortE);
+    const bars=list.slice(0,3).map(e=>{const cls=e.typ==="termin"?e.person:e.typ;const t=e.typ==="arbeit"?`${PNAME[e.person][0]} ${e.von||"Arbeit"}`:e.typ==="urlaub"?`${PNAME[e.person]} Urlaub`:`${e.von?e.von+" ":""}${e.titel}`;return `<div class="mbar ${cls}">${esc(t)}</div>`}).join("");
+    h+=`<button class="mcell${d.getMonth()!==m?" out":""}${fr?" fer":""}${fe?" feier":""}${day===today?" today":""}" data-goday="${day}" aria-label="${fmt(day)}${fe?", "+fe:""}${fr?", "+fr:""}, ${list.length} Einträge"><span class="n">${d.getDate()}</span>${fe?`<span class="fname">${esc(fe)}</span>`:""}${bars}${list.length>3?`<span class="more">+${list.length-3} mehr</span>`:""}</button>`;
+  }
+  h+=`</div><div class="key"><span><i style="background:var(--fer)"></i>Schulferien Berlin</span><span style="color:var(--feier);font-weight:600">Feiertag</span><span>Tippe auf einen Tag für die Wochenansicht</span></div>`;
+  document.getElementById("vOther").innerHTML=h;
+}
+function renderYear(){
+  const y=yearCur;document.getElementById("weekLbl").textContent=String(y);
+  const busy=new Set();
+  for(const e of entries){let d=e.datum;const end=e.endDatum&&e.endDatum>e.datum?e.endDatum:e.datum;let n=0;while(d<=end&&n<400){if(d.startsWith(String(y)))busy.add(d);d=addDays(d,1);n++}}
+  let h=`<div class="ygrid">`;
+  for(let m=0;m<12;m++){
+    const first=iso(new Date(y,m,1));const off=(parse(first).getDay()+6)%7;const dim=new Date(y,m+1,0).getDate();
+    let cells=["M","D","M","D","F","S","S"].map(x=>`<span class="h">${x}</span>`).join("")+"<span></span>".repeat(off);
+    for(let i=1;i<=dim;i++){const day=iso(new Date(y,m,i));const c=[ferienOf(day)?"fer":"",feierOf(day)?"feier":"",day===today?"today":"",busy.has(day)?"dot":""].filter(Boolean).join(" ");
+      cells+=`<span class="${c}"${feierOf(day)?` title="${esc(feierOf(day))}"`:""}>${i}</span>`}
+    h+=`<button class="ymon" data-gomonth="${first}" aria-label="${MONL[m]} ${y} öffnen"><h4>${MONL[m]}</h4><div class="ydays">${cells}</div></button>`;
+  }
+  h+=`</div><div class="key"><span><i style="background:var(--fer)"></i>Schulferien</span><span style="color:var(--feier);font-weight:700">Feiertag</span><span>● Termin eingetragen</span></div>`;
+  document.getElementById("vOther").innerHTML=h;
+}
+function renderFerien(){
+  const fam=(a,b)=>{const who=[...new Set(entries.filter(e=>e.typ==="urlaub"&&e.datum<=b&&(e.endDatum||e.datum)>=a).map(e=>PNAME[e.person]))];return who.length?`Urlaub eingetragen: ${who.join(", ")}`:""};
+  const range=(a,b)=>a===b?fmt(a)+" "+a.slice(0,4):`${fmt(a)} – ${fmt(b)} ${b.slice(0,4)}`;
+  const rows=FERIEN.filter(([n,a,b])=>b>=today).map(([n,a,b])=>{
+    const now=a<=today;const len=diffDays(a,b)+1;const until=diffDays(today,a);const left=diffDays(today,b);
+    const cd=now?(left===0?"letzter Tag":`noch ${left+1} Tage`):until===1?"morgen":`in ${until} Tagen`;
+    const f=fam(a,b);
+    return `<div class="frow${now?" now":""}"><b>${esc(n)}</b><span class="cd">${now?"läuft · ":""}${cd}</span><span class="when">${range(a,b)} · ${len} ${len===1?"Tag":"Tage"}</span><span></span>${f?`<span class="fam">${esc(f)}</span>`:""}</div>`}).join("");
+  const fts=[];for(let y=+today.slice(0,4);y<=+today.slice(0,4)+1;y++)for(const[d,n] of Object.entries(feiertage(y)))if(d>=today&&d<=addDays(today,365))fts.push([d,n]);
+  fts.sort((a,b)=>a[0]<b[0]?-1:1);
+  const frows=fts.map(([d,n])=>{const u=diffDays(today,d);return `<div class="frow"><b>${esc(n)}</b><span class="cd">${u===0?"heute":u===1?"morgen":`in ${u} Tagen`}</span><span class="when">${WDL[parse(d).getDay()]}, ${fmt(d).slice(3)} ${d.slice(0,4)}</span></div>`}).join("");
+  document.getElementById("vOther").innerHTML=`<h3 class="sec">Schulferien in Berlin</h3><div class="flist">${rows||'<p class="hint">Keine weiteren Ferientermine hinterlegt.</p>'}</div>
+  <p class="hint">Ferientermine laut Ferienordnung des Landes Berlin, hinterlegt bis Januar 2029. Bewegliche Ferientage einzelner Schulen sind nicht enthalten.</p>
+  <h3 class="sec">Feiertage in Berlin (nächste 12 Monate)</h3><div class="flist">${frows}</div>`;
+}
+function renderWeek(){
   const wEnd=addDays(weekStart,6);
   const a=parse(weekStart),b=parse(wEnd);
   const kw=isoWeek(a);
@@ -318,7 +447,8 @@ function render(){
   for(let i=0;i<7;i++){
     const day=addDays(weekStart,i);const d=parse(day);
     const list=entries.filter(e=>onDay(e,day));
-    html+=`<article class="day${day===today?" is-today":""}"><div class="day-head"><b>${WDL[d.getDay()]}, ${d.getDate()}. ${MON[d.getMonth()]}</b><span>${day===today?"heute · ":""}${list.length?list.length+(list.length===1?" Eintrag":" Einträge"):"frei"}</span></div><div class="cols">`;
+    const fe=feierOf(day),fr=ferienOf(day);
+    html+=`<article class="day${day===today?" is-today":""}${fr?" is-fer":""}" id="d-${day}"><div class="day-head"><b>${WDL[d.getDay()]}, ${d.getDate()}. ${MON[d.getMonth()]}${fe?`<span class="badge feier">${esc(fe)}</span>`:""}${fr?`<span class="badge fer">${esc(fr)}</span>`:""}</b><span>${day===today?"heute · ":""}${list.length?list.length+(list.length===1?" Eintrag":" Einträge"):"frei"}</span></div><div class="cols">`;
     for(const[p] of PEOPLE){
       const cell=list.filter(e=>e.person===p).sort(sortE);
       html+=`<div class="cell" role="button" tabindex="0" data-day="${day}" data-person="${p}" aria-label="${PNAME[p]}, ${fmt(day)}: Eintrag hinzufügen">${cell.map(e=>chipHTML(e,day)).join("")}<span class="plus" aria-hidden="true">+</span></div>`;
@@ -326,7 +456,6 @@ function render(){
     html+=`</div></article>`;
   }
   document.getElementById("days").innerHTML=html;
-  renderMorning();
 }
 function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/864e5+1)/7)}
 
@@ -647,9 +776,19 @@ document.getElementById("days").addEventListener("click",ev=>{
   const cell=ev.target.closest(".cell");if(cell)openSheet(null,{day:cell.dataset.day,person:cell.dataset.person});
 });
 document.getElementById("days").addEventListener("keydown",ev=>{if((ev.key==="Enter"||ev.key===" ")&&ev.target.classList.contains("cell")){ev.preventDefault();openSheet(null,{day:ev.target.dataset.day,person:ev.target.dataset.person})}});
-document.getElementById("prev").onclick=()=>{weekStart=addDays(weekStart,-7);render()};
-document.getElementById("next").onclick=()=>{weekStart=addDays(weekStart,7);render()};
-document.getElementById("goToday").onclick=()=>{weekStart=mondayOf(iso(new Date()));render()};
+function step(dir){
+  if(view==="monat"){const d=parse(monthCur);monthCur=iso(new Date(d.getFullYear(),d.getMonth()+dir,1))}
+  else if(view==="jahr")yearCur+=dir;else weekStart=addDays(weekStart,7*dir);
+  render();
+}
+document.getElementById("prev").onclick=()=>step(-1);
+document.getElementById("next").onclick=()=>step(1);
+document.getElementById("goToday").onclick=()=>{const t=iso(new Date());weekStart=mondayOf(t);monthCur=t.slice(0,7)+"-01";yearCur=+t.slice(0,4);render()};
+document.querySelectorAll(".tabs [data-view]").forEach(b=>b.onclick=()=>setView(b.dataset.view));
+document.getElementById("vOther").addEventListener("click",ev=>{
+  const g=ev.target.closest("[data-goday]");if(g){weekStart=mondayOf(g.dataset.goday);setView("woche");setTimeout(()=>{const el=document.getElementById("d-"+g.dataset.goday);if(el)el.scrollIntoView({block:"center"})},50);return}
+  const mo=ev.target.closest("[data-gomonth]");if(mo){monthCur=mo.dataset.gomonth;setView("monat")}
+});
 document.getElementById("fab").onclick=()=>openSheet(null,{day:today>=weekStart&&today<=addDays(weekStart,6)?today:weekStart,person:"gemeinsam"});
 document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&draft)closeSheet()});
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&iso(new Date())!==today)render()});
