@@ -154,6 +154,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .frow .when{font-size:.85rem;font-variant-numeric:tabular-nums}
 .frow .cd{font-size:.8rem;font-weight:600;color:var(--fer-fg);text-align:right}
 .frow .fam{grid-column:1/-1;font-size:.78rem;color:var(--vac)}
+.row3n{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.sub{font-family:var(--f-display);font-size:1rem;margin:6px 0 -4px}
 .sec{font-family:var(--f-display);font-size:1.05rem;margin:6px 0 0}
 .empty-note{font-size:.85rem;color:var(--muted);text-align:center;padding:4px}
 
@@ -249,8 +251,19 @@ textarea.cfg{font:inherit;font-size:.8rem;font-family:ui-monospace,monospace;col
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-const PEOPLE=[["christin","Christin"],["john","John"],["robert","Robert"],["gemeinsam","Gemeinsam"]];
-const PNAME=Object.fromEntries(PEOPLE);
+// Die drei Personen-Spalten haben feste interne Schlüssel, die Namen kommen aus den Kalender-Einstellungen
+const SLOTS=["christin","john","robert"];
+const DEFAULT_NAMES=["Christin","John","Robert"];
+let NAMES=DEFAULT_NAMES.slice();
+let PEOPLE=[],PNAME={};
+function applyNames(arr){
+  NAMES=SLOTS.map((k,i)=>String((arr&&arr[i])||"").trim().slice(0,20)||`Person ${i+1}`);
+  PEOPLE=[...SLOTS.map((k,i)=>[k,NAMES[i]]),["gemeinsam","Gemeinsam"]];
+  PNAME=Object.fromEntries(PEOPLE);
+  const lg=document.querySelector(".legend");
+  if(lg)lg.innerHTML=PEOPLE.map(([k,n])=>`<div class="p-${k}">${esc(n)}</div>`).join("");
+}
+
 const WD=["So","Mo","Di","Mi","Do","Fr","Sa"];
 const WDL=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
 const MON=["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
@@ -263,6 +276,8 @@ const diffDays=(a,b)=>Math.round((parse(b)-parse(a))/864e5);
 const mondayOf=s=>{const d=parse(s);const w=(d.getDay()+6)%7;d.setDate(d.getDate()-w);return iso(d)};
 const fmt=s=>{const d=parse(s);return `${WD[d.getDay()]} ${d.getDate()}. ${MON[d.getMonth()]}`};
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let _ln=null;try{_ln=JSON.parse(localStorage.getItem("fk-namen")||"null")}catch(e){}
+applyNames(_ln||DEFAULT_NAMES);
 
 let today=iso(new Date());
 let weekStart=mondayOf(today);
@@ -278,7 +293,8 @@ function localStore(){
   return{mode:"lokal",
     async add(o){const id="l"+Math.random().toString(36).slice(2,10);entries.push({...o,id});save(entries);render()},
     async set(id,o){entries=entries.map(e=>e.id===id?{...o,id}:e);save(entries);render()},
-    async del(id){entries=entries.filter(e=>e.id!==id);save(entries);render()}};
+    async del(id){entries=entries.filter(e=>e.id!==id);save(entries);render()},
+    async names(n){try{localStorage.setItem("fk-namen",JSON.stringify(n))}catch(e){}applyNames(n);render()}};
 }
 /* ---------- Verbindung (Firebase) ---------- */
 const CFG_KEY="fk-config";
@@ -305,7 +321,7 @@ async function init(){
   render();
   initPhoto();
   const cfg=getCfg();
-  if(!cfg){store=localStore();setStatus("Noch nicht eingerichtet · tippe oben rechts");render();showSetup();return}
+  if(!cfg){if(!_ln){applyNames([]);render()}store=localStore();setStatus("Noch nicht eingerichtet · tippe oben rechts");render();showSetup();return}
   if(cfg.local||!window.firebase){store=localStore();setStatus(cfg.local?"Nur auf diesem Gerät gespeichert":"Datenbank nicht erreichbar · nur auf diesem Gerät");render();return}
   let col;
   try{
@@ -317,14 +333,18 @@ async function init(){
   store={mode:"db",
     async add(o){await col.add(o)},
     async set(id,o){await col.doc(id).set(o)},
-    async del(id){await col.doc(id).delete()}};
+    async del(id){await col.doc(id).delete()},
+    async names(n){await col.doc("_config").set({typ:"config",namen:n})}};
+  try{const nn=sessionStorage.getItem("fk-namen-neu");if(nn){sessionStorage.removeItem("fk-namen-neu");await store.names(JSON.parse(nn))}}catch(e){}
   // Einträge, die vorher nur auf diesem Gerät lagen, einmalig hochladen
   try{const loc=JSON.parse(localStorage.getItem("familienkalender-lokal")||"[]");
     if(loc.length){for(const e of loc){const{id,...o}=e;await col.add(o)}localStorage.removeItem("familienkalender-lokal");toast(`${loc.length} Einträge übernommen`)}}catch(e){}
   const timer=setTimeout(()=>setStatus("Offline · Änderungen werden später übertragen"),10000);
   try{if(sessionStorage.getItem("fk-invite")){sessionStorage.removeItem("fk-invite");setTimeout(showSettings,400)}}catch(e){}
   col.onSnapshot({includeMetadataChanges:true},snap=>{
-    entries=snap.docs.map(d=>({...d.data(),id:d.id}));
+    const conf=snap.docs.find(d=>d.id==="_config");
+    if(conf){const n=conf.data().namen;if(Array.isArray(n)){applyNames(n);try{localStorage.setItem("fk-namen",JSON.stringify(n))}catch(e){}}}
+    entries=snap.docs.filter(d=>d.id!=="_config").map(d=>({...d.data(),id:d.id}));
     if(!snap.metadata.fromCache){clearTimeout(timer);setStatus("Gemeinsam gespeichert · alle sehen dieselben Termine")}
     render();
   },err=>{clearTimeout(timer);setStatus(err&&err.code==="permission-denied"?"Kein Zugriff · Datenbank-Regeln prüfen (Anleitung Schritt 4)":"Fehler beim Laden der Termine");});
@@ -333,29 +353,46 @@ async function init(){
 /* ---------- Einrichtung & Einladen ---------- */
 function sheet(title,html){document.getElementById("sheetHost").innerHTML=`<div class="backdrop" id="bd"><div class="sheet" role="dialog" aria-modal="true" aria-label="${title}"><h3>${title}</h3>${html}</div></div>`;draft={setup:true};
   document.getElementById("bd").onclick=ev=>{if(ev.target.id==="bd")closeSheet()}}
+function nameFields(vals){return `<div class="row3n">${SLOTS.map((k,i)=>`<label class="f">Person ${i+1}<input id="nm${i}" maxlength="20" value="${esc(vals[i]||"")}" placeholder="Name"></label>`).join("")}</div>`}
+const readNames=()=>SLOTS.map((k,i)=>(document.getElementById("nm"+i).value||"").trim());
 function showSetup(){
-  sheet("Willkommen",`<p>Bist du der Erste, der den Kalender einrichtet? Dann tippe auf „Neuen Familienkalender starten“. Danach kannst du über das Personen-Symbol oben rechts einen Einladungslink an die anderen schicken.</p>
-    <p class="hint">Hast du einen Einladungslink bekommen? Dann schließe dieses Fenster und öffne einfach den Link, damit du im gemeinsamen Kalender landest.</p>
-    <div class="actions"><button class="btn" id="cfgNew">Neuen Familienkalender starten</button></div>
+  sheet("Willkommen",`<p>Hier legst du einen eigenen Kalender für deine Familie an. Trag dafür die Namen ein, die als Spalten erscheinen sollen. Die Spalte „Gemeinsam“ gibt es immer dazu.</p>
+    ${nameFields(["","",""])}
+    <div class="actions"><button class="btn" id="cfgNew">Neuen Kalender starten</button></div>
+    <p class="hint">Hast du einen Einladungslink bekommen? Dann schließe dieses Fenster und öffne einfach den Link. So landest du im gemeinsamen Kalender deiner Familie.</p>
     <div class="actions"><button class="btn ghost" id="cfgLocal">Erst mal nur auf diesem Handy</button><button class="btn ghost" id="cfgLater">Schließen</button></div>`);
-  document.getElementById("cfgNew").onclick=()=>{setCfg({firebase:DEFAULT_FIREBASE,code:newCode()});sessionStorage.setItem("fk-invite","1");location.reload()};
-  document.getElementById("cfgLocal").onclick=()=>{setCfg({local:true});closeSheet();location.reload()};
+  document.getElementById("cfgNew").onclick=()=>{
+    const n=readNames();if(!n.some(Boolean)){toast("Bitte mindestens einen Namen eintragen");return}
+    try{sessionStorage.setItem("fk-namen-neu",JSON.stringify(n));localStorage.setItem("fk-namen",JSON.stringify(n));sessionStorage.setItem("fk-invite","1")}catch(e){}
+    setCfg({firebase:DEFAULT_FIREBASE,code:newCode()});location.reload();
+  };
+  document.getElementById("cfgLocal").onclick=()=>{const n=readNames();if(n.some(Boolean)){try{localStorage.setItem("fk-namen",JSON.stringify(n))}catch(e){}}setCfg({local:true});closeSheet();location.reload()};
   document.getElementById("cfgLater").onclick=closeSheet;
 }
 function showSettings(){
   const c=getCfg();
   if(!c||c.local){if(c&&c.local){localStorage.removeItem(CFG_KEY)}showSetup();return}
   const link=inviteLink(c);
-  sheet("Familie einladen",`<p class="hint">Schick diesen Link an Christin und John. Wer ihn öffnet, ist sofort mit diesem Kalender verbunden. Gib ihn nur an die Familie weiter.</p>
+  const appLink=location.origin+location.pathname;
+  sheet("Teilen & Einstellungen",`<h4 class="sub">Familie einladen</h4><p class="hint">Wer diesen Link öffnet, ist sofort mit <b>diesem</b> Kalender verbunden und sieht alle Einträge. Gib ihn nur an die Familie weiter.</p>
     <div class="linkbox" id="inv">${esc(link)}</div>
     <div class="actions"><button class="btn" id="invCopy">Link kopieren</button><button class="btn ghost" id="invShare">Teilen …</button></div>
     <a class="btn ghost" style="text-align:center;text-decoration:none" href="https://wa.me/?text=${encodeURIComponent("Unser Familienkalender: "+link)}" target="_blank" rel="noopener">Per WhatsApp schicken</a>
+    <h4 class="sub">Namen der Spalten</h4>
+    ${nameFields(NAMES)}
+    <button class="btn ghost" id="nmSave">Namen speichern</button>
+    <h4 class="sub">Für Freunde: eigenen Kalender</h4>
+    <p class="hint">Mit diesem Link können andere die App nutzen und legen dabei ihren <b>eigenen, getrennten</b> Kalender an. Deine Termine sehen sie nicht.</p>
+    <div class="linkbox" id="appl">${esc(appLink)}</div>
+    <button class="btn ghost" id="applCopy">App-Link kopieren</button>
     <p class="hint">Tipp: Im Browser-Menü „Zum Startbildschirm hinzufügen“ wählen, dann hat jeder die App als Symbol auf dem Handy.</p>
     <div class="actions"><button class="btn danger" id="disc">Auf diesem Handy trennen</button><button class="btn ghost" id="setClose">Schließen</button></div>`);
   document.getElementById("invCopy").onclick=async()=>{try{await navigator.clipboard.writeText(link);toast("Link kopiert")}catch(e){const r=document.createRange();r.selectNodeContents(document.getElementById("inv"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Link markiert, jetzt kopieren")}};
   const sh=document.getElementById("invShare");
   if(navigator.share)sh.onclick=()=>navigator.share({title:"Familienkalender",text:"Unser Familienkalender",url:link}).catch(()=>{});else sh.hidden=true;
   document.getElementById("setClose").onclick=closeSheet;
+  document.getElementById("nmSave").onclick=async()=>{const n=readNames();if(!n.some(Boolean)){toast("Bitte mindestens einen Namen eintragen");return}try{await store.names(n);applyNames(n);render();toast("Namen gespeichert")}catch(e){toast("Speichern hat nicht geklappt")}};
+  document.getElementById("applCopy").onclick=async()=>{try{await navigator.clipboard.writeText(appLink);toast("App-Link kopiert")}catch(e){const r=document.createRange();r.selectNodeContents(document.getElementById("appl"));const x=getSelection();x.removeAllRanges();x.addRange(r);toast("Link markiert, jetzt kopieren")}};
   document.getElementById("disc").onclick=()=>{if(document.getElementById("disc").dataset.sure){localStorage.removeItem(CFG_KEY);location.reload()}else{document.getElementById("disc").dataset.sure="1";document.getElementById("disc").textContent="Wirklich trennen? Nochmal tippen"}};
 }
 document.getElementById("gear").onclick=showSettings;
@@ -687,7 +724,8 @@ function isGeneric(w){
 function parseOCR(text,todayISO){
   const lines=String(text||"").split(/\n+/).map(l=>l.trim()).filter(l=>l.length>1);
   const low=String(text||"").toLowerCase();
-  const names=["christin","john","robert"].filter(n=>low.includes(n));
+  const NM=PEOPLE.slice(0,3).map(([k,n])=>[k,n.toLowerCase()]).filter(([k,n])=>n.length>1&&!/^person \d$/.test(n));
+  const names=NM.filter(([k,n])=>low.includes(n)).map(([k])=>k);
   const personAll=names.length===1?names[0]:"gemeinsam";
   const info=lines.map(raw=>{const a=findDates(raw,todayISO);const b=findTimes(a.rest);return{raw,dates:a.dates,times:b.times,words:cleanTitle(b.rest),used:false}});
   const events=[];const FREE=/^(frei|f|x|-|ruhetag|dienstfrei|ft)$/i;
@@ -712,7 +750,7 @@ function parseOCR(text,todayISO){
     const l=(info[e.i].raw+" "+t).toLowerCase();
     const typ=/urlaub/.test(l)?"urlaub":/(dienst|schicht|arbeit)/.test(l)?"arbeit":"termin";
     const ctx=info.slice(Math.max(0,e.i-2),e.i+3).map(x=>x.raw).join(" ").toLowerCase();
-    const nm=["christin","john","robert"].filter(n=>ctx.includes(n));
+    const nm=NM.filter(([k,n])=>ctx.includes(n)).map(([k])=>k);
     return{typ,person:nm.length===1?nm[0]:personAll,titel:t,datum:e.datum,endDatum:e.endDatum,von:e.von,bis:e.bis};
   }).filter(e=>{const k=e.datum+e.von+e.titel;if(seen.has(k))return false;seen.add(k);return true}).slice(0,40);
 }
