@@ -2,28 +2,51 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function mitglied(code) {
+      return /databases/$(database)/documents/familien/$(code)/mitglieder/$(request.auth.uid);
+    }
+    function istMitglied(code) {
+      return request.auth != null && exists(mitglied(code));
+    }
+    function darfSchreiben(code) {
+      return istMitglied(code) && get(mitglied(code)).data.get('rolle', 'schreiben') != 'lesen';
+    }
+
     match /familien/{code}/eintraege/{eintrag} {
-      allow read, write: if code.size() >= 18;
+      allow read: if code.size() >= 18;
+      allow write: if code.size() >= 18 && darfSchreiben(code);
     }
 
     match /familien/{code}/mitglieder/{uid} {
-      allow create, update: if code.size() >= 18 && request.auth != null && request.auth.uid == uid;
-      allow read, delete: if false;
+      allow read: if istMitglied(code);
+      allow create: if code.size() >= 18 && request.auth != null && request.auth.uid == uid && (
+        request.resource.data.rolle == 'lesen'
+        || (request.resource.data.rolle == 'schreiben' && (
+              !exists(/databases/$(database)/documents/familien/$(code)/eintraege/_config)
+              || (request.resource.data.get('token', '').size() >= 18
+                  && exists(/databases/$(database)/documents/familien/$(code)/einladungen/$(request.resource.data.get('token', '')))))));
+      allow update: if (request.auth != null && request.auth.uid == uid
+          && request.resource.data.get('rolle', 'schreiben') == resource.data.get('rolle', 'schreiben'))
+        || darfSchreiben(code);
+      allow delete: if darfSchreiben(code);
+    }
+
+    match /familien/{code}/einladungen/{tok} {
+      allow read, delete: if darfSchreiben(code);
+      allow create: if tok.size() >= 18 && darfSchreiben(code);
     }
 
     match /leselinks/{rc} {
       allow read, update: if false;
-      allow create: if rc.size() >= 18 && request.auth != null
-        && exists(/databases/$(database)/documents/familien/$(request.resource.data.fam)/mitglieder/$(request.auth.uid));
-      allow delete: if request.auth != null
-        && exists(/databases/$(database)/documents/familien/$(resource.data.fam)/mitglieder/$(request.auth.uid));
+      allow create: if rc.size() >= 18 && darfSchreiben(request.resource.data.fam);
+      allow delete: if darfSchreiben(resource.data.fam);
     }
 
     match /lesen/{rc} {
       allow read: if rc.size() >= 18;
       allow write: if request.auth != null
         && exists(/databases/$(database)/documents/leselinks/$(rc))
-        && exists(/databases/$(database)/documents/familien/$(get(/databases/$(database)/documents/leselinks/$(rc)).data.fam)/mitglieder/$(request.auth.uid));
+        && darfSchreiben(get(/databases/$(database)/documents/leselinks/$(rc)).data.fam);
 
       // Wünsche über den Nur-Lese-Link (z. B. von Papa)
       match /wuensche/{w} {
@@ -37,7 +60,7 @@ service cloud.firestore {
         allow delete: if rc.size() >= 18;
         allow update: if request.auth != null
           && exists(/databases/$(database)/documents/leselinks/$(rc))
-          && exists(/databases/$(database)/documents/familien/$(get(/databases/$(database)/documents/leselinks/$(rc)).data.fam)/mitglieder/$(request.auth.uid));
+          && darfSchreiben(get(/databases/$(database)/documents/leselinks/$(rc)).data.fam);
       }
     }
   }
