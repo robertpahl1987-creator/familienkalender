@@ -18,9 +18,27 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/gesperrt/$(code));
     }
 
+    // Termin-Schutz: geschützte Einträge darf nur der Ersteller löschen oder entsperren
+    function vomErsteller() {
+      return !resource.data.get('geschuetzt', false) || resource.data.get('ersteller', '') == request.auth.uid;
+    }
+    function erstellerBleibt() {
+      return request.resource.data.get('ersteller', '') == resource.data.get('ersteller', '')
+        || (resource.data.get('ersteller', '') == '' && request.resource.data.get('ersteller', '') == request.auth.uid);
+    }
+    function schutzNurEigen() {
+      return !request.resource.data.get('geschuetzt', false) || request.resource.data.get('ersteller', '') == request.auth.uid;
+    }
+
     match /familien/{code}/eintraege/{eintrag} {
       allow read: if code.size() >= 18 && !gesperrt(code);
-      allow write: if code.size() >= 18 && darfSchreiben(code) && !gesperrt(code);
+      allow create: if code.size() >= 18 && darfSchreiben(code) && !gesperrt(code) && schutzNurEigen();
+      allow update: if code.size() >= 18 && darfSchreiben(code) && !gesperrt(code) && (
+        (vomErsteller() && erstellerBleibt() && schutzNurEigen())
+        || (resource.data.get('geschuetzt', false) == true
+            && request.resource.data.get('geschuetzt', false) == true
+            && request.resource.data.get('ersteller', '') == resource.data.get('ersteller', '')));
+      allow delete: if code.size() >= 18 && darfSchreiben(code) && !gesperrt(code) && vomErsteller();
       allow read, delete: if istAdmin();
     }
 
