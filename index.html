@@ -201,6 +201,17 @@ body.ro .cell{cursor:default}
 label.pick{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid var(--line);border-radius:9px;font-size:.85rem;font-weight:600}
 label.pick input{width:18px;height:18px}
 ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.news{background:var(--surface);border-left:5px solid var(--star);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.news-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.news h2{font-family:var(--f-display);font-size:1.05rem;margin:0}
+.news #newsAck{padding:8px 14px;font-size:.88rem;flex:none}
+.news ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.newsrow{display:flex;gap:10px;align-items:flex-start;text-align:left;width:100%;padding:4px 0}
+.newsrow .nt{min-width:0}
+.newsrow .meta{font-size:.78rem;color:var(--muted)}
+.tag{flex:none;font-size:.68rem;font-weight:700;padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+.tag.nw{background:var(--star);color:#1a1200}
+.tag.ed{background:var(--fer);color:var(--fer-fg)}
 .sec{font-family:var(--f-display);font-size:1.05rem;margin:6px 0 0}
 .empty-note{font-size:.85rem;color:var(--muted);text-align:center;padding:4px}
 
@@ -263,6 +274,11 @@ textarea.cfg{font:inherit;font-size:.8rem;font-family:ui-monospace,monospace;col
     <button role="tab" data-view="woche">Woche</button><button role="tab" data-view="monat">Monat</button><button role="tab" data-view="jahr">Jahr</button><button role="tab" data-view="ferien">Ferien</button><button role="tab" data-view="sterne">Sterne</button>
   </div>
   </header>
+
+  <section class="news" id="news" hidden>
+    <div class="news-head"><h2 id="newsTitle">Neue Einträge</h2><button class="btn" id="newsAck">Gesehen ✓</button></div>
+    <ul id="newsList"></ul>
+  </section>
 
   <section class="morning" id="morning" hidden>
     <h2 id="mTitle">Guten Morgen</h2>
@@ -399,8 +415,8 @@ async function init(){
   }catch(e){store=localStore();setStatus("Verbindung fehlerhaft · Einstellungen prüfen");render();return}
   const failed=e=>{console.error(e);toast("Nicht gespeichert: "+(e&&e.code==="permission-denied"?"kein Zugriff auf diesen Kalender":"Verbindungsproblem")+". Bitte App neu laden.")};
   store={mode:"db",
-    add(o){col.add(o).catch(failed)},
-    set(id,o){col.doc(id).set(o).catch(failed)},
+    add(o){col.add(stampNew(o)).catch(failed)},
+    set(id,o){col.doc(id).set(stampEdit(id,o)).catch(failed)},
     del(id){col.doc(id).delete().catch(failed)},
     async names(n){await col.doc("_config").set({typ:"config",namen:n},{merge:true})},
     async conf(o){await col.doc("_config").set({typ:"config",...o},{merge:true})},
@@ -902,7 +918,7 @@ function render(){
   document.getElementById("vOther").hidden=view==="woche";
   document.getElementById("navbar").hidden=view==="ferien"||view==="sterne";
   if(view==="monat")renderMonth();else if(view==="jahr")renderYear();else if(view==="ferien")renderFerien();else if(view==="sterne")renderStars();else renderWeek();
-  renderMorning();
+  renderMorning();renderNews();
 }
 function renderMonth(){
   const m0=parse(monthCur);const y=m0.getFullYear(),m=m0.getMonth();
@@ -973,6 +989,38 @@ function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.get
 /* ---------- Morgen-Übersicht (bleibt bis "Gelesen") ---------- */
 function ackKey(){return"fk-gelesen-"+today}
 function isAck(){try{return localStorage.getItem(ackKey())==="1"}catch(e){return false}}
+/* ---------- Neue & geänderte Einträge ---------- */
+let DEVICE_ID="";try{DEVICE_ID=localStorage.getItem("fk-dev")||"";if(!DEVICE_ID){DEVICE_ID="d"+Math.random().toString(36).slice(2,10);localStorage.setItem("fk-dev",DEVICE_ID)}}catch(e){DEVICE_ID="d"+Math.random().toString(36).slice(2,10)}
+const nowISO=()=>new Date().toISOString();
+function stampNew(o){return {...o,erstellt:nowISO(),geraet:DEVICE_ID}}
+function stampEdit(id,o){const prev=[...entries,...tasks,...rewards].find(x=>x.id===id);return {...o,erstellt:(prev&&prev.erstellt)||o.erstellt||nowISO(),geaendert:nowISO(),geraet:DEVICE_ID}}
+function seenAt(){try{let v=localStorage.getItem("fk-seen");if(!v){v=nowISO();localStorage.setItem("fk-seen",v)}return v}catch(e){return nowISO()}}
+function whenTxt(isoStr){const d=new Date(isoStr);const day=iso(d);const t=d.toTimeString().slice(0,5);
+  if(day===today)return `heute ${t} Uhr`;if(day===addDays(today,-1))return `gestern ${t} Uhr`;return `${fmt(day)}, ${t} Uhr`}
+function renderNews(){
+  const box=document.getElementById("news");if(!box)return;
+  if(READONLY){box.hidden=true;return}
+  const seen=seenAt();
+  const items=entries.filter(e=>e.geraet&&e.geraet!==DEVICE_ID&&((e.geaendert||e.erstellt||"")>seen));
+  if(!items.length){box.hidden=true;return}
+  const groups=[];const bySerie={};
+  for(const e of items){if(e.serie){if(!bySerie[e.serie]){bySerie[e.serie]={...e,anzahl:0,erster:e.datum};groups.push(bySerie[e.serie])}const g=bySerie[e.serie];g.anzahl++;if(e.datum<g.erster)g.erster=e.datum;if((e.geaendert||e.erstellt)>(g.geaendert||g.erstellt))Object.assign(g,{geaendert:e.geaendert,erstellt:e.erstellt})}else groups.push({...e,anzahl:1,erster:e.datum})}
+  groups.sort((a,b)=>(b.geaendert||b.erstellt).localeCompare(a.geaendert||a.erstellt));
+  const isEd=g=>g.geaendert&&g.geaendert>seen&&!(g.erstellt>seen);
+  const nEd=groups.filter(isEd).length,nNew=groups.length-nEd;
+  document.getElementById("newsTitle").textContent=`🔔 ${[nNew?`${nNew} ${nNew===1?"neuer Eintrag":"neue Einträge"}`:"",nEd?`${nEd} ${nEd===1?"Änderung":"Änderungen"}`:""].filter(Boolean).join(", ")}`;
+  document.getElementById("newsList").innerHTML=groups.slice(0,8).map(g=>{
+    const ed=isEd(g);
+    const what=g.typ==="geburtstag"?bdayLabel(g,g.datum):g.typ==="arbeit"?`Arbeit ${timeTxt(g)}`:g.typ==="urlaub"?"Urlaub":`${g.von?g.von+" ":""}${g.titel}`;
+    const termin=g.anzahl>1?`Serie mit ${g.anzahl} Terminen ab ${fmt(g.erster)}`:g.typ==="geburtstag"?fmt(bdayIn(g,+today.slice(0,4))<today?bdayIn(g,+today.slice(0,4)+1):bdayIn(g,+today.slice(0,4))):fmt(g.datum)+(g.endDatum&&g.endDatum>g.datum?` – ${fmt(g.endDatum)}`:"");
+    return `<li><button class="newsrow" data-goday="${g.erster}"><span class="tag ${ed?"ed":"nw"}">${ed?"geändert":"neu"}</span>
+      <span class="nt"><b class="p-${g.person}" style="background:none">${esc(PNAME[g.person]||"")}</b> ${esc(what)}<br><span class="meta">📅 ${esc(termin)} · ${ed?"geändert":"eingetragen"} ${esc(whenTxt(ed?g.geaendert:g.erstellt))}</span></span></button></li>`}).join("")
+    +(groups.length>8?`<li class="meta">… und ${groups.length-8} weitere</li>`:"");
+  box.hidden=false;
+}
+document.getElementById("newsAck").onclick=()=>{try{localStorage.setItem("fk-seen",nowISO())}catch(e){}document.getElementById("news").hidden=true;toast("Als gesehen markiert")};
+document.getElementById("newsList").addEventListener("click",ev=>{const b=ev.target.closest("[data-goday]");if(!b)return;weekStart=mondayOf(b.dataset.goday);setView("woche");setTimeout(()=>{const el=document.getElementById("d-"+b.dataset.goday);if(el)el.scrollIntoView({block:"center"})},60)});
+
 function renderMorning(){
   const box=document.getElementById("morning");
   if(isAck()){box.hidden=true;return}
