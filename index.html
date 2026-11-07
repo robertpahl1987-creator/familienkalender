@@ -156,6 +156,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .row3n{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .sub{font-family:var(--f-display);font-size:1rem;margin:6px 0 -4px}
 .foot{text-align:center;font-size:.85rem;padding:8px 0 4px}.foot a{color:var(--muted)}
+.lbl-s{font-size:.82rem;color:var(--muted);font-weight:600;letter-spacing:.02em}
+.wdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.wdays button{padding:10px 0;border-radius:10px;border:1px solid var(--line);font-weight:600;font-size:.85rem}
+.wdays button[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
 .sec{font-family:var(--f-display);font-size:1.05rem;margin:6px 0 0}
 .empty-note{font-size:.85rem;color:var(--muted);text-align:center;padding:4px}
 
@@ -597,6 +601,7 @@ function openSheet(e,preset){
   draft=e?{...e}:{typ:"termin",person:preset?.person||"gemeinsam",titel:"",datum:preset?.day||today,endDatum:"",von:"",bis:"",serie:"",intervall:0,wdh:"keine",wdhBis:addDays(preset?.day||today,364)};
   if(!draft.wdhBis)draft.wdhBis=addDays(draft.datum,364);
   if(!draft.wdh)draft.wdh="keine";
+  if(!draft.tage)draft.tage=[parse(draft.datum).getDay()];
   drawSheet();
 }
 function closeSheet(){document.getElementById("sheetHost").innerHTML="";draft=null}
@@ -621,16 +626,16 @@ function drawSheet(){
       <label class="f">${d.typ==="arbeit"?"Arbeitsende":"Bis (optional)"}<input type="time" id="i-bis" value="${d.bis||""}"></label>
     </div>`:""}
     ${!isEdit?`<div class="box">
-      <label class="f">Wiederholen<select id="i-wdh">
-        <option value="keine"${d.wdh==="keine"?" selected":""}>Nicht wiederholen</option>
-        <option value="7"${d.wdh==="7"?" selected":""}>Jede Woche</option>
-        <option value="14"${d.wdh==="14"?" selected":""}>Alle 2 Wochen</option>
-      </select></label>
-      ${d.wdh!=="keine"?`<label class="f">Fortlaufend bis<input type="date" id="i-wdhbis" value="${d.wdhBis}"></label>`:""}
+      <span class="lbl-s">Wiederholen</span>
+      <div class="seg" style="--n:3">${[["keine","Einmalig"],["7","Jede Woche"],["14","Alle 2 Wochen"]].map(([v,t])=>`<button class="typ" data-wdh="${v}" aria-pressed="${d.wdh===v}">${t}</button>`).join("")}</div>
+      ${d.wdh!=="keine"?`<span class="lbl-s">An diesen Tagen</span>
+      <div class="wdays">${[1,2,3,4,5,6,0].map(w=>`<button data-wd="${w}" aria-pressed="${d.tage.includes(w)}">${WD[w]}</button>`).join("")}</div>
+      <label class="f">Fortlaufend bis<input type="date" id="i-wdhbis" value="${d.wdhBis}"></label>
+      <p class="hint" id="wdhPrev">${seriesPreview(d)}</p>`:""}
     </div>`:`<div class="box">
       ${d.serie?`<p class="hint">Teil einer Serie (${d.intervall===7?"jede Woche":"alle 2 Wochen"}, ${series} Einträge).</p>`:""}
-      <button class="btn ghost" id="cont">↻ Alle 2 Wochen fortlaufend eintragen</button>
-      <p class="hint">Trägt diesen Eintrag ab hier alle 14 Tage ein, für die nächsten 12 Monate. Schon vorhandene Termine der Serie werden nicht doppelt angelegt.</p>
+      <div class="actions"><button class="btn ghost" id="cont7">↻ Jede Woche fortlaufend</button><button class="btn ghost" id="cont14">↻ Alle 2 Wochen fortlaufend</button></div>
+      <p class="hint">Trägt diesen Eintrag ab hier für die nächsten 12 Monate weiter ein. Schon vorhandene Termine der Serie werden nicht doppelt angelegt.</p>
     </div>`}
     <div class="actions">
       <button class="btn" id="save">${isEdit?"Änderungen speichern":"Eintragen"}</button>
@@ -645,14 +650,18 @@ function drawSheet(){
   const $=id=>document.getElementById(id);
   const read=()=>{d.titel=$("i-titel").value.trim();d.datum=$("i-datum").value||d.datum;d.endDatum=$("i-end").value;
     if($("i-von"))d.von=$("i-von").value;if($("i-bis"))d.bis=$("i-bis").value;
-    if($("i-wdh"))d.wdh=$("i-wdh").value;if($("i-wdhbis"))d.wdhBis=$("i-wdhbis").value;};
+    if($("i-wdhbis"))d.wdhBis=$("i-wdhbis").value||d.wdhBis;};
   $("bd").onclick=ev=>{if(ev.target.id==="bd")closeSheet()};
   document.querySelectorAll(".sheet [data-typ]").forEach(b=>b.onclick=()=>{read();d.typ=b.dataset.typ;if(d.typ==="urlaub"){d.von="";d.bis=""}drawSheet()});
   document.querySelectorAll(".sheet [data-person]").forEach(b=>b.onclick=()=>{read();d.person=b.dataset.person;drawSheet()});
-  if($("i-wdh"))$("i-wdh").onchange=()=>{read();drawSheet()};
+  document.querySelectorAll(".sheet [data-wdh]").forEach(b=>b.onclick=()=>{read();d.wdh=b.dataset.wdh;if(d.wdh!=="keine"&&!d.tage.length)d.tage=[parse(d.datum).getDay()];drawSheet()});
+  document.querySelectorAll(".sheet [data-wd]").forEach(b=>b.onclick=()=>{read();const w=+b.dataset.wd;d.tage=d.tage.includes(w)?d.tage.filter(x=>x!==w):[...d.tage,w];drawSheet()});
+  if($("i-wdhbis"))$("i-wdhbis").onchange=()=>{read();const p=$("wdhPrev");if(p)p.textContent=seriesPreview(d)};
+  if($("i-datum"))$("i-datum").addEventListener("change",()=>{read();const p=$("wdhPrev");if(p)p.textContent=seriesPreview(d)});
   $("cancel").onclick=closeSheet;
   $("save").onclick=()=>{read();save()};
-  if($("cont"))$("cont").onclick=()=>{read();continueSeries()};
+  if($("cont7"))$("cont7").onclick=()=>{read();continueSeries(7)};
+  if($("cont14"))$("cont14").onclick=()=>{read();continueSeries(14)};
   if($("del"))$("del").onclick=()=>{read();confirmDel=true;drawSheet()};
   if($("delNo"))$("delNo").onclick=()=>{confirmDel=false;drawSheet()};
   if($("delOne"))$("delOne").onclick=async()=>{await store.del(editId);closeSheet();toast("Gelöscht")};
@@ -674,25 +683,38 @@ async function save(){
   const d=draft;if(!validate(d))return;
   if(editId){await store.set(editId,clean(d));closeSheet();toast("Gespeichert");return}
   if(d.wdh==="keine"){await store.add(clean(d));closeSheet();weekStart=mondayOf(d.datum);render();toast("Eingetragen");return}
+  if(!d.tage.length){toast("Bitte mindestens einen Wochentag wählen");return}
   const step=Number(d.wdh);const serie="s"+Date.now().toString(36);
   const span=d.endDatum&&d.endDatum>d.datum?diffDays(d.datum,d.endDatum):0;
-  const until=d.wdhBis||addDays(d.datum,364);
+  const dates=seriesDates(d);
+  if(!dates.length){toast("Im gewählten Zeitraum liegt kein passender Tag");return}
   const base=clean({...d,serie,intervall:step});
-  closeSheet();let n=0;
-  for(let s=d.datum;s<=until&&n<120;s=addDays(s,step)){await store.add({...base,datum:s,endDatum:span?addDays(s,span):""});n++}
-  weekStart=mondayOf(d.datum);render();toast(`${n} Einträge angelegt`);
+  closeSheet();
+  for(const s of dates)await store.add({...base,datum:s,endDatum:span?addDays(s,span):""});
+  weekStart=mondayOf(dates[0]);render();toast(`${dates.length} Einträge angelegt`);
 }
-async function continueSeries(){
+const MAX_SERIE=300;
+function seriesDates(d){
+  const step=Number(d.wdh)||7,until=d.wdhBis||addDays(d.datum,364),out=[];
+  for(let wk=mondayOf(d.datum);wk<=until&&out.length<MAX_SERIE;wk=addDays(wk,step))
+    for(const w of [1,2,3,4,5,6,0]){if(!d.tage.includes(w))continue;const day=addDays(wk,(w+6)%7);if(day>=d.datum&&day<=until&&out.length<MAX_SERIE)out.push(day)}
+  return out;
+}
+function seriesPreview(d){
+  if(!d.tage||!d.tage.length)return"Bitte mindestens einen Wochentag wählen.";
+  const n=seriesDates(d).length;const days=[1,2,3,4,5,6,0].filter(w=>d.tage.includes(w)).map(w=>WD[w]).join(", ");
+  return `Ergibt ${n} ${n===1?"Termin":"Termine"}: ${d.wdh==="14"?"alle 2 Wochen":"jede Woche"} am ${days}, bis ${fmt(d.wdhBis)} ${d.wdhBis.slice(0,4)}${n>=MAX_SERIE?" (höchstens "+MAX_SERIE+")":""}.`;
+}
+async function continueSeries(step){
   const d=draft;if(!validate(d))return;
   const serie=d.serie||("s"+Date.now().toString(36));
   const span=d.endDatum&&d.endDatum>d.datum?diffDays(d.datum,d.endDatum):0;
-  if(!d.serie||d.intervall!==14){await store.set(editId,clean({...d,serie,intervall:14}))}
-  else await store.set(editId,clean(d));
+  await store.set(editId,clean({...d,serie,intervall:step}));
   const have=new Set(entries.filter(x=>x.serie===serie).map(x=>x.datum));have.add(d.datum);
-  const base=clean({...d,serie,intervall:14});
+  const base=clean({...d,serie,intervall:step});
   const until=addDays(d.datum,365);closeSheet();let n=0;
-  for(let s=addDays(d.datum,14);s<=until;s=addDays(s,14)){if(have.has(s))continue;await store.add({...base,datum:s,endDatum:span?addDays(s,span):""});n++}
-  toast(n?`${n} weitere Einträge alle 2 Wochen angelegt`:"Serie ist schon vollständig eingetragen");
+  for(let s=addDays(d.datum,step);s<=until;s=addDays(s,step)){if(have.has(s))continue;await store.add({...base,datum:s,endDatum:span?addDays(s,span):""});n++}
+  toast(n?`${n} weitere Einträge ${step===7?"jede Woche":"alle 2 Wochen"} angelegt`:"Serie ist schon vollständig eingetragen");
 }
 
 /* ---------- Foto-Erkennung ---------- */
