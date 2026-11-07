@@ -1,9 +1,33 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Nur wer den geheimen Familien-Code aus dem Einladungslink kennt, kommt an die Termine.
+
+    // Familienkalender: nur wer den geheimen Familien-Code aus dem Einladungslink kennt
     match /familien/{code}/eintraege/{eintrag} {
       allow read, write: if code.size() >= 18;
+    }
+
+    // Familien-Mitglieder (anonyme Anmeldung): wer den Code kennt, darf sich selbst eintragen
+    match /familien/{code}/mitglieder/{uid} {
+      allow create, update: if code.size() >= 18 && request.auth != null && request.auth.uid == uid;
+      allow read, delete: if false;
+    }
+
+    // Verknüpfung Nur-Lese-Link -> Familie (für niemanden lesbar)
+    match /leselinks/{rc} {
+      allow read, update: if false;
+      allow create: if rc.size() >= 18 && request.auth != null
+        && exists(/databases/$(database)/documents/familien/$(request.resource.data.fam)/mitglieder/$(request.auth.uid));
+      allow delete: if request.auth != null
+        && exists(/databases/$(database)/documents/familien/$(resource.data.fam)/mitglieder/$(request.auth.uid));
+    }
+
+    // Nur-Lese-Ansicht: jeder mit dem Link darf lesen, schreiben nur Familien-Mitglieder
+    match /lesen/{rc} {
+      allow read: if rc.size() >= 18;
+      allow write: if request.auth != null
+        && exists(/databases/$(database)/documents/leselinks/$(rc))
+        && exists(/databases/$(database)/documents/familien/$(get(/databases/$(database)/documents/leselinks/$(rc)).data.fam)/mitglieder/$(request.auth.uid));
     }
   }
 }

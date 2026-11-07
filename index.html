@@ -74,7 +74,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .nav .arrow{width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:1.2rem}
 .nav .today-btn{padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:.85rem}
 
-.legend{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 56px);z-index:4;background:var(--bg);padding-bottom:4px}
+.legend{display:grid;grid-template-columns:repeat(var(--ncol,4),minmax(0,1fr));gap:4px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 56px);z-index:4;background:var(--bg);padding-bottom:4px}
 .legend div{text-align:center;font-size:.75rem;font-weight:600;padding:5px 2px;border-radius:8px;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .p-christin{color:var(--c-christin);background:var(--c-christin-bg)}
 .p-john{color:var(--c-john);background:var(--c-john-bg)}
@@ -88,7 +88,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .day.is-today .day-head{background:var(--today)}
 .day-head b{font-family:var(--f-display);font-weight:700}
 .day-head span{font-size:.78rem;color:var(--muted)}
-.cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.cols{display:grid;grid-template-columns:repeat(var(--ncol,4),minmax(0,1fr))}
 .cell{min-height:52px;padding:4px;display:flex;flex-direction:column;gap:4px;border-right:1px solid var(--line);text-align:left;min-width:0}
 .cell:last-child{border-right:0}
 .cell:hover{background:color-mix(in srgb,var(--accent) 6%,transparent)}
@@ -191,6 +191,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .rw-btns{display:flex;flex-wrap:wrap;gap:6px}
 .rw-btns button{padding:7px 10px;border-radius:9px;border:1px solid var(--line);font-size:.82rem;font-weight:600}
 .rw-btns button:disabled{opacity:.4}
+.cbackdrop{position:fixed;inset:0;background:rgba(5,15,20,.55);z-index:40;display:flex;align-items:center;justify-content:center;padding:20px}
+.cdialog{background:var(--surface);border-radius:16px;padding:18px;max-width:360px;width:100%;display:flex;flex-direction:column;gap:14px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.cdialog p{margin:0;font-size:1rem;font-weight:600}
+.btn.danger.solid{background:var(--c-christin);color:#fff;border-color:var(--c-christin)}
+body.ro .fabs,body.ro #gear,body.ro [data-view="sterne"],body.ro .plus,body.ro .empty-note,body.ro #mImg{display:none!important}
+body.ro .tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
+body.ro .cell{cursor:default}
+label.pick{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid var(--line);border-radius:9px;font-size:.85rem;font-weight:600}
+label.pick input{width:18px;height:18px}
+ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
 .sec{font-family:var(--f-display);font-size:1.05rem;margin:6px 0 0}
 .empty-note{font-size:.85rem;color:var(--muted);text-align:center;padding:4px}
 
@@ -287,6 +297,7 @@ textarea.cfg{font:inherit;font-size:.8rem;font-family:ui-monospace,monospace;col
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 // Die drei Personen-Spalten haben feste interne Schlüssel, die Namen kommen aus den Kalender-Einstellungen
 const SLOTS=["christin","john","robert"];
@@ -361,7 +372,9 @@ function parseFirebaseConfig(txt){
 }
 function joinCode(c){const old=getCfg();if(old&&old.code&&old.code!==c){try{sessionStorage.setItem("fk-oldcode",old.code)}catch(e){}}setCfg({firebase:DEFAULT_FIREBASE,code:c})}
 function checkJoin(){
-  const h=location.hash;if(!h.startsWith("#join="))return;
+  const h=location.hash;
+  if(h.startsWith("#lesen=")){const v=h.slice(7);if(/^[a-z2-9]{18,}$/.test(v)){const old=getCfg();if(!old||!old.code)setCfg({firebase:DEFAULT_FIREBASE,lesen:v});else sessionStorage.setItem("fk-lesen-own",v)}history.replaceState(null,"",location.pathname);return}
+  if(!h.startsWith("#join="))return;
   const v=h.slice(6);try{if(/^[a-z2-9]{18,}$/.test(v)){joinCode(v);toast("Mit dem Familienkalender verbunden")}else{const j=JSON.parse(b64d(v));if(j&&j.c){joinCode(j.c);toast("Mit dem Familienkalender verbunden")}}}catch(e){toast("Der Einladungslink ist unvollständig")}
   history.replaceState(null,"",location.pathname);
 }
@@ -371,6 +384,7 @@ async function init(){
   initPhoto();
   const cfg=getCfg();
   if(!cfg){if(!_ln){applyNames([]);render()}store=localStore();setStatus("Noch nicht eingerichtet · tippe oben rechts");render();showSetup();return}
+  if(cfg.lesen){startReader(cfg);return}
   if(cfg.local||!window.firebase){store=localStore();setStatus(cfg.local?"Nur auf diesem Gerät gespeichert":"Datenbank nicht erreichbar · nur auf diesem Gerät");render();return}
   let col;
   try{
@@ -378,13 +392,15 @@ async function init(){
     const fs=firebase.firestore(app);
     try{await fs.enablePersistence({synchronizeTabs:true})}catch(e){}
     col=fs.collection(`familien/${cfg.code}/eintraege`);
+    FS=fs;
   }catch(e){store=localStore();setStatus("Verbindung fehlerhaft · Einstellungen prüfen");render();return}
   const failed=e=>{console.error(e);toast("Nicht gespeichert: "+(e&&e.code==="permission-denied"?"kein Zugriff auf diesen Kalender":"Verbindungsproblem")+". Bitte App neu laden.")};
   store={mode:"db",
     add(o){col.add(o).catch(failed)},
     set(id,o){col.doc(id).set(o).catch(failed)},
     del(id){col.doc(id).delete().catch(failed)},
-    async names(n){await col.doc("_config").set({typ:"config",namen:n})},
+    async names(n){await col.doc("_config").set({typ:"config",namen:n},{merge:true})},
+    async conf(o){await col.doc("_config").set({typ:"config",...o},{merge:true})},
     async wipe(){const snap=await col.get();let b=col.firestore.batch(),n=0;for(const d of snap.docs){b.delete(d.ref);if(++n%400===0){await b.commit();b=col.firestore.batch()}}await b.commit()}};
   try{const nn=sessionStorage.getItem("fk-namen-neu");if(nn){sessionStorage.removeItem("fk-namen-neu");await store.names(JSON.parse(nn))}}catch(e){}
   // Beim Wechsel in einen anderen Kalender: Einträge aus dem bisherigen Kalender mitnehmen
@@ -396,16 +412,19 @@ async function init(){
   try{const loc=JSON.parse(localStorage.getItem("familienkalender-lokal")||"[]");
     if(loc.length){for(const e of loc){const{id,...o}=e;await col.add(o)}localStorage.removeItem("familienkalender-lokal");toast(`${loc.length} Einträge übernommen`)}}catch(e){}
   const timer=setTimeout(()=>setStatus("Offline · Änderungen werden später übertragen"),10000);
+  ensureMember(cfg);
   try{if(sessionStorage.getItem("fk-invite")){sessionStorage.removeItem("fk-invite");setTimeout(showSettings,400)}}catch(e){}
   col.onSnapshot({includeMetadataChanges:true},snap=>{
     const conf=snap.docs.find(d=>d.id==="_config");
     if(conf){const n=conf.data().namen;if(Array.isArray(n)){applyNames(n);try{localStorage.setItem("fk-namen",JSON.stringify(n))}catch(e){}}}
+    LESE=conf?(conf.data().lesen||[]):[];
     splitData(snap.docs.filter(d=>d.id!=="_config").map(d=>({...d.data(),id:d.id})));
     const nr=calNr();
     if(snap.metadata.hasPendingWrites)setStatus(`Kalender ${nr} · Änderungen werden übertragen …`);
     else if(!snap.metadata.fromCache){clearTimeout(timer);setStatus(`Kalender ${nr} · alles übertragen ✓`)}
     else setStatus(`Kalender ${nr} · offline, zeigt gespeicherten Stand`);
     render();
+    if(!snap.metadata.fromCache&&!snap.metadata.hasPendingWrites)scheduleMirror();
   },err=>{clearTimeout(timer);setStatus(err&&err.code==="permission-denied"?"Kein Zugriff · Datenbank-Regeln prüfen (Anleitung Schritt 4)":"Fehler beim Laden der Termine");});
 }
 
@@ -440,6 +459,7 @@ function showSettings(){
     <div class="linkbox" id="inv">${esc(link)}</div>
     <div class="actions"><button class="btn" id="invCopy">Link kopieren</button><button class="btn ghost" id="invShare">Teilen …</button></div>
     <a class="btn ghost" style="text-align:center;text-decoration:none" href="https://wa.me/?text=${encodeURIComponent("Unser Familienkalender: "+link)}" target="_blank" rel="noopener">Per WhatsApp schicken</a>
+    ${readLinkSection()}
     <h4 class="sub">Mit einem anderen Kalender verbinden</h4>
     ${joinBox()}
     <p class="hint">Deine bisherigen Einträge werden dabei in den neuen Kalender übernommen.</p>
@@ -460,16 +480,17 @@ function showSettings(){
     <p class="hint">Löscht alle Einträge und Namen dieses Kalenders für alle Beteiligten. Das lässt sich nicht rückgängig machen.</p>
     <p class="hint"><a href="datenschutz.html">Datenschutz, Impressum & Nutzungshinweise</a></p>
     <div class="actions"><button class="btn danger" id="disc">Auf diesem Handy trennen</button><button class="btn ghost" id="setClose">Schließen</button></div>`);
-  document.getElementById("exp").onclick=exportICS;
+  document.getElementById("exp").onclick=exportICS;wireReadLinks();
   document.getElementById("setImg").onclick=()=>showWidgetImage();wireJoin();
-  document.getElementById("wipe").onclick=()=>{const b=document.getElementById("wipe");if(!b.dataset.sure){b.dataset.sure="1";b.textContent="Sicher? Alles für alle löschen – nochmal tippen";return}wipeAll()};
+  document.getElementById("wipe").onclick=async()=>{if(!await askConfirm("Den ganzen Kalender mit allen Einträgen, Aufgaben und Sternen für ALLE löschen? Das lässt sich nicht rückgängig machen.","Endgültig löschen"))return;
+    if(!await askConfirm("Bist du ganz sicher?","Ja, alles löschen"))return;wipeAll()};
   document.getElementById("invCopy").onclick=async()=>{try{await navigator.clipboard.writeText(link);toast("Link kopiert")}catch(e){const r=document.createRange();r.selectNodeContents(document.getElementById("inv"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Link markiert, jetzt kopieren")}};
   const sh=document.getElementById("invShare");
   if(navigator.share)sh.onclick=()=>navigator.share({title:"Familienkalender",text:"Unser Familienkalender",url:link}).catch(()=>{});else sh.hidden=true;
   document.getElementById("setClose").onclick=closeSheet;
   document.getElementById("nmSave").onclick=async()=>{const n=readNames();if(!n.some(Boolean)){toast("Bitte mindestens einen Namen eintragen");return}try{await store.names(n);applyNames(n);render();toast("Namen gespeichert")}catch(e){toast("Speichern hat nicht geklappt")}};
   document.getElementById("applCopy").onclick=async()=>{try{await navigator.clipboard.writeText(appLink);toast("App-Link kopiert")}catch(e){const r=document.createRange();r.selectNodeContents(document.getElementById("appl"));const x=getSelection();x.removeAllRanges();x.addRange(r);toast("Link markiert, jetzt kopieren")}};
-  document.getElementById("disc").onclick=()=>{if(document.getElementById("disc").dataset.sure){localStorage.removeItem(CFG_KEY);location.reload()}else{document.getElementById("disc").dataset.sure="1";document.getElementById("disc").textContent="Wirklich trennen? Nochmal tippen"}};
+  document.getElementById("disc").onclick=async()=>{if(!await askConfirm("Dieses Handy vom Kalender trennen? Die Termine bleiben für die anderen erhalten. Zum erneuten Verbinden brauchst du den Einladungslink.","Trennen"))return;localStorage.removeItem(CFG_KEY);location.reload()};
 }
 document.getElementById("gear").onclick=showSettings;
 async function wipeAll(){
@@ -653,13 +674,13 @@ document.getElementById("vOther").addEventListener("click",async ev=>{
   if(view!=="sterne")return;
   const dn=ev.target.closest("[data-done]");
   if(dn){const t=tasks.find(x=>x.id===dn.dataset.done);if(!t||!store)return;const l=logFor(t);
-    if(l){await store.del(l.id);toast("Zurückgenommen")}
+    if(l){if(!await askConfirm(`Erledigt zurücknehmen? ${PNAME[t.person]} verliert dafür ${+l.sterne||1} ⭐.`,"Zurücknehmen"))return;await store.del(l.id);toast("Zurückgenommen")}
     else{await store.add({typ:"erledigt",aufgabe:t.id,person:t.person,sterne:+t.sterne||1,datum:today,titel:t.titel});popPerson=t.person;render();toast(`⭐ +${+t.sterne||1} für ${PNAME[t.person]}!`)}
     return}
   const tk=ev.target.closest("[data-task]");if(tk){openTaskSheet(tasks.find(x=>x.id===tk.dataset.task));return}
   const re=ev.target.closest("[data-redeem]");
   if(re){const r=rewards.find(x=>x.id===re.dataset.redeem),p=re.dataset.who;if(!r)return;
-    if(re.dataset.sure!=="1"){re.dataset.sure="1";re.textContent=`Sicher? −${+r.kosten} ⭐ für ${PNAME[p]}`;return}
+    if(!await askConfirm(`„${r.titel}“ für ${PNAME[p]} einlösen? Dafür werden ${+r.kosten} ⭐ abgezogen.`,"Einlösen",false))return;
     await store.add({typ:"einloesung",person:p,kosten:+r.kosten,titel:r.titel,datum:today});toast(`🎉 ${PNAME[p]} hat „${r.titel}“ eingelöst`);return}
   const rw=ev.target.closest("[data-rwedit]");if(rw){openRewardSheet(rewards.find(x=>x.id===rw.dataset.rwedit))}
 });
@@ -674,7 +695,7 @@ function openTaskSheet(t){
     <span class="lbl-s">Wie oft?</span>
     <div class="seg" style="--n:3">${Object.entries(WIED).map(([k,n])=>`<button class="typ" data-tw="${k}" aria-pressed="${d.wiederholung===k}">${n}</button>`).join("")}</div>
     <div class="actions"><button class="btn" id="tSave">${t?"Speichern":"Aufgabe anlegen"}</button><button class="btn ghost" id="tCancel">Abbrechen</button></div>
-    ${t?`<button class="btn danger" id="tDel">${sure?"Wirklich löschen? Nochmal tippen":"Aufgabe löschen"}</button><p class="hint">Bereits verdiente Sterne bleiben erhalten.</p>`:""}`);
+    ${t?`<button class="btn danger" id="tDel">Aufgabe löschen</button><p class="hint">Bereits verdiente Sterne bleiben erhalten.</p>`:""}`);
     const $=id=>document.getElementById(id);const rd=()=>{d.titel=$("tTit").value.trim()};
     document.querySelectorAll("[data-tp]").forEach(b=>b.onclick=()=>{rd();d.person=b.dataset.tp;draw()});
     document.querySelectorAll("[data-ts]").forEach(b=>b.onclick=()=>{rd();d.sterne=+b.dataset.ts;draw()});
@@ -683,7 +704,7 @@ function openTaskSheet(t){
     $("tSave").onclick=async()=>{rd();if(!d.titel){toast("Bitte eintragen, was zu tun ist");return}if(!store)return;
       const o={typ:"aufgabe",titel:d.titel.slice(0,120),person:d.person,sterne:+d.sterne||1,wiederholung:d.wiederholung,erstellt:d.erstellt||today};
       closeSheet();if(t)await store.set(t.id,o);else await store.add(o);toast(t?"Gespeichert":"Aufgabe angelegt")};
-    if($("tDel"))$("tDel").onclick=async()=>{if(!sure){rd();sure=true;draw();return}closeSheet();await store.del(t.id);toast("Aufgabe gelöscht")};
+    if($("tDel"))$("tDel").onclick=async()=>{rd();if(!await askConfirm(`Aufgabe „${t.titel}“ wirklich löschen?`))return;closeSheet();await store.del(t.id);toast("Aufgabe gelöscht")};
   };draw();
 }
 function openRewardSheet(r){
@@ -692,15 +713,129 @@ function openRewardSheet(r){
     <label class="f">Belohnung<input id="rTit" value="${esc(d.titel)}" placeholder="z. B. Kinobesuch, Pizza-Abend"></label>
     <label class="f">Kostet so viele Sterne<input id="rCost" type="number" inputmode="numeric" min="1" max="999" value="${+d.kosten||10}"></label>
     <div class="actions"><button class="btn" id="rSave">${r?"Speichern":"Belohnung anlegen"}</button><button class="btn ghost" id="rCancel">Abbrechen</button></div>
-    ${r?`<button class="btn danger" id="rDel">${sure?"Wirklich löschen? Nochmal tippen":"Belohnung löschen"}</button>`:""}`);
+    ${r?`<button class="btn danger" id="rDel">Belohnung löschen</button>`:""}`);
     const $=id=>document.getElementById(id);
     $("rCancel").onclick=closeSheet;
     $("rSave").onclick=async()=>{const ti=$("rTit").value.trim(),k=Math.max(1,Math.min(999,parseInt($("rCost").value,10)||0));if(!ti){toast("Bitte eine Belohnung eintragen");return}if(!store)return;
       closeSheet();const o={typ:"belohnung",titel:ti.slice(0,120),kosten:k};if(r)await store.set(r.id,o);else await store.add(o);toast("Gespeichert")};
-    if($("rDel"))$("rDel").onclick=async()=>{if(!sure){d.titel=$("rTit").value;d.kosten=$("rCost").value;sure=true;draw();return}closeSheet();await store.del(r.id);toast("Belohnung gelöscht")};
+    if($("rDel"))$("rDel").onclick=async()=>{d.titel=$("rTit").value;d.kosten=$("rCost").value;if(!await askConfirm(`Belohnung „${r.titel}“ wirklich löschen?`))return;closeSheet();await store.del(r.id);toast("Belohnung gelöscht")};
   };draw();
 }
 
+/* ---------- Nur-Lese-Links ---------- */
+let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
+async function ensureMember(cfg){
+  if(memberOK)return true;
+  try{
+    if(!firebase.auth)throw{code:"no-auth"};
+    const a=firebase.auth();
+    if(!a.currentUser)await a.signInAnonymously();
+    await FS.doc(`familien/${cfg.code}/mitglieder/${a.currentUser.uid}`).set({seit:today},{merge:true});
+    memberOK=true;scheduleMirror();return true;
+  }catch(e){memberOK=false;memberErr=e&&e.code||"";console.warn("Mitglied",e);return false}
+}
+function mirrorData(l){
+  const sp=l.spalten||[];
+  return entries.filter(e=>sp.includes(e.person)).map(e=>{const o={typ:e.typ,person:e.person,titel:e.titel||"",datum:e.datum};
+    if(e.endDatum)o.endDatum=e.endDatum;if(e.von)o.von=e.von;if(e.bis)o.bis=e.bis;if(e.geburtsjahr)o.geburtsjahr=e.geburtsjahr;return o})
+    .sort((a,b)=>(a.datum+a.person+(a.von||"")+a.titel)<(b.datum+b.person+(b.von||"")+b.titel)?-1:1);
+}
+function scheduleMirror(){clearTimeout(mirrorTimer);mirrorTimer=setTimeout(syncMirrors,2500)}
+async function syncMirrors(){
+  if(!memberOK||!FS||!LESE.length)return;
+  for(const l of LESE){
+    const body={namen:NAMES,spalten:l.spalten,name:l.name||"",eintraege:mirrorData(l)};
+    const key=JSON.stringify(body);let last="";try{last=localStorage.getItem("fk-mirror-"+l.rc)||""}catch(e){}
+    if(key===last)continue;
+    try{await FS.doc(`lesen/${l.rc}`).set({...body,stand:new Date().toISOString()});try{localStorage.setItem("fk-mirror-"+l.rc,key)}catch(e){}}catch(e){console.warn("Spiegel",e)}
+  }
+}
+async function createReadLink(name,spalten){
+  const cfg=getCfg();if(!await ensureMember(cfg)){showAuthHelp();return}
+  const rc=newCode();
+  try{
+    await FS.doc(`leselinks/${rc}`).set({fam:cfg.code});
+    const neu=[...LESE.filter(l=>l.rc!==rc),{rc,name,spalten}];
+    await store.conf({lesen:neu});LESE=neu;
+    await FS.doc(`lesen/${rc}`).set({namen:NAMES,spalten,name,eintraege:mirrorData({spalten}),stand:new Date().toISOString()});
+    toast("Nur-Lese-Link erstellt");showSettings();
+  }catch(e){console.warn(e);showAuthHelp()}
+}
+async function removeReadLink(rc){
+  const l=LESE.find(x=>x.rc===rc);
+  if(!await askConfirm(`Nur-Lese-Link${l&&l.name?" für "+l.name:""} löschen? Wer ihn hat, sieht danach nichts mehr.`,"Link löschen"))return;
+  try{await FS.doc(`lesen/${rc}`).delete()}catch(e){}
+  try{await FS.doc(`leselinks/${rc}`).delete()}catch(e){}
+  LESE=LESE.filter(x=>x.rc!==rc);await store.conf({lesen:LESE});toast("Link gelöscht");showSettings();
+}
+const readLink=rc=>location.origin+location.pathname+"#lesen="+rc;
+function showAuthHelp(){
+  sheet("Einmalig in Firebase einschalten",`<p>Für Nur-Lese-Links muss in deinem Firebase-Projekt einmal die <b>anonyme Anmeldung</b> eingeschaltet und die Regeln erweitert werden. Das dauert 2 Minuten:</p>
+    <ol class="steps"><li>console.firebase.google.com → Projekt <b>familienkalender</b></li>
+    <li>Links <b>Sicherheit → Authentication</b> → „Jetzt starten“ → Reiter <b>Anmeldemethode</b> → <b>Anonym</b> → aktivieren → Speichern</li>
+    <li><b>Firestore → Regeln</b>: den Text aus der Datei <b>firestore.rules</b> im GitHub-Projekt einfügen → Veröffentlichen</li>
+    <li>App neu laden und nochmal versuchen</li></ol>
+    <p class="hint">Fehlercode: ${esc(memberErr||"unbekannt")}</p>
+    <div class="actions"><button class="btn ghost" id="ahClose">Schließen</button></div>`);
+  document.getElementById("ahClose").onclick=closeSheet;
+}
+function readLinkSection(){
+  const rows=LESE.map(l=>`<div class="rw"><div class="rw-head"><b>${esc(l.name||"Nur-Lese-Link")}</b><span class="hint">sieht: ${(l.spalten||[]).map(k=>esc(PNAME[k]||k)).join(", ")}</span></div>
+    <div class="linkbox">${esc(readLink(l.rc))}</div>
+    <div class="rw-btns"><button data-rlcopy="${l.rc}">Link kopieren</button><a class="btn ghost" style="padding:7px 10px;font-size:.82rem;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("Hier siehst du unsere Termine: "+readLink(l.rc))}">Per WhatsApp</a><button data-rldel="${l.rc}">Link löschen</button></div></div>`).join("");
+  return `<h4 class="sub">Nur-Lese-Links (z. B. für Papa)</h4>
+    <p class="hint">Wer diesen Link öffnet, kann die ausgewählten Spalten <b>nur ansehen</b>, nichts ändern und nichts von den anderen Spalten sehen. Änderungen erscheinen bei ihm automatisch, sobald ein Familien-Handy die App geöffnet hat.</p>
+    ${rows}
+    <div class="rw"><label class="f">Für wen?<input id="rlName" maxlength="30" placeholder="z. B. Papa von John"></label>
+      <span class="lbl-s">Welche Spalten darf er sehen?</span>
+      <div class="rw-btns">${PEOPLE.map(([k,n])=>`<label class="pick"><input type="checkbox" data-rlsp="${k}" ${k==="john"?"checked":""}> ${esc(n)}</label>`).join("")}</div>
+      <button class="btn ghost" id="rlNew">Nur-Lese-Link erstellen</button></div>`;
+}
+function wireReadLinks(){
+  const n=document.getElementById("rlNew");
+  if(n)n.onclick=()=>{const sp=[...document.querySelectorAll("[data-rlsp]")].filter(x=>x.checked).map(x=>x.dataset.rlsp);if(!sp.length){toast("Bitte mindestens eine Spalte auswählen");return}createReadLink(document.getElementById("rlName").value.trim(),sp)};
+  document.querySelectorAll("[data-rlcopy]").forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(readLink(b.dataset.rlcopy));toast("Link kopiert")}catch(e){toast("Bitte den Link markieren und kopieren")}});
+  document.querySelectorAll("[data-rldel]").forEach(b=>b.onclick=()=>removeReadLink(b.dataset.rldel));
+}
+/* Lesemodus (für Papa) */
+let READONLY=false;
+function startReader(cfg){
+  READONLY=true;document.body.classList.add("ro");
+  if(view==="sterne")view="woche";
+  store=null;setStatus("Nur ansehen · lade Termine …");
+  if(!window.firebase){setStatus("Keine Verbindung. Bitte später erneut öffnen.");return}
+  try{
+    const app=firebase.apps.length?firebase.app():firebase.initializeApp(cfg.firebase||DEFAULT_FIREBASE);
+    const fs=firebase.firestore(app);
+    fs.doc(`lesen/${cfg.lesen}`).onSnapshot(doc=>{
+      if(!doc.exists){entries=[];render();setStatus("Dieser Link ist nicht mehr gültig.");return}
+      const d=doc.data();if(Array.isArray(d.namen))applyNames(d.namen);
+      const sp=Array.isArray(d.spalten)&&d.spalten.length?d.spalten:PEOPLE.map(([k])=>k);
+      PEOPLE=PEOPLE.filter(([k])=>sp.includes(k));
+      document.documentElement.style.setProperty("--ncol",String(PEOPLE.length));
+      const h1=document.querySelector("h1");if(h1)h1.textContent=PEOPLE.length===1?`Termine von ${PEOPLE[0][1]}`:"Familienkalender";
+      const lg=document.querySelector(".legend");if(lg)lg.innerHTML=PEOPLE.map(([k,n])=>`<div class="p-${k}">${esc(n)}</div>`).join("");
+      entries=(d.eintraege||[]).map((e,i)=>({...e,id:"r"+i}));
+      const st=d.stand?new Date(d.stand):null;
+      setStatus(`Nur ansehen${d.name?" · "+d.name:""}${st?" · Stand "+st.toLocaleDateString("de-DE")+" "+st.toTimeString().slice(0,5):""}`);
+      render();
+    },()=>setStatus("Termine konnten nicht geladen werden."));
+  }catch(e){setStatus("Termine konnten nicht geladen werden.")}
+}
+
+/* ---------- Rückfrage-Dialog ---------- */
+function askConfirm(text,ok="Löschen",danger=true){
+  return new Promise(res=>{
+    const host=document.createElement("div");host.className="cbackdrop";
+    host.innerHTML=`<div class="cdialog" role="alertdialog" aria-modal="true" aria-labelledby="cdT"><p id="cdT">${esc(text)}</p>
+      <div class="actions"><button class="btn ghost" data-a="0">Abbrechen</button><button class="btn ${danger?"danger solid":""}" data-a="1">${esc(ok)}</button></div></div>`;
+    document.body.appendChild(host);
+    const done=v=>{host.remove();document.removeEventListener("keydown",kd);res(v)};
+    const kd=ev=>{if(ev.key==="Escape")done(false)};document.addEventListener("keydown",kd);
+    host.onclick=ev=>{const b=ev.target.closest("[data-a]");if(b)done(b.dataset.a==="1");else if(ev.target===host)done(false)};
+    setTimeout(()=>{const b=host.querySelector('[data-a="0"]');if(b)b.focus()},30);
+  });
+}
 function calNr(){const c=getCfg();return c&&c.code?c.code.slice(0,4).toUpperCase():"–"}
 function joinFromText(t){const m=String(t||"").match(/#join=([^\s&]+)/);const v=m?m[1]:String(t||"").trim().toLowerCase();
   if(!/^[a-z2-9]{18,}$/.test(v)&&!m){toast("Das ist kein gültiger Einladungslink");return}
@@ -753,7 +888,7 @@ const ferienOf=day=>{const f=FERIEN.find(([n,a,b])=>a<=day&&day<=b);return f?f[0
 let view="woche";try{view=localStorage.getItem("fk-view")||"woche"}catch(e){}
 let monthCur=iso(new Date()).slice(0,7)+"-01",yearCur=new Date().getFullYear();
 const MONL=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
-function setView(v){view=v;try{localStorage.setItem("fk-view",v)}catch(e){}render();window.scrollTo({top:0})}
+function setView(v){if(READONLY&&v==="sterne")v="woche";view=v;try{localStorage.setItem("fk-view",v)}catch(e){}render();window.scrollTo({top:0})}
 function render(){
   today=iso(new Date());
   document.querySelectorAll(".tabs [data-view]").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.view===view)));
@@ -923,10 +1058,12 @@ function drawSheet(){
   $("save").onclick=()=>{read();save()};
   if($("cont7"))$("cont7").onclick=()=>{read();continueSeries(7)};
   if($("cont14"))$("cont14").onclick=()=>{read();continueSeries(14)};
-  if($("del"))$("del").onclick=()=>{read();confirmDel=true;drawSheet()};
+  if($("del"))$("del").onclick=async()=>{read();
+    if(d.serie&&series>1){confirmDel=true;drawSheet();return}
+    if(await askConfirm(`„${d.typ==="geburtstag"?"Geburtstag "+d.titel:d.titel||TYPN[d.typ]}“ wirklich löschen?`)){await store.del(editId);closeSheet();toast("Gelöscht")}};
   if($("delNo"))$("delNo").onclick=()=>{confirmDel=false;drawSheet()};
-  if($("delOne"))$("delOne").onclick=async()=>{await store.del(editId);closeSheet();toast("Gelöscht")};
-  if($("delSeries"))$("delSeries").onclick=async()=>{const ids=entries.filter(x=>x.serie===d.serie).map(x=>x.id);closeSheet();for(const id of ids)await store.del(id);toast(`${ids.length} Einträge gelöscht`)};
+  if($("delOne"))$("delOne").onclick=async()=>{if(!await askConfirm("Nur diesen einen Eintrag löschen?"))return;await store.del(editId);closeSheet();toast("Gelöscht")};
+  if($("delSeries"))$("delSeries").onclick=async()=>{const ids=entries.filter(x=>x.serie===d.serie).map(x=>x.id);if(!await askConfirm(`Wirklich die ganze Serie mit ${ids.length} Einträgen löschen?`,"Serie löschen"))return;closeSheet();for(const id of ids)await store.del(id);toast(`${ids.length} Einträge gelöscht`)};
 }
 function clean(d){
   const o={typ:d.typ,person:d.person,titel:d.titel||"",datum:d.datum,endDatum:(d.endDatum&&d.endDatum>d.datum)?d.endDatum:"",
@@ -1172,6 +1309,7 @@ async function saveFound(){
 
 /* ---------- Ereignisse ---------- */
 document.getElementById("days").addEventListener("click",ev=>{
+  if(READONLY)return;
   const chip=ev.target.closest(".chip");
   if(chip){const e=entries.find(x=>x.id===chip.dataset.id);if(e)openSheet(e);return}
   const cell=ev.target.closest(".cell");if(cell)openSheet(null,{day:cell.dataset.day,person:cell.dataset.person});

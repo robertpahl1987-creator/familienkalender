@@ -73,3 +73,10 @@ service cloud.firestore {
 - **Wichtig:** Oben im Abschnitt „Anbieter (Impressum)“ müssen noch deine Anschrift und E-Mail-Adresse eingetragen werden (gelb markiert).
 - Die App lädt keine Google-Schriften und nutzt kein Google Analytics.
 - Unter „Teilen & Einstellungen“ gibt es „Alle Termine exportieren (.ics)“ und „Kalender endgültig löschen“.
+
+## Nur-Lese-Links (z. B. für Papa) – einmalig einschalten
+
+1. console.firebase.google.com → Projekt **familienkalender**
+2. Links **Sicherheit → Authentication** → „Jetzt starten“ → Reiter **Anmeldemethode** → **Anonym** → aktivieren → Speichern
+3. **Firestore Database → Regeln**: alles ersetzen durch den Inhalt von `firestore.rules` → **Veröffentlichen**
+4. In der App: Personen-Symbol → „Nur-Lese-Links“ → Name eingeben, Spalte(n) wählen → „Nur-Lese-Link erstellen“
