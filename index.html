@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Familienkalender</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#1f5f7a">
+<meta name="theme-color" content="#15394b">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -16,25 +16,25 @@
 html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
 /* Layout: Wochenansicht, je Tag eine Zeile mit 4 Spalten (Christin · John · Robert · Gemeinsam), Morgen-Übersicht oben, Eingabe im Bottom-Sheet */
 :root{
-  --bg:#eef2f4; --surface:#ffffff; --fg:#17232b; --muted:#5d6d77; --line:#d5dde2;
-  --accent:#1f5f7a;
-  --c-christin:#c2416b; --c-christin-bg:#fbe7ee;
-  --c-john:#1f7a6e; --c-john-bg:#e0f3ef;
-  --c-robert:#b5681a; --c-robert-bg:#fbefe1;
-  --c-gem:#5b4bb0; --c-gem-bg:#ebe8fa;
-  --work:#33434d; --work-bg:#e4e9ec;
-  --vac:#2f7d32; --vac-bg:#e2f2df;
-  --today:#fff7d6; --fer:#dcecf9; --fer-fg:#1d5a86; --feier:#c0392b;
+  --bg:#cdd7dd; --surface:#e9eef1; --fg:#0f181e; --muted:#43525b; --line:#b3c0c8;
+  --accent:#174a61; --band:#15394b; --on-band:#eef6fa; --on-band-dim:#a9c4d2;
+  --c-christin:#b3305c; --c-christin-bg:#f2d0dc;
+  --c-john:#156a5f; --c-john-bg:#c6e6de;
+  --c-robert:#a35a10; --c-robert-bg:#f1d9bb;
+  --c-gem:#4d3ea3; --c-gem-bg:#d8d1f3;
+  --work:#25343d; --work-bg:#d0d9de;
+  --vac:#246b27; --vac-bg:#cbe5c6;
+  --today:#f3e2a3; --fer:#bfd8ee; --fer-fg:#164e78; --feier:#b02a1c;
   --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
   --f-body:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#10181d; --surface:#18232a; --fg:#e6edf1; --muted:#97a7b0; --line:#2a3842; --accent:#6bb7d6;
+  --bg:#0d1418; --surface:#162026; --fg:#e6edf1; --muted:#97a7b0; --line:#28353e; --accent:#6bb7d6; --band:#1b3442; --on-band:#eef6fa; --on-band-dim:#9ab6c4;
   --c-christin:#f08aaa; --c-christin-bg:#3a1f2a; --c-john:#6fd1c2; --c-john-bg:#16332f;
   --c-robert:#f0b26b; --c-robert-bg:#3a2a17; --c-gem:#a99bf2; --c-gem-bg:#2a2548;
   --work:#c9d4da; --work-bg:#26333b; --vac:#8bd08e; --vac-bg:#1d3320; --today:#2c2a1a; --fer:#17324a; --fer-fg:#9ccbf0; --feier:#ff8a7a; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#10181d; --surface:#18232a; --fg:#e6edf1; --muted:#97a7b0; --line:#2a3842; --accent:#6bb7d6;
+  --bg:#0d1418; --surface:#162026; --fg:#e6edf1; --muted:#97a7b0; --line:#28353e; --accent:#6bb7d6; --band:#1b3442; --on-band:#eef6fa; --on-band-dim:#9ab6c4;
   --c-christin:#f08aaa; --c-christin-bg:#3a1f2a; --c-john:#6fd1c2; --c-john-bg:#16332f;
   --c-robert:#f0b26b; --c-robert-bg:#3a2a17; --c-gem:#a99bf2; --c-gem-bg:#2a2548;
   --work:#c9d4da; --work-bg:#26333b; --vac:#8bd08e; --vac-bg:#1d3320; --today:#2c2a1a; --fer:#17324a; --fer-fg:#9ccbf0; --feier:#ff8a7a; color-scheme:dark}
@@ -46,11 +46,21 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 h1{font-family:var(--f-display);font-weight:700;font-size:1.6rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
 .top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
 .status{font-size:.8rem;color:var(--muted)}
+.appbar{background:var(--band);color:var(--on-band);border-radius:18px;padding:14px 14px 10px;display:flex;flex-direction:column;gap:12px;box-shadow:0 6px 18px rgba(8,25,35,.22)}
+.appbar .top{align-items:center;flex-wrap:nowrap}
+.appbar h1{font-size:1.45rem}
+.appbar .status{color:var(--on-band-dim)}
+.appbar .gear{background:rgba(255,255,255,.12);border:0;color:var(--on-band);flex:none}
+.appbar .tabs{background:rgba(0,0,0,.18);border:0}
+.appbar .tabs button{color:var(--on-band-dim)}
+.appbar .tabs button[aria-selected="true"]{background:var(--on-band);color:var(--band)}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 /* Morgen-Übersicht */
-.morning{background:var(--surface);border:2px solid var(--accent);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.morning{background:var(--surface);border-left:5px solid var(--accent);border-radius:14px;padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center}
+.morning ul{grid-column:1/-1}
+.morning #mAck{padding:8px 14px;font-size:.88rem}
 .morning h2{font-family:var(--f-display);font-size:1.15rem;margin:0}
 .morning ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
 .morning li{display:flex;gap:8px;align-items:baseline}
@@ -194,6 +204,7 @@ textarea.cfg{font:inherit;font-size:.8rem;font-family:ui-monospace,monospace;col
 <body>
 
 <div class="wrap">
+  <header class="appbar">
   <div class="top">
     <div>
       <h1>Familienkalender</h1>
@@ -201,16 +212,16 @@ textarea.cfg{font:inherit;font-size:.8rem;font-family:ui-monospace,monospace;col
     </div>
     <button class="gear" id="gear" aria-label="Einstellungen und Familie einladen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M17 8v6M14 11h6"/></svg></button>
   </div>
-
-  <section class="morning" id="morning" hidden>
-    <h2 id="mTitle">Guten Morgen</h2>
-    <ul id="mList"></ul>
-    <button class="btn" id="mAck">Gelesen ✓</button>
-  </section>
-
   <div class="tabs" role="tablist" aria-label="Ansicht">
     <button role="tab" data-view="woche">Woche</button><button role="tab" data-view="monat">Monat</button><button role="tab" data-view="jahr">Jahr</button><button role="tab" data-view="ferien">Ferien</button>
   </div>
+  </header>
+
+  <section class="morning" id="morning" hidden>
+    <h2 id="mTitle">Guten Morgen</h2>
+    <button class="btn" id="mAck">Gelesen ✓</button>
+    <ul id="mList"></ul>
+  </section>
   <div class="nav" id="navbar">
     <button class="arrow" id="prev" aria-label="Zurück">‹</button>
     <div class="lbl" id="weekLbl"></div>
@@ -447,7 +458,7 @@ function renderWeek(){
   const wEnd=addDays(weekStart,6);
   const a=parse(weekStart),b=parse(wEnd);
   const kw=isoWeek(a);
-  document.getElementById("weekLbl").textContent=`KW ${kw} · ${a.getDate()}. ${MON[a.getMonth()]} – ${b.getDate()}. ${MON[b.getMonth()]} ${b.getFullYear()}`;
+  document.getElementById("weekLbl").textContent=`KW ${kw} · ${a.getDate()}.${a.getMonth()===b.getMonth()?"":" "+MON[a.getMonth()]+" "}–${b.getDate()}. ${MON[b.getMonth()]}`;
   let html="";
   for(let i=0;i<7;i++){
     const day=addDays(weekStart,i);const d=parse(day);
