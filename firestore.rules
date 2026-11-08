@@ -11,6 +11,23 @@ service cloud.firestore {
     function darfSchreiben(code) {
       return istMitglied(code) && get(mitglied(code)).data.get('rolle', 'schreiben') != 'lesen';
     }
+    // Kinder-Handy: sieht im Kalender nur die eigene Spalte, darf nur eigene Einträge und offene Häkchen anlegen
+    function kindVon(code) {
+      return get(mitglied(code)).data.get('kind', '');
+    }
+    function istKind(code) {
+      return kindVon(code) != '';
+    }
+    function darfVerwalten(code) {
+      return darfSchreiben(code) && !istKind(code);
+    }
+    function kindDarf(code, d) {
+      return (d.get('typ', 'termin') in ['termin', 'arbeit', 'urlaub', 'geburtstag']
+          && (d.get('person', '') == kindVon(code)
+              || (d.get('person', '') == 'gemeinsam' && get(mitglied(code)).data.get('kindGem', false) == true)))
+        || (d.get('typ', '') in ['erledigt', 'einloesung']
+          && d.get('offen', false) == true && d.get('person', '') == kindVon(code));
+    }
     function istAdmin() {
       return request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
@@ -32,24 +49,28 @@ service cloud.firestore {
 
     match /familien/{code}/eintraege/{eintrag} {
       allow read: if code.size() >= 18 && !gesperrt(code);
-      allow create: if code.size() >= 18 && darfSchreiben(code) && !gesperrt(code) && schutzNurEigen();
-      allow update: if code.size() >= 18 && darfSchreiben(code) && !gesperrt(code) && (
+      allow create: if code.size() >= 18 && darfSchreiben(code) && !gesperrt(code) && schutzNurEigen()
+        && (!istKind(code) || kindDarf(code, request.resource.data));
+      allow update: if code.size() >= 18 && darfSchreiben(code) && !gesperrt(code)
+        && (!istKind(code) || (resource.data.get('ersteller', '') == request.auth.uid
+            && kindDarf(code, resource.data) && kindDarf(code, request.resource.data))) && (
         (vomErsteller() && erstellerBleibt() && schutzNurEigen())
         || (resource.data.get('geschuetzt', false) == true
             && request.resource.data.get('geschuetzt', false) == true
             && request.resource.data.get('ersteller', '') == resource.data.get('ersteller', '')));
-      allow delete: if code.size() >= 18 && darfSchreiben(code) && !gesperrt(code) && vomErsteller();
+      allow delete: if code.size() >= 18 && darfSchreiben(code) && !gesperrt(code) && vomErsteller()
+        && (!istKind(code) || (resource.data.get('ersteller', '') == request.auth.uid && kindDarf(code, resource.data)));
       allow read, delete: if istAdmin();
     }
 
     // Private Termine: nur für ausgewählte Mitglieder (Liste "sichtbar") lesbar
     match /familien/{code}/privat/{id} {
       allow read: if request.auth != null && request.auth.uid in resource.data.sichtbar && !gesperrt(code);
-      allow create: if code.size() >= 18 && darfSchreiben(code) && !gesperrt(code)
+      allow create: if code.size() >= 18 && darfVerwalten(code) && !gesperrt(code)
         && request.resource.data.ersteller == request.auth.uid
         && request.resource.data.sichtbar is list && request.resource.data.sichtbar.size() <= 30
         && request.auth.uid in request.resource.data.sichtbar;
-      allow update: if code.size() >= 18 && darfSchreiben(code) && !gesperrt(code)
+      allow update: if code.size() >= 18 && darfVerwalten(code) && !gesperrt(code)
         && request.auth.uid in resource.data.sichtbar && (
           (resource.data.ersteller == request.auth.uid && request.resource.data.ersteller == request.auth.uid
             && request.resource.data.sichtbar is list && request.resource.data.sichtbar.size() <= 30
@@ -72,14 +93,16 @@ service cloud.firestore {
               || (request.resource.data.get('token', '').size() >= 18
                   && exists(/databases/$(database)/documents/familien/$(code)/einladungen/$(request.resource.data.get('token', '')))))));
       allow update: if (request.auth != null && request.auth.uid == uid
-          && request.resource.data.get('rolle', 'schreiben') == resource.data.get('rolle', 'schreiben'))
-        || darfSchreiben(code);
-      allow delete: if darfSchreiben(code);
+          && request.resource.data.get('rolle', 'schreiben') == resource.data.get('rolle', 'schreiben')
+          && request.resource.data.get('kind', '') == resource.data.get('kind', '')
+          && request.resource.data.get('kindGem', false) == resource.data.get('kindGem', false))
+        || darfVerwalten(code);
+      allow delete: if darfVerwalten(code);
     }
 
     match /familien/{code}/einladungen/{tok} {
-      allow read, delete: if darfSchreiben(code);
-      allow create: if tok.size() >= 18 && darfSchreiben(code);
+      allow read, delete: if darfVerwalten(code);
+      allow create: if tok.size() >= 18 && darfVerwalten(code);
     }
 
     // Support: jeder darf schicken, Absender kann seine eigene Nachricht (über die geheime ID) abrufen
@@ -176,8 +199,8 @@ service cloud.firestore {
 
     match /leselinks/{rc} {
       allow read, update: if false;
-      allow create: if rc.size() >= 18 && darfSchreiben(request.resource.data.fam);
-      allow delete: if darfSchreiben(resource.data.fam);
+      allow create: if rc.size() >= 18 && darfVerwalten(request.resource.data.fam);
+      allow delete: if darfVerwalten(resource.data.fam);
     }
 
     match /lesen/{rc} {
