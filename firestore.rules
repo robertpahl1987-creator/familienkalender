@@ -148,6 +148,27 @@ service cloud.firestore {
       }
     }
 
+    // Premium: Empfehlungen und verschenkte Stufen
+    match /refs/{ref} {
+      allow create: if ref.size() == 8 && request.auth != null
+        && request.resource.data.keys().hasOnly(['fam', 'zeit'])
+        && darfSchreiben(request.resource.data.fam);
+      allow read: if istAdmin();
+
+      match /neu/{uid} {
+        allow create: if request.auth != null && request.auth.uid == uid
+          && exists(/databases/$(database)/documents/refs/$(ref))
+          && !istMitglied(get(/databases/$(database)/documents/refs/$(ref)).data.fam)
+          && request.resource.data.keys().hasOnly(['zeit'])
+          && request.resource.data.zeit == request.time;
+        allow read: if istAdmin() || istMitglied(get(/databases/$(database)/documents/refs/$(ref)).data.fam);
+      }
+    }
+    match /premium/{code} {
+      allow get: if code.size() >= 18;
+      allow list, write: if istAdmin();
+    }
+
     match /admins/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
       allow write: if false;
