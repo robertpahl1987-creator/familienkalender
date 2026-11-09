@@ -22,7 +22,7 @@ service cloud.firestore {
       return darfSchreiben(code) && !istKind(code);
     }
     function kindDarf(code, d) {
-      return (d.get('typ', 'termin') in ['termin', 'arbeit', 'urlaub', 'geburtstag']
+      return (d.get('typ', 'termin') in ['termin', 'arbeit', 'urlaub', 'ferien', 'geburtstag']
           && (d.get('person', '') == kindVon(code)
               || (d.get('person', '') == 'gemeinsam' && get(mitglied(code)).data.get('kindGem', false) == true)))
         || (d.get('typ', '') in ['erledigt', 'einloesung']
