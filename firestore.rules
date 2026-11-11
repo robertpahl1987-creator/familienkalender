@@ -100,6 +100,17 @@ service cloud.firestore {
       allow delete: if darfVerwalten(code);
     }
 
+    // Foto-Beweise: nur für die eigene Familie, werden nach der Bewertung gelöscht
+    match /familien/{code}/fotos/{id} {
+      allow read: if istMitglied(code);
+      allow create: if code.size() >= 18 && darfSchreiben(code) && !gesperrt(code)
+        && request.resource.data.keys().hasOnly(['bild', 'person', 'zeit', 'ersteller'])
+        && request.resource.data.bild is string && request.resource.data.bild.size() < 700000
+        && request.resource.data.ersteller == request.auth.uid;
+      allow delete: if darfVerwalten(code)
+        || (istMitglied(code) && resource.data.ersteller == request.auth.uid);
+    }
+
     match /familien/{code}/einladungen/{tok} {
       allow read, delete: if darfVerwalten(code);
       allow create: if tok.size() >= 18 && darfVerwalten(code);
