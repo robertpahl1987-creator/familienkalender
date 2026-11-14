@@ -989,7 +989,7 @@ async function init(){
     if(loc.length&&ROLE!=="lesen"){for(const e of loc){const{id,...o}=e;await col.add(o)}localStorage.removeItem("familienkalender-lokal");toast(`${loc.length} Einträge übernommen`)}}catch(e){}
   const timer=setTimeout(()=>setStatus("Offline · Änderungen werden später übertragen"),10000);
   ensureMember(cfg);
-  try{if(sessionStorage.getItem("fk-invite")){sessionStorage.removeItem("fk-invite");setTimeout(showSettings,400)}}catch(e){}
+  try{if(sessionStorage.getItem("fk-invite")){sessionStorage.removeItem("fk-invite");setTimeout(showEinladen,900)}}catch(e){}
   col.onSnapshot({includeMetadataChanges:true},snap=>{
     const conf=snap.docs.find(d=>d.id==="_config");
     if(conf){const n=conf.data().namen,ks=conf.data().personen;if(Array.isArray(n)){setPersons(Array.isArray(ks)&&ks.length===n.length?ks:BASE_SLOTS.slice(0,n.length),n);try{localStorage.setItem("fk-namen",JSON.stringify(n))}catch(e){}}}
@@ -1004,7 +1004,7 @@ async function init(){
     else if(!snap.metadata.fromCache){clearTimeout(timer);setStatus(`${nr}alles übertragen ✓`)}
     else setStatus(`${nr}offline, zeigt gespeicherten Stand`);
     render();
-    if(!snap.metadata.fromCache&&!snap.metadata.hasPendingWrites){scheduleMirror();autoBackup();setTimeout(maybeKidPack,4000);setTimeout(runAbzug,6000);setTimeout(runBonus,8000);setTimeout(showKidNews,2500)}
+    if(!snap.metadata.fromCache&&!snap.metadata.hasPendingWrites){scheduleMirror();autoBackup();setTimeout(maybeKidPack,4000);setTimeout(runAbzug,6000);setTimeout(runBonus,8000);setTimeout(showKidNews,2500);setTimeout(maybeEmpfehlen,20000)}
   },err=>{clearTimeout(timer);setStatus(err&&err.code==="permission-denied"?"Kein Zugriff · Datenbank-Regeln prüfen (Anleitung Schritt 4)":"Fehler beim Laden der Termine");});
 }
 
@@ -2067,7 +2067,7 @@ function showIntro(){
     <h2>So einfach geht's</h2><ol class="intro-steps"><li><b>Anlegen:</b> Namen eintragen, fertig. Kein Konto, keine E-Mail.</li><li><b>Einladen:</b> Link per WhatsApp an die Familie schicken.</li><li><b>Installieren:</b> „📲 Als App installieren“, dann liegt er wie eine App auf dem Startbildschirm.</li></ol>
     <h2>Häufige Fragen</h2><details><summary>Was kostet das?</summary><p>Nichts. Keine Werbung, kein Abo.</p></details><details><summary>Wer sieht unsere Termine?</summary><p>Nur wer euren Einladungslink bekommt. Jede Familie hat ihren eigenen, geheimen Kalender.</p></details><details><summary>Brauche ich ein Konto?</summary><p>Nein. Einfach anlegen und loslegen.</p></details>
     <div class="intro-cta"><button class="btn" id="inDemo2">👀 Beispiel-Familie ansehen</button></div>
-    <p class="intro-foot"><a href="datenschutz.html">Datenschutz & Impressum</a></p></div>`;
+    <p class="intro-foot"><a href="familienkalender.html">Mehr über den Familienkalender</a> · <a href="datenschutz.html">Datenschutz & Impressum</a></p></div>`;
   document.body.appendChild(el);document.body.classList.add("introopen");
   const zu=()=>{el.remove();document.body.classList.remove("introopen");try{localStorage.setItem("fk-intro","1")}catch(e){}};
   const demo=()=>{zu();startDemo()};
@@ -2102,6 +2102,41 @@ function startDemo(){
   document.body.appendChild(bar);
   bar.querySelector("#demoGo").onclick=()=>{try{sessionStorage.setItem("fk-setup","1")}catch(e){}location.reload()};
   view="woche";render();toast("👀 Das ist eine Beispiel-Familie. Schau dir Woche, Familie und Sterne an!");
+}
+/* ---------- Einladen nach dem Anlegen & Empfehlen ---------- */
+async function showEinladen(){
+  const c=getCfg();if(!c||!c.code){showSettings();return}
+  let link=inviteLink(c);try{await ensureMember(c);link=writeLink(c,await getWriteToken())}catch(e){}
+  const txt=`Ich habe uns einen Familienkalender angelegt 📅 Tipp auf den Link, dann bist du dabei und siehst alle Termine:\n${link}`;
+  sheet("🎉 Euer Kalender ist bereit!",`<p style="margin-top:0">Jetzt noch die Familie einladen. Dann sieht jeder alle Termine live auf seinem Handy.</p>
+    <a class="btn" href="https://wa.me/?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener" style="display:block;text-align:center;margin-bottom:8px">💬 Per WhatsApp einladen</a>
+    ${navigator.share?`<button class="btn ghost" id="eiShare" style="width:100%;margin-bottom:8px">📤 Anders teilen …</button>`:""}
+    <button class="btn ghost" id="eiCopy" style="width:100%;margin-bottom:8px">📋 Link kopieren</button>
+    <p class="hint">Mit diesem Link darf man mitschreiben. Für Großeltern oder den anderen Elternteil gibt es unter Einstellungen → Familie einladen auch „Nur lesen“.</p>
+    <button class="btn ghost" id="eiLater" style="width:100%">Später</button>`);
+  const sh=document.getElementById("eiShare");if(sh)sh.onclick=()=>navigator.share({title:"Familienkalender",text:txt}).catch(()=>{});
+  document.getElementById("eiCopy").onclick=async()=>{try{await navigator.clipboard.writeText(link);toast("Link kopiert ✓")}catch(e){toast("Kopieren ging nicht")}};
+  document.getElementById("eiLater").onclick=closeSheet;
+}
+async function maybeEmpfehlen(){
+  if(KID||READONLY||IS_READER_SITE||ROLE!=="schreiben"||!store||store.mode!=="db"||document.querySelector("#sheetHost .sheet"))return;
+  let st=lsGet("fk-start");if(!st){try{localStorage.setItem("fk-start",today)}catch(e){}return}
+  const nx=lsGet("fk-empf");if(nx==="nie"||(nx&&nx>today))return;
+  if(diffDays(st,today)<14)return;
+  let r="";try{r=await ensureRef()}catch(e){}
+  const link=r?refLink(r):"https://familien-kalender.github.io/";
+  const txt=`Wir nutzen seit ein paar Wochen diesen kostenlosen Familienkalender 📅 Alle Termine, Einkaufsliste und Sterne für die Kinder an einem Ort. Ohne Anmeldung, ohne Werbung. Einfach auf „Erst mal ausprobieren“ tippen:\n${link}`;
+  sheet("💛 Gefällt euch der Kalender?",`<p style="margin-top:0">Ihr nutzt den Familienkalender jetzt seit über 2 Wochen. Wenn er euch hilft: Erzählt befreundeten Familien davon! Er ist kostenlos und bleibt es.</p>
+    <a class="btn" id="emWa" href="https://wa.me/?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener" style="display:block;text-align:center;margin-bottom:8px">💬 Per WhatsApp empfehlen</a>
+    ${navigator.share?`<button class="btn ghost" id="emShare" style="width:100%;margin-bottom:8px">📤 Anders teilen …</button>`:""}
+    <a class="btn ghost" href="https://familien-kalender.github.io/flyer.html" target="_blank" rel="noopener" style="display:block;text-align:center;margin-bottom:8px">🖨️ Flyer für Kita, Schule oder Verein</a>
+    ${r?`<p class="hint">Über deinen persönlichen Link zählt jede neue Familie für euer ⭐ Premium.</p>`:""}
+    <div class="actions"><button class="btn ghost" id="emLater">Später</button><button class="btn ghost" id="emNie">Nicht mehr fragen</button></div>`);
+  const setz=v=>{try{localStorage.setItem("fk-empf",v)}catch(e){}};setz(addDays(today,30));
+  document.getElementById("emWa").onclick=()=>setz("nie");
+  const sh=document.getElementById("emShare");if(sh)sh.onclick=()=>navigator.share({title:"Familienkalender",text:txt}).then(()=>setz("nie")).catch(()=>{});
+  document.getElementById("emLater").onclick=()=>{setz(addDays(today,14));closeSheet()};
+  document.getElementById("emNie").onclick=()=>{setz("nie");closeSheet()};
 }
 function fixStars(p){
   const cur=starBalance(p);
@@ -2435,7 +2470,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v93";
+const APP_VER="v94";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4250,6 +4285,9 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-14b",d:"2026-11-14",t:"💬 Einladen & Empfehlen",items:[
+    "🎉 Direkt nach dem Anlegen: Familie mit einem Tipp per WhatsApp einladen",
+    "💛 Nach 2 Wochen fragt der Kalender einmal, ob ihr ihn befreundeten Familien empfehlen wollt (mit Flyer zum Ausdrucken)"]},
   {v:"2026-11-14a",d:"2026-11-14",t:"👋 Neue Startseite",items:[
     "👋 Wer die App zum ersten Mal öffnet, sieht eine Startseite mit allen Funktionen",
     "👀 Mit „Erst mal ausprobieren“ lässt sich eine Beispiel-Familie ansehen, ohne etwas anzulegen"]},
