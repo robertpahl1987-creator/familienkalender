@@ -308,6 +308,11 @@ body.demo .fabs{bottom:calc(70px + env(safe-area-inset-bottom))}body.demo{paddin
 .sprachwahl{text-align:center;padding-top:12vh}.sprachwahl img{border-radius:18px;box-shadow:0 8px 28px rgba(0,0,0,.35)}.sprachwahl h1{margin:12px 0 4px}.sprachwahl p{opacity:.8;margin:0 0 20px}
 .sprachen{display:grid;gap:10px;max-width:340px;margin:0 auto}.sprachen button{display:flex;align-items:center;gap:14px;font:inherit;font-size:1.15rem;font-weight:700;padding:14px 18px;border-radius:16px;border:1px solid var(--line);background:var(--surface);color:inherit;text-align:left}.sprachen button span{font-size:1.7rem}.sprachen button.vor{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 .intro-lang{float:right;font:inherit;font-size:13px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:inherit}
+.introopen #newsPage{display:block}#newsPage{position:fixed;inset:0;z-index:9000;overflow-y:auto;background:var(--bg);color:var(--text)}
+.news-in{max-width:620px;margin:0 auto;padding:12px 16px 40px}.news-top{position:sticky;top:0;display:flex;align-items:center;gap:10px;padding:10px 0;background:var(--bg);z-index:2}.news-top h2{margin:0;font-size:1.35rem}
+.news-back{font:inherit;font-size:1.6rem;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:inherit;line-height:1}
+.news-day{font-size:.95rem;opacity:.7;margin:18px 0 6px}.news-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:0 0 8px}.news-card h4{display:flex;align-items:center;gap:8px;margin:0 0 4px}.news-card ul{margin:0;padding-left:20px;line-height:1.5}
+.news-card.ist-neu{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}.news-badge{font-size:11px;font-weight:800;padding:2px 7px;border-radius:99px;background:var(--accent);color:var(--surface)}
 .kidbar{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:8px 0}
 .kidbar .pbar{height:12px;border-radius:99px;background:rgba(127,127,127,.2);overflow:hidden;margin:6px 0 2px}.kidbar .pbar i{display:block;height:100%;background:linear-gradient(90deg,#ffd166,#ff9f1c);border-radius:99px}
 .pend{display:grid;grid-template-columns:1fr auto auto auto;gap:6px;align-items:center}.pend button{border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:10px;padding:6px 10px;font:inherit}
@@ -1094,7 +1099,7 @@ function showSettings(){
     <p class="hint">Tipp: Im Browser-Menü „Zum Startbildschirm hinzufügen“ wählen, dann hat jeder die App als Symbol auf dem Handy.</p>
     ${isStandalone()?"":`<button class="btn" id="installSet">📲 Als App installieren</button>`}
     <button class="btn ghost" id="tourAgain">❓ Hilfe & Anleitung</button>
-    <button class="btn ghost" id="clBtn">✨ Was ist neu? (alle Updates)</button>
+    <button class="btn ghost" id="clBtn">✨ Neuigkeiten (alle Neuerungen)</button>
     <button class="btn ghost" id="supBtn">💬 Support · Nachricht an den Entwickler</button>
     <button class="btn ghost" id="ideaBtn">💡 Ideen-Wand · Wünsche für die App</button>
     <div id="adminBox"></div>
@@ -1281,7 +1286,7 @@ function showHelp(open){
   sheet("Hilfe & Anleitung",`<div class="help">
     <p class="hint">Tippe auf ein Thema, um es aufzuklappen.</p>
     <button class="btn" id="hTour" style="width:100%">▶️ Geführte Tour starten (1 Minute)</button>
-    <button class="btn ghost" id="hNews" style="width:100%">✨ Was ist neu?</button>
+    <button class="btn ghost" id="hNews" style="width:100%">✨ Neuigkeiten (alle Neuerungen)</button>
     <label class="f hsearch">Suchen<input id="hQ" type="search" placeholder="z. B. Person, Link, Geburtstag …"></label>
     <div id="hList">${HELP.map(([k,ic,t,b])=>`<details data-hk="${k}"${k===open?" open":""}><summary>${ic} ${t}</summary><div class="hb">${b}</div></details>`).join("")}</div>
     <p class="hint" id="hNone" hidden>Nichts gefunden. Probier ein anderes Wort.</p>
@@ -2484,7 +2489,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v95";
+const APP_VER="v96";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -2536,7 +2541,6 @@ async function checkAdmin(){
     try{ni=(await FS.collection("ideen").where("status","==","neu").get({source:"server"})).size}catch(e){}
     SUP_NEW=sn.size+ne+ni;markGear();
     const parts=[sn.size?`${sn.size} Nachricht${sn.size===1?"":"en"}`:"",ne?`${ne} Fehlerbericht${ne===1?"":"e"}`:"",ni?`${ni} neue Idee${ni===1?"":"n"}`:""].filter(Boolean);
-    const waitCl=CHANGELOG.length-clReleased().length;if(waitCl&&CL_LOADED)parts.push(`${waitCl} Update-Ankündigung${waitCl===1?"":"en"} zur Freigabe`);
     if(parts.length)toast("🛠 Neu im Admin-Bereich: "+parts.join(", "));
   }catch(e){IS_ADMIN=false;ADMIN_ERR=e&&e.code==="permission-denied"?"regeln":"offline"}
 }
@@ -4299,6 +4303,10 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-15a",d:"2026-11-15",t:"✨ Neue Neuigkeiten-Seite",items:[
+    "✨ Alle Neuerungen stehen jetzt auf einer eigenen Seite mit allen Details (Einstellungen oder Hilfe → Neuigkeiten)",
+    "🧹 Auf dem Hauptbildschirm erscheint kein Hinweis-Fenster mehr",
+    "🆕 Was seit deinem letzten Besuch dazugekommen ist, ist mit NEU markiert"]},
   {v:"2026-11-14c",d:"2026-11-14",t:"🌐 Sprachauswahl beim Start",items:[
     "🌐 Beim ersten Öffnen wählt man zuerst die Sprache: Deutsch, English, Türkçe, Polski oder Українська",
     "🗣️ Startseite, Familie-Bereich und viele Sterne-Funktionen sind jetzt übersetzt"]},
@@ -4437,9 +4445,10 @@ const CHANGELOG=[
 ];
 // Freigabe: Nur Einträge bis einschließlich info/steuerung.clFrei werden Nutzern gezeigt (Admin gibt im Admin-Bereich frei)
 let CL_LOADED=false;
-function clReleased(){const fr=CTL.steuerung&&CTL.steuerung.clFrei;const i=fr?CHANGELOG.findIndex(c=>c.v===fr):-1;return i<0?[]:CHANGELOG.slice(i)}
+function clReleased(){return CHANGELOG} // keine Freigabe mehr nötig: alles erscheint sofort auf der Neuigkeiten-Seite
 function showNews(){
-  const el=document.getElementById("newCard");if(!el)return;
+  const el=document.getElementById("newCard");if(el)el.hidden=true;return; // kein Hinweis mehr auf dem Hauptbildschirm
+
   if(IS_READER_SITE||annReader()||!CL_LOADED||KID){el.hidden=true;return}
   const rel=clReleased();if(!rel.length){el.hidden=true;return}
   const top=rel[0].v;
@@ -4457,20 +4466,25 @@ function showNews(){
 function clSeen(){const rel=clReleased();if(rel.length){try{localStorage.setItem("fk-cl-seen",rel[0].v)}catch(e){}}const el=document.getElementById("newCard");if(el)el.hidden=true}
 document.getElementById("newX").onclick=clSeen;
 function showChangelog(){
-  const list=IS_ADMIN?CHANGELOG:clReleased();const relSet=new Set(clReleased().map(c=>c.v));
-  sheet("✨ Was ist neu?",`<p class="hint">Alle Updates der App, das Neueste oben.</p>
-    ${list.length?list.map(c=>`<div class="clog"><h4>${esc(c.t)}<span class="cd">${dmy(c.d)}${relSet.has(c.v)?"":" · ⏳ noch nicht freigegeben"}</span></h4><ul>${c.items.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`).join(""):`<p class="hint">Noch keine Neuigkeiten.</p>`}
-    <div class="actions"><button class="btn ghost" id="clClose">Schließen</button></div>`);
-  document.getElementById("clClose").onclick=closeSheet;
+  const seen=lsGet("fk-cl-seen"),si=CHANGELOG.findIndex(c=>c.v===seen),neuBis=si<0?(seen?0:0):si;
+  try{if(CHANGELOG[0])localStorage.setItem("fk-cl-seen",CHANGELOG[0].v)}catch(e){}
+  const tage={};for(const c of CHANGELOG)(tage[c.d]=tage[c.d]||[]).push(c);
+  const el=document.createElement("div");el.id="newsPage";el.setAttribute("role","dialog");el.setAttribute("aria-label","Neuigkeiten");
+  el.innerHTML=`<div class="news-in"><div class="news-top"><button class="news-back" id="nwBack" aria-label="Zurück">‹</button><h2>✨ Neuigkeiten</h2></div>
+    <p class="hint">Alle Neuerungen der App mit allen Details, das Neueste oben.</p>
+    ${Object.keys(tage).map(d=>`<h3 class="news-day">${dmy(d)}</h3>${tage[d].map(c=>{const ist=CHANGELOG.indexOf(c)<neuBis;return `<article class="clog news-card${ist?" ist-neu":""}"><h4>${esc(c.t)}${ist?'<span class="news-badge">NEU</span>':""}</h4><ul>${c.items.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></article>`}).join("")}`).join("")||'<p class="hint">Noch keine Neuigkeiten.</p>'}
+    <button class="btn ghost" id="nwBack2" style="width:100%;margin-top:14px">Zurück zum Kalender</button></div>`;
+  document.body.appendChild(el);document.body.classList.add("introopen");
+  const zu=()=>{el.remove();document.body.classList.remove("introopen")};
+  el.querySelector("#nwBack").onclick=zu;el.querySelector("#nwBack2").onclick=zu;
 }
 async function admUpd(body){
   const rel=new Set(clReleased().map(c=>c.v));const open=CHANGELOG.filter(c=>!rel.has(c.v)).length;
-  body.innerHTML=`<p class="hint">Neue Update-Ankündigungen erscheinen bei den Nutzern erst, wenn du sie hier freigibst. ${open?`<b>${open} warten auf Freigabe.</b>`:"Alles ist freigegeben."}</p>
+  body.innerHTML=`<p class="hint">Alle Neuerungen erscheinen automatisch auf der Seite <b>✨ Neuigkeiten</b> (Einstellungen oder Hilfe). Eine Freigabe ist nicht mehr nötig, und auf dem Hauptbildschirm erscheint kein Hinweis.</p><button class="btn" id="clOpen" style="width:100%;margin-bottom:10px">✨ Neuigkeiten-Seite öffnen</button>
     ${CHANGELOG.map(c=>`<div class="clog"><h4>${esc(c.t)}<span class="cd">${dmy(c.d)}</span></h4>
-      <div class="hint" style="margin:0">${rel.has(c.v)?"✅ freigegeben":"⏳ wartet auf Freigabe"}</div>
       <ul>${c.items.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
-      ${rel.has(c.v)?"":`<button class="btn" data-clrel="${esc(c.v)}">✅ Freigeben${CHANGELOG.indexOf(c)<CHANGELOG.length-1&&!rel.has(CHANGELOG[CHANGELOG.indexOf(c)+1].v)?" (inkl. ältere)":""}</button>`}</div>`).join("")}
-    ${rel.size?`<button class="btn ghost" id="clBack">↩️ Letzte Freigabe zurücknehmen</button>`:""}`;
+      </div>`).join("")}`;
+  {const o=document.getElementById("clOpen");if(o)o.onclick=()=>{closeSheet();setTimeout(showChangelog,200)}}
   body.querySelectorAll("[data-clrel]").forEach(b=>b.onclick=async()=>{
     if(!await askConfirm("Diese Ankündigung jetzt für alle freigeben? Sie erscheint dann bei allen oben in der App.","Freigeben",false))return;
     try{await FS.doc("info/steuerung").set({clFrei:b.dataset.clrel,clZeit:nowISO()},{merge:true});toast("✅ Freigegeben");setTimeout(()=>showAdmin("updates"),700)}catch(e){toast("Hat nicht geklappt")}});
@@ -4844,7 +4858,7 @@ const I18N={
 "Wie geht das genau?":["How does it work?","Nasıl çalışır?","Jak to działa?","Як це працює?"],"Standard":["Default","Varsayılan","Domyślny","Типово"],
 "Für Freunde: eigenen Kalender":["For friends: their own calendar","Arkadaşlar için: kendi takvimleri","Dla znajomych: własny kalendarz","Для друзів: власний календар"],"App-Link kopieren":["Copy app link","Uygulama bağlantısını kopyala","Kopiuj link do aplikacji","Копіювати посилання на застосунок"],
 "📲 Als App installieren":["📲 Install as app","📲 Uygulama olarak yükle","📲 Zainstaluj jako aplikację","📲 Встановити як застосунок"],"❓ Hilfe & Anleitung":["❓ Help & guide","❓ Yardım ve kılavuz","❓ Pomoc i instrukcja","❓ Довідка та інструкція"],
-"✨ Was ist neu? (alle Updates)":["✨ What's new? (all updates)","✨ Yenilikler (tüm güncellemeler)","✨ Co nowego? (wszystkie aktualizacje)","✨ Що нового? (усі оновлення)"],"✨ Was ist neu?":["✨ What's new?","✨ Yenilikler","✨ Co nowego?","✨ Що нового?"],
+"✨ Neuigkeiten (alle Neuerungen)":["✨ News (all updates)","✨ Yenilikler (tüm güncellemeler)","✨ Nowości (wszystkie aktualizacje)","✨ Новини (усі оновлення)"],"✨ Was ist neu? (alle Updates)":["✨ What's new? (all updates)","✨ Yenilikler (tüm güncellemeler)","✨ Co nowego? (wszystkie aktualizacje)","✨ Що нового? (усі оновлення)"],"✨ Was ist neu?":["✨ What's new?","✨ Yenilikler","✨ Co nowego?","✨ Що нового?"],
 "💬 Support · Nachricht an den Entwickler":["💬 Support · message the developer","💬 Destek · geliştiriciye mesaj","💬 Wsparcie · wiadomość do twórcy","💬 Підтримка · написати розробнику"],
 "💡 Ideen-Wand · Wünsche für die App":["💡 Idea wall · wishes for the app","💡 Fikir duvarı · uygulama için dilekler","💡 Tablica pomysłów · życzenia","💡 Стіна ідей · побажання"],"💡 Ideen-Wand":["💡 Idea wall","💡 Fikir duvarı","💡 Tablica pomysłów","💡 Стіна ідей"],
 "Darstellung":["Appearance","Görünüm","Wygląd","Вигляд"],"Kompakt-Modus (mehr auf einen Blick)":["Compact mode (more at a glance)","Kompakt mod (bir bakışta daha fazla)","Tryb kompaktny (więcej na raz)","Компактний режим (більше одразу)"],
