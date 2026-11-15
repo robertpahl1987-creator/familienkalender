@@ -313,6 +313,8 @@ body.demo .fabs{bottom:calc(70px + env(safe-area-inset-bottom))}body.demo{paddin
 .news-back{font:inherit;font-size:1.6rem;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:inherit;line-height:1}
 .news-day{font-size:.95rem;opacity:.7;margin:18px 0 6px}.news-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:0 0 8px}.news-card h4{display:flex;align-items:center;gap:8px;margin:0 0 4px}.news-card ul{margin:0;padding-left:20px;line-height:1.5}
 .news-card.ist-neu{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}.news-badge{font-size:11px;font-weight:800;padding:2px 7px;border-radius:99px;background:var(--accent);color:var(--surface)}
+.mehropt{border:1px solid var(--line);border-radius:14px;padding:4px 12px;margin:8px 0}.mehropt>summary{cursor:pointer;font-weight:700;padding:8px 0;display:flex;justify-content:space-between;gap:8px;align-items:center}.mehropt>summary .meta{font-weight:400;text-align:right}.mehropt[open]>summary{border-bottom:1px solid var(--line);margin-bottom:8px}
+.kz{display:none!important}.kzmore{display:block;width:calc(100% - 0px);margin:-4px 0 8px;font:inherit;font-size:13px;padding:6px;border-radius:12px;border:1px dashed var(--line);background:transparent;color:var(--muted)}.kzmore[hidden]{display:none}
 .kidbar{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:8px 0}
 .kidbar .pbar{height:12px;border-radius:99px;background:rgba(127,127,127,.2);overflow:hidden;margin:6px 0 2px}.kidbar .pbar i{display:block;height:100%;background:linear-gradient(90deg,#ffd166,#ff9f1c);border-radius:99px}
 .pend{display:grid;grid-template-columns:1fr auto auto auto;gap:6px;align-items:center}.pend button{border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:10px;padding:6px 10px;font:inherit}
@@ -595,6 +597,9 @@ body.lang-x #micBtn,body.lang-x #voiceIn{display:none!important}
 .season{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 .season span{position:absolute;top:-24px;opacity:.85;animation:sfall 10s linear infinite;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
 @keyframes sfall{0%{transform:translate(0,-10px) rotate(0)}50%{transform:translate(var(--sw,10px),120px) rotate(180deg)}100%{transform:translate(0,260px) rotate(360deg);opacity:0}}
+body.mod-aus-sterne .tabs [data-view="sterne"],body.mod-aus-familie .tabs [data-view="familie"],body.mod-aus-ferien .tabs [data-view="ferien"]{display:none!important}
+.setgrp{border:1px solid var(--line,#3335);border-radius:12px;margin:8px 0;padding:0 12px}.setgrp>summary{cursor:pointer;font-weight:600;padding:12px 0;list-style:none}.setgrp>summary::-webkit-details-marker{display:none}.setgrp>summary::after{content:"›";float:right;transition:transform .2s}.setgrp[open]>summary::after{transform:rotate(90deg)}.setgrp[open]{padding-bottom:10px}.setsuche{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;border:1px solid var(--line,#3335);background:transparent;color:inherit;font:inherit;margin:4px 0 6px}
+.svtabs{display:flex;gap:6px;overflow-x:auto;margin:10px 0 8px;padding-bottom:2px;scrollbar-width:none}.svtabs button{flex:0 0 auto;border:1px solid var(--line,#3335);background:transparent;color:inherit;border-radius:999px;padding:7px 12px;font:inherit;font-size:.9em}.svtabs button[aria-selected="true"]{background:var(--accent,#5b8def);color:#fff;border-color:transparent}.svbadge{background:#e5484d;color:#fff;border-radius:999px;padding:0 6px;font-size:.8em}.svwrap>section{display:none}.svwrap.sv-ueb>[data-sv="ueb"],.svwrap.sv-auf>[data-sv="auf"],.svwrap.sv-bel>[data-sv="bel"],.svwrap.sv-geld>[data-sv="geld"],.svwrap.sv-spiel>[data-sv="spiel"],.svwrap.sv-einst>[data-sv="einst"]{display:block}.leer{border:1px dashed var(--line,#3337);border-radius:14px;padding:14px;margin:8px 0;display:grid;gap:8px}.leer p{margin:0}
 canvas.confetti{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9999}
 .premcta{background:linear-gradient(180deg,#ffe9a8,#ffcc4d 50%,#e0a21f);color:#3a2600;border:0;font-weight:800;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 2px 0 #a8730f,0 6px 14px rgba(0,0,0,.25)}
 .premhero{text-align:center;border-radius:16px;padding:16px 14px;background:linear-gradient(160deg,#3a2a10,#1d1408);color:#fff3cf;border:1px solid rgba(255,204,77,.35);display:grid;gap:6px;justify-items:center}
@@ -779,6 +784,7 @@ textarea.cfg{font:inherit;font-size:.8rem;font-family:ui-monospace,monospace;col
     <div class="mbtns"><button class="btn ghost" id="mImg" aria-label="Bild für den Sperrbildschirm erstellen">🖼</button><button class="btn" id="mAck">Gelesen ✓</button></div>
     <ul id="mList"></ul>
   </section>
+  <button class="kzmore" id="kzMore" hidden></button>
   <div class="tabs calswitch" role="tablist" aria-label="Kalender-Ansicht">
     <button role="tab" data-view="tag">Tag</button><button role="tab" data-view="woche">Woche</button><button role="tab" data-view="monat">Monat</button><button role="tab" data-view="jahr">Jahr</button>
   </div>
@@ -793,7 +799,7 @@ textarea.cfg{font:inherit;font-size:.8rem;font-family:ui-monospace,monospace;col
     <div class="p-christin">Christin</div><div class="p-john">John</div><div class="p-robert">Robert</div><div class="p-gemeinsam">Gemeinsam</div>
   </div>
   <div class="days" id="days"></div>
-  <p class="empty-note">Tippe in ein Feld, um dort einen Eintrag anzulegen. Arbeitszeiten und Urlaub trägt jeder in seiner eigenen Spalte ein.</p>
+  <p class="empty-note" id="emptyNote">Tippe in ein Feld, um dort einen Eintrag anzulegen. Arbeitszeiten und Urlaub trägt jeder in seiner eigenen Spalte ein.</p>
   </div>
   <div id="vOther" hidden></div>
   <footer class="foot"><a href="datenschutz.html">Datenschutz, Impressum & Nutzungshinweise</a></footer>
@@ -997,7 +1003,7 @@ async function init(){
     if(loc.length&&ROLE!=="lesen"){for(const e of loc){const{id,...o}=e;await col.add(o)}localStorage.removeItem("familienkalender-lokal");toast(`${loc.length} Einträge übernommen`)}}catch(e){}
   const timer=setTimeout(()=>setStatus("Offline · Änderungen werden später übertragen"),10000);
   ensureMember(cfg);
-  try{if(sessionStorage.getItem("fk-invite")){sessionStorage.removeItem("fk-invite");setTimeout(showEinladen,900)}}catch(e){}
+  try{if(sessionStorage.getItem("fk-invite")){sessionStorage.removeItem("fk-invite");setTimeout(()=>showModulWahl(showEinladen),900)}}catch(e){}
   col.onSnapshot({includeMetadataChanges:true},snap=>{
     const conf=snap.docs.find(d=>d.id==="_config");
     if(conf){const n=conf.data().namen,ks=conf.data().personen;if(Array.isArray(n)){setPersons(Array.isArray(ks)&&ks.length===n.length?ks:BASE_SLOTS.slice(0,n.length),n);try{localStorage.setItem("fk-namen",JSON.stringify(n))}catch(e){}}}
@@ -1056,6 +1062,15 @@ function showSetup(){
   document.getElementById("cfgLater").onclick=closeSheet;wireJoin();wireLang();
   {const cb=document.getElementById("cfgClip");if(cb)cb.onclick=joinFromClipboard}
 }
+function setGruppen(){const sh=document.querySelector("#sheetHost .sheet");if(!sh)return;
+  const hs=[...sh.querySelectorAll(":scope > h4.sub")];if(!hs.length)return;const end=sh.querySelector(":scope > .setend");
+  const offen=lsGet("fk-setgrp")||"";
+  for(const h of hs){const d=document.createElement("details");d.className="setgrp";const sm=document.createElement("summary");sm.textContent=h.textContent;d.appendChild(sm);
+    if(sm.textContent===offen)d.open=true;d.ontoggle=()=>{if(d.open)lsSet("fk-setgrp",sm.textContent)};
+    h.before(d);let n=h.nextSibling;h.remove();while(n&&!(n.nodeType===1&&(n.matches("h4.sub")||n===end))){const nx=n.nextSibling;d.appendChild(n);n=nx}}
+  const f=document.createElement("input");f.type="search";f.className="setsuche";f.placeholder="🔍 Einstellung suchen …";f.setAttribute("aria-label","Einstellung suchen");
+  sh.querySelector(":scope > h3").after(f);
+  f.oninput=()=>{const q=f.value.trim().toLowerCase();sh.querySelectorAll(".setgrp").forEach(d=>{const hit=!q||d.textContent.toLowerCase().includes(q);d.hidden=!hit;if(q)d.open=hit})}}
 function showSettings(){
   const c=getCfg();
   if(!c||c.local){if(c&&c.local){localStorage.removeItem(CFG_KEY)}showSetup();return}
@@ -1098,12 +1113,14 @@ function showSettings(){
     <button class="btn ghost" id="applCopy">App-Link kopieren</button>
     <p class="hint">Tipp: Im Browser-Menü „Zum Startbildschirm hinzufügen“ wählen, dann hat jeder die App als Symbol auf dem Handy.</p>
     ${isStandalone()?"":`<button class="btn" id="installSet">📲 Als App installieren</button>`}
+    <h4 class="sub">❓ Hilfe & Neuigkeiten</h4>
     <button class="btn ghost" id="tourAgain">❓ Hilfe & Anleitung</button>
     <button class="btn ghost" id="clBtn">✨ Neuigkeiten (alle Neuerungen)</button>
     <button class="btn ghost" id="supBtn">💬 Support · Nachricht an den Entwickler</button>
     <button class="btn ghost" id="ideaBtn">💡 Ideen-Wand · Wünsche für die App</button>
-    <div id="adminBox"></div>
-    <h4 class="sub">🎨 Darstellung</h4>
+    ${IS_ADMIN?'<h4 class="sub">🛠️ Admin</h4>':""}<div id="adminBox"></div>
+    ${ROLE==="schreiben"?`<h4 class="sub">🧩 Bereiche ein- und ausblenden</h4>${modulBox()}`:""}
+    <h4 class="sub">🎨 Darstellung & Sprache</h4>
     ${langSelect()}
     <div class="rw">
       <label class="pick" style="justify-content:space-between"><span>Kompakt-Modus (mehr auf einen Blick)</span><input type="checkbox" id="optCompact" ${prefOn("compact")?"checked":""}></label>
@@ -1129,8 +1146,9 @@ function showSettings(){
     <p class="hint">Die Datei kannst du z. B. in Google Kalender importieren oder als Sicherung aufheben.</p>
     <button class="btn danger" id="wipe">Kalender endgültig löschen</button>
     <p class="hint">Löscht alle Einträge und Namen dieses Kalenders für alle Beteiligten. Das lässt sich nicht rückgängig machen.</p>
-    <p class="hint"><a href="datenschutz.html">Datenschutz, Impressum & Nutzungshinweise</a></p>
+    <div class="setend"></div><p class="hint"><a href="datenschutz.html">Datenschutz, Impressum & Nutzungshinweise</a></p>
     <div class="actions"><button class="btn danger" id="disc">Auf diesem Handy trennen</button><button class="btn ghost" id="setClose">Schließen</button></div>`);
+  setGruppen();wireModule();
   document.getElementById("exp").onclick=exportICS;wireReadLinks();wireBackups();
   {const ib=document.getElementById("installSet");if(ib)ib.onclick=()=>{closeSheet();setTimeout(installApp,200)}}
   wireLang();document.getElementById("premBtn").onclick=()=>{closeSheet();setTimeout(showPremium,200)};
@@ -1498,22 +1516,55 @@ function renderStars(){
     const heute=taskLogs.filter(l=>l.person===KID&&l.datum===today&&!l.abgelehnt).reduce((a,l)=>a+(+l.sterne||0),0),noch=vis.filter(t=>t.person===KID&&!logFor(t)).reduce((a,t)=>a+(+t.sterne||1),0);
     kidH=levelHTML(KID)+`<div class="kidbar">${sternPause(KID)?`<div class="pausebox">🏠 <b>Heute bist du bei Papa.</b><br>Das Sterne-System macht Pause: keine Aufgaben, kein Abzug. Morgen geht es weiter!</div>`:""}<b>Hallo ${esc(PNAME[KID]||"")}! 👋</b><div class="kidsum"><span>⭐ Heute verdient<b>+${sF(heute)}</b></span><span>🎯 Noch möglich<b>${sF(noch)}</b></span><span>💰 Kontostand<b>${sF(b)}</b></span></div>${nx?`<div class="pbar"><i style="width:${Math.min(100,Math.round(b/(+nx.kosten)*100))}%"></i></div><span class="meta">${zr&&nx===zr?"🎯 Dein Sparziel":"Nächstes Ziel"}: <b>${esc(nx.titel)}</b> · noch ${sF(+nx.kosten-b)} ⭐</span>`:rewards.length?`<br><span class="meta">Du kannst dir jede Belohnung leisten! 🎉</span>`:""}${np?`<br><span class="meta">⏳ ${np} ⭐ warten noch auf Bestätigung</span>`:""}${limitHTML(KID)}${abzugHTML()}${bonusHTML()}</div>`}
   const tlH=tl||'<p class="hint">Noch keine Aufgaben. Leg zum Beispiel „Zimmer aufräumen“ für dein Kind mit 2 Sternen an. Wer eine Aufgabe erledigt, tippt auf den Kreis und bekommt die Sterne.</p>';
+  if(KID){
   document.getElementById("vOther").innerHTML=`<div class="starcards">${cards}</div>${kidH}
-    ${KID?`<h3 class="sec">✅ Deine Aufgaben</h3>${hilfe(KID,"fokus")?jetztH():""}${hilfe(KID,"fokus")?`<details class="spaeter"><summary>📋 Alle Aufgaben ansehen</summary>${tlH}</details>`:tlH}${radHTML()}`:""}
-    <div class="actions" style="margin:8px 0">${TTS_OK&&tasks.length?`<button class="btn${KID?"":" ghost"}" id="ttsBtn">🔊 Vorlesen</button>`:""}<button class="btn ghost" id="histBtn">📜 Verlauf</button></div>
-    ${KID?"":radHTML()}
-    ${kontoHTML()}
-    ${spieleHTML()}
-    ${KID?`<h3 class="sec">🏅 Deine Abzeichen · ${abzVon(KID).filter(b=>b.ok).length}/${ABZ.length}</h3>${abzHTML(KID,true)}<button class="btn ghost" data-abzshow="${KID}" style="width:100%;margin-top:8px">Alle Abzeichen ansehen</button>`:""}
-    ${KID?"":abzugHTML()+bonusHTML()+limitEinst()+hilfenEinst()}
-    <div class="actions"><button class="btn" id="tAdd">+ Aufgabe</button><button class="btn ghost" id="rAdd">+ Belohnung</button></div>
-    ${pendH}
-    ${KID?"":`<h3 class="sec">Aufgaben</h3>${tlH}`}
-    <h3 class="sec">${KID?"🎁 Deine Belohnungen":"Belohnungen"}</h3>
-    <div class="tasklist">${rws||'<p class="hint">Noch keine Belohnungen. Zum Beispiel: „30 Minuten länger aufbleiben“ für 10 Sterne oder „Kinobesuch“ für 40 Sterne.</p>'}</div>
-    ${last?`<h3 class="sec">Zuletzt eingelöst</h3><ul class="hint" style="margin:0;padding-left:18px">${last}</ul>`:""}
-    <button class="btn ghost" id="kpBtn" style="margin-top:12px">🎒 Startpaket: Kinder-Aufgaben & Belohnungen</button>`;
-  document.getElementById("kpBtn").onclick=kidPackSheet;
+      ${KID?`<h3 class="sec">✅ Deine Aufgaben</h3>${hilfe(KID,"fokus")?jetztH():""}${hilfe(KID,"fokus")?`<details class="spaeter"><summary>📋 Alle Aufgaben ansehen</summary>${tlH}</details>`:tlH}${radHTML()}`:""}
+      <div class="actions" style="margin:8px 0">${TTS_OK&&tasks.length?`<button class="btn${KID?"":" ghost"}" id="ttsBtn">🔊 Vorlesen</button>`:""}<button class="btn ghost" id="histBtn">📜 Verlauf</button></div>
+      ${KID?"":radHTML()}
+      ${kontoHTML()}
+      ${spieleHTML()}
+      ${KID?`<h3 class="sec">🏅 Deine Abzeichen · ${abzVon(KID).filter(b=>b.ok).length}/${ABZ.length}</h3>${abzHTML(KID,true)}<button class="btn ghost" data-abzshow="${KID}" style="width:100%;margin-top:8px">Alle Abzeichen ansehen</button>`:""}
+      ${KID?"":abzugHTML()+bonusHTML()+limitEinst()+hilfenEinst()}
+      <div class="actions"><button class="btn" id="tAdd">+ Aufgabe</button><button class="btn ghost" id="rAdd">+ Belohnung</button></div>
+      ${pendH}
+      ${KID?"":`<h3 class="sec">Aufgaben</h3>${tlH}`}
+      <h3 class="sec">${KID?"🎁 Deine Belohnungen":"Belohnungen"}</h3>
+      <div class="tasklist">${rws||'<p class="hint">Noch keine Belohnungen. Zum Beispiel: „30 Minuten länger aufbleiben“ für 10 Sterne oder „Kinobesuch“ für 40 Sterne.</p>'}</div>
+      ${last?`<h3 class="sec">Zuletzt eingelöst</h3><ul class="hint" style="margin:0;padding-left:18px">${last}</ul>`:""}
+      <button class="btn ghost" id="kpBtn" style="margin-top:12px">🎒 Startpaket: Kinder-Aufgaben & Belohnungen</button>`;
+  }else{
+  const SV=[["ueb","Übersicht"],["auf","Aufgaben"],["bel","Belohnungen"],["geld","Geld"],["spiel","Spiele"],["einst","Einstellungen"]];
+  let sv=lsGet("fk-sv")||"ueb";if(!SV.some(x=>x[0]===sv))sv="ueb";
+  const leer=!tasks.length;
+  document.getElementById("vOther").innerHTML=`<div class="starcards">${cards}</div>
+    <div class="svtabs" role="tablist">${SV.map(([k,n])=>`<button role="tab" data-svt="${k}" aria-selected="${k===sv}">${n}${k==="ueb"&&pend.length&&!READONLY?` <span class="svbadge">${pend.length}</span>`:""}</button>`).join("")}</div>
+    <div class="svwrap sv-${sv}">
+    <section data-sv="ueb">
+      ${leer?`<div class="leer"><b>So startet ihr</b><p class="hint">1. Aufgaben anlegen (oder das fertige Startpaket nehmen) · 2. Belohnungen festlegen · 3. Das Kind hakt ab, ihr bestätigt.</p><button class="btn" data-kp>🎒 Startpaket nutzen</button><button class="btn ghost" data-tadd>+ Eigene Aufgabe</button></div>`:""}
+      ${pendH||(leer?"":`<p class="hint">✅ Nichts zu bestätigen.</p>`)}
+      <div class="actions" style="margin:8px 0">${TTS_OK&&tasks.length?`<button class="btn ghost" id="ttsBtn">🔊 Vorlesen</button>`:""}<button class="btn ghost" id="histBtn">📜 Verlauf</button></div>
+      ${radHTML()}
+      ${last?`<h3 class="sec">Zuletzt eingelöst</h3><ul class="hint" style="margin:0;padding-left:18px">${last}</ul>`:""}
+    </section>
+    <section data-sv="auf">
+      <div class="actions"><button class="btn" id="tAdd">+ Aufgabe</button></div>
+      ${tl||`<div class="leer"><b>Noch keine Aufgaben</b><p class="hint">Zum Beispiel „Zimmer aufräumen“ mit 2 Sternen. Oder nimm das Startpaket mit fertigen, kindgerechten Aufgaben.</p><button class="btn" data-kp>🎒 Startpaket nutzen</button></div>`}
+      ${leer?"":`<button class="btn ghost" id="kpBtn" style="margin-top:12px">🎒 Startpaket: Kinder-Aufgaben & Belohnungen</button>`}
+    </section>
+    <section data-sv="bel">
+      <div class="actions"><button class="btn" id="rAdd">+ Belohnung</button></div>
+      <div class="tasklist">${rws||`<div class="leer"><b>Noch keine Belohnungen</b><p class="hint">Zum Beispiel „30 Minuten länger aufbleiben“ für 10 Sterne oder „Kinobesuch“ für 40 Sterne.</p><button class="btn ghost" data-radd>+ Erste Belohnung anlegen</button></div>`}</div>
+    </section>
+    <section data-sv="geld">${kontoHTML()}</section>
+    <section data-sv="spiel">${spieleHTML()}</section>
+    <section data-sv="einst">${abzugHTML()+bonusHTML()+limitEinst()+hilfenEinst()}</section>
+    </div>`;
+  document.querySelectorAll("[data-svt]").forEach(b=>b.onclick=()=>{const k=b.dataset.svt;lsSet("fk-sv",k);const w=document.querySelector(".svwrap");w.className="svwrap sv-"+k;document.querySelectorAll("[data-svt]").forEach(x=>x.setAttribute("aria-selected",String(x===b)))});
+  document.querySelectorAll("[data-kp]").forEach(b=>b.onclick=kidPackSheet);
+  document.querySelectorAll("[data-tadd]").forEach(b=>b.onclick=()=>openTaskSheet(null));
+  document.querySelectorAll("[data-radd]").forEach(b=>b.onclick=()=>openRewardSheet(null));
+  }
+  {const kb=document.getElementById("kpBtn");if(kb)kb.onclick=kidPackSheet}
   document.getElementById("histBtn").onclick=()=>showHistory(KID||"");wireSpiele();wireAbzug();wireBonus();wireLimit();wireHilfen();wireGeld();
   document.querySelectorAll("[data-rad]").forEach(b=>b.onclick=()=>radDrehen(b.dataset.rad));
   document.querySelectorAll("[data-abzshow]").forEach(b=>b.onclick=ev=>{ev.stopPropagation();showAbz(b.dataset.abzshow)});
@@ -1529,7 +1580,7 @@ document.getElementById("vOther").addEventListener("click",async ev=>{
     if(l){if(KID&&!l.offen){toast("Schon bestätigt ✓ Super gemacht!");return}
       if(!await askConfirm(l.offen?"Abhaken zurücknehmen?":`Erledigt zurücknehmen? ${PNAME[t.person]} verliert dafür ${sF(+l.sterne||0)} ⭐.`,"Zurücknehmen"))return;await store.del(l.id);toast("Zurückgenommen")}
     else if(KID&&t.foto){kidFoto(t)}
-    else if(KID){const w=+t.sterne||1,st=capSterne(t.person,today,artVon(t),w);await store.add({typ:"erledigt",aufgabe:t.id,person:t.person,sterne:st,datum:today,titel:t.titel});render();confetti();toast(st?`⏳ Super! +${st} ⭐, sobald Mama oder Papa bestätigt haben${capTxt(st,w)}`:"✅ Super gemacht! Für heute ist das Sterne-Limit erreicht.");if(ttsAuto())speak(`Super gemacht, ${PNAME[KID]||""}! ${t.titel} ist abgehakt. Du bekommst ${sternTxt(+t.sterne||1)}, sobald Mama oder Papa bestätigt haben.`)}
+    else if(KID){const w=+t.sterne||1,st=capSterne(t.person,today,artVon(t),w);await store.add({typ:"erledigt",aufgabe:t.id,person:t.person,sterne:st,datum:today,titel:t.titel});render();toast(st?`⏳ Super! +${st} ⭐, sobald Mama oder Papa bestätigt haben${capTxt(st,w)}`:"✅ Super gemacht! Für heute ist das Sterne-Limit erreicht.");if(ttsAuto())speak(`Super gemacht, ${PNAME[KID]||""}! ${t.titel} ist abgehakt. Du bekommst ${sternTxt(+t.sterne||1)}, sobald Mama oder Papa bestätigt haben.`)}
     else{const voll=+t.sterne||1;
       const buche=async hilfe=>{closeSheet();const w=hilfe?halb(voll):voll,st=capSterne(t.person,today,artVon(t),w);await store.add({typ:"erledigt",aufgabe:t.id,person:t.person,sterne:st,datum:today,titel:t.titel,...(hilfe?{mitHilfe:true}:{})});popPerson=t.person;render();if(premOn(3)&&!hilfe)confetti();toast(`${hilfe?"🤝":"⭐"} +${sF(st)} für ${PNAME[t.person]}!${capTxt(st,w)}`)};
       sheet(`✅ ${esc(t.titel)}`,`<p class="hint" style="margin-top:0">Wie hat ${esc(PNAME[t.person]||"")} das geschafft?</p>
@@ -1552,7 +1603,7 @@ document.getElementById("vOther").addEventListener("click",async ev=>{
   if(re){const r=rewards.find(x=>x.id===re.dataset.redeem),p=re.dataset.who;if(!r)return;if(sternPause(p)){pauseToast(p);return}
     if(monatVoll(p,r)){toast(`„${r.titel}“ gibt es höchstens ${r.proMonat}× im Monat. Ab dem 1. geht es wieder!`);return}
     if(KID){if(!await askConfirm(`„${r.titel}“ für ${+r.kosten} ⭐ einlösen? Mama oder Papa bekommen Bescheid und bestätigen.`,"Einlösen",false))return;
-      await store.add({typ:"einloesung",person:p,kosten:+r.kosten,titel:r.titel,datum:today,...(+r.zuschuss?{zuschuss:+r.zuschuss}:{})});confetti();toast("🎁 Wunsch geschickt! Warte auf die Bestätigung");if(ttsAuto())speak(`Toll! Dein Wunsch ${r.titel} ist verschickt.`);return}
+      await store.add({typ:"einloesung",person:p,kosten:+r.kosten,titel:r.titel,datum:today,...(+r.zuschuss?{zuschuss:+r.zuschuss}:{})});toast("🎁 Wunsch geschickt! Warte auf die Bestätigung");if(ttsAuto())speak(`Toll! Dein Wunsch ${r.titel} ist verschickt.`);return}
     if(!await askConfirm(`„${r.titel}“ für ${PNAME[p]} einlösen? Dafür werden ${+r.kosten} ⭐ abgezogen.`,"Einlösen",false))return;
     await store.add({typ:"einloesung",person:p,kosten:+r.kosten,titel:r.titel,datum:today,...(+r.zuschuss?{zuschuss:+r.zuschuss}:{})});if(+r.zuschuss)await zuschussBuchen({person:p,zuschuss:+r.zuschuss,titel:r.titel});toast(`🎉 ${PNAME[p]} hat „${r.titel}“ eingelöst${+r.zuschuss?` · ${ctEuro(r.zuschuss)} aufs Ersparte`:""}`);return}
   if(KID&&ev.target.closest("[data-rwedit]"))return;
@@ -1666,7 +1717,7 @@ function kidFoto(t){
     document.getElementById("fSend").onclick=async()=>{const b=document.getElementById("fSend");b.disabled=true;b.textContent="Wird geschickt …";
       try{const fid=await fotoSpeichern(bild,t.person);const alt=abgelehntVon(t);if(alt){try{await store.del(alt.id)}catch(e){}}
         await store.add({typ:"erledigt",aufgabe:t.id,person:t.person,sterne:capSterne(t.person,today,artVon(t),+t.sterne||1),datum:today,titel:t.titel,foto:fid});
-        closeSheet();render();confetti();toast("📸 Foto geschickt! Mama oder Papa schauen es sich an");if(ttsAuto())speak(`Super, ${PNAME[KID]||""}! Dein Foto ist verschickt.`)}
+        closeSheet();render();toast("📸 Foto geschickt! Mama oder Papa schauen es sich an");if(ttsAuto())speak(`Super, ${PNAME[KID]||""}! Dein Foto ist verschickt.`)}
       catch(e){b.disabled=false;b.textContent="📤 Foto schicken";toast(e&&e.code==="permission-denied"?"Fotos sind noch nicht freigeschaltet (Firebase-Regeln)":"Schicken ging nicht · bitte nochmal")}};
   };
   inp.click();
@@ -1916,7 +1967,7 @@ async function tauschen(p,st){
   if(!await askConfirm(`${st} ⭐ gegen ${ctEuro(ct)} für ${KID?"dein":"das"} Erspartes tauschen?${KID?" Mama oder Papa bestätigen das noch.":""}`,"Tauschen",false))return;
   await store.add({typ:"einloesung",person:p,kosten:st,titel:`💶 Zahltag: ${st} ⭐ → ${ctEuro(ct)}`,zuschuss:ct,tausch:true,datum:today});
   if(!KID)await zuschussBuchen({person:p,zuschuss:ct,titel:`Zahltag ${st} ⭐`});
-  confetti();toast(KID?"💶 Getauscht! Sobald Mama oder Papa bestätigen, ist das Geld auf deinem Konto.":`💶 ${ctEuro(ct)} aufs Ersparte von ${PNAME[p]}`);
+  toast(KID?"💶 Getauscht! Sobald Mama oder Papa bestätigen, ist das Geld auf deinem Konto.":`💶 ${ctEuro(ct)} aufs Ersparte von ${PNAME[p]}`);
 }
 function wireGeld(){
   document.querySelectorAll("[data-tausch]").forEach(b=>b.onclick=()=>{const [p,st]=b.dataset.tausch.split(":");tauschen(p,+st)});
@@ -1956,7 +2007,7 @@ function ekHTML(){
   return `<section class="famsec"><h3 class="sec">🛒 Einkaufsliste${offen.length?` · ${offen.length}`:""}</h3>
     ${READONLY?"":`<div class="ekadd"><input id="ekIn" placeholder="z. B. Milch, Brot, Eier" enterkeyhint="done"><button class="btn" id="ekGo">+</button></div>
     <div class="ekchips">${ekHaeufig().map(t=>`<button data-ekq="${esc(t)}">+ ${esc(t)}</button>`).join("")}</div>`}
-    ${grp||'<p class="hint">Die Liste ist leer. 🎉</p>'}
+    ${grp||'<p class="hint">Alles eingekauft. Schreib oben, was fehlt, oder tippe auf einen Vorschlag.</p>'}
     ${fertig.length?`<details class="ekdone"><summary class="meta">✓ ${fertig.length} im Wagen</summary>${fertig.map(x=>`<button class="ekitem done" data-ek="${esc(x.id)}"><span class="ekbox">✓</span>${esc(x.titel)}</button>`).join("")}${READONLY?"":`<button class="btn ghost" id="ekClean" style="width:100%;margin-top:6px">🧹 Erledigte entfernen</button>`}</details>`:""}</section>`;
 }
 /* Essensplan */
@@ -2157,6 +2208,14 @@ async function maybeEmpfehlen(){
   document.getElementById("emLater").onclick=()=>{setz(addDays(today,14));closeSheet()};
   document.getElementById("emNie").onclick=()=>{setz("nie");closeSheet()};
 }
+/* ---------- Ruhiger Startbildschirm: nur die wichtigste Karte ---------- */
+let KZ_OFFEN=false;
+function kompaktKarten(){
+  const ids=["remind","morning","eve","news","nextCard","petCard"],sicht=ids.map(i=>document.getElementById(i)).filter(el=>el&&!el.hidden);
+  sicht.forEach((el,i)=>el.classList.toggle("kz",i>0&&!KZ_OFFEN));
+  const b=document.getElementById("kzMore");if(!b)return;const n=sicht.length-1;
+  b.hidden=n<1;if(n>0){b.textContent=KZ_OFFEN?"▲ Weniger anzeigen":`▼ ${n} ${n===1?"weiterer Hinweis":"weitere Hinweise"} für heute`;b.onclick=()=>{KZ_OFFEN=!KZ_OFFEN;kompaktKarten()}}
+}
 function fixStars(p){
   const cur=starBalance(p);
   sheet(`⭐ Sterne von ${esc(PNAME[p]||"")}`,`<p class="hint">Aktueller Stand: <b>${sF(cur)} ⭐</b>. Gib den neuen Stand ein. Die Änderung erscheint im 📜 Verlauf als „Korrektur“.</p>
@@ -2268,7 +2327,7 @@ function spielRunde(sp,p){
     else st=0;
     if(p&&st>0){const c=capSterne(p,today,"sonder",st);if(c<st){info=c?`Heute gibt es nur noch ${c} ⭐ Extra-Sterne.`:"Das Tageslimit für Extra-Sterne ist erreicht. Morgen geht es weiter!";st=c}}
     const msg=G.ok>=N?"🏆 Perfekt! Alles richtig!":G.ok>=EIN?"🎉 Super gemacht!":G.ok>=Math.ceil(N/2)?`👍 Gut! Für einen Stern brauchst du ${EIN} richtige.`:"💪 Übung macht den Meister. Versuch es nochmal!";
-    if(p&&st>0&&store){store.add({typ:"erledigt",aufgabe:"spiel-"+sp,person:p,sterne:st,datum:today,titel:`${SPIELE[sp].n} · ${G.ok}/${N} richtig`});if(premOn(3)||KID)confetti()}
+    if(p&&st>0&&store){store.add({typ:"erledigt",aufgabe:"spiel-"+sp,person:p,sterne:st,datum:today,titel:`${SPIELE[sp].n} · ${G.ok}/${N} richtig`});if(G.ok===N)confetti()}
     if(p)try{lsSet("fk-spiel-last",String(Date.now()))}catch(e){}
     sheet(SPIELE[sp].n,`<div class="spiel" style="text-align:center"><div style="font-size:52px">${G.ok>=EIN?"🌟":"🙂"}</div>
       <h3 style="margin:4px 0">${G.ok} von ${N} richtig</h3><p>${msg}</p>
@@ -2489,7 +2548,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v96";
+const APP_VER="v97";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -3204,14 +3263,29 @@ function render(){
   const lg=document.querySelector(".legend");if(lg)lg.innerHTML=legendHTML();
   try{renderInner()}finally{entries=allE;PEOPLE=allP;ALLE=null}
 }
+/* ---------- Bereiche an/aus ---------- */
+const MODULE=[["sterne","⭐ Sterne & Aufgaben","Belohnungssystem für Kinder"],["familie","🏠 Familie","Einkaufsliste, Essensplan, Infos"],["ferien","🎒 Ferien","Schulferien & Feiertage"]];
+function modAn(k){if(KID&&k==="sterne")return true;const m=FAMCONF&&FAMCONF.module;return !(m&&m[k]===false)}
+function applyModule(){for(const [k] of MODULE)document.body.classList.toggle("mod-aus-"+k,!modAn(k));
+  if(["sterne","familie","ferien"].includes(view)&&!modAn(view)){view="woche";document.getElementById("vWoche").hidden=false;document.getElementById("vOther").hidden=true}}
+async function setModul(k,an){const m={...((FAMCONF&&FAMCONF.module)||{}),[k]:!!an};try{await store.conf({module:m});FAMCONF.module=m;applyModule();render();toast(an?"✅ Bereich eingeschaltet":"Bereich ausgeblendet")}catch(e){toast("Speichern ging nicht")}}
+function modulBox(){if(ROLE!=="schreiben")return"";return`<div class="rw">${MODULE.map(([k,n,h])=>`<label class="pick" style="justify-content:space-between"><span>${n}<br><small class="hint">${h}</small></span><input type="checkbox" data-mod="${k}" ${modAn(k)?"checked":""}></label>`).join("")}<p class="hint" style="margin:0">Ausgeblendete Bereiche bleiben gespeichert und lassen sich jederzeit wieder einschalten.</p></div>`}
+function wireModule(){document.querySelectorAll("[data-mod]").forEach(c=>c.onchange=()=>setModul(c.dataset.mod,c.checked))}
+function showModulWahl(then){
+  sheet("Was braucht ihr?",`<p class="hint">Damit die App nicht überladen wirkt, zeigen wir nur, was ihr nutzt. Das lässt sich später in den Einstellungen ändern.</p>
+  <div class="rw">${[["sterne","Habt ihr Kinder, die mit Aufgaben Sterne sammeln sollen?"],["familie","Wollt ihr Einkaufsliste und Essensplan gemeinsam nutzen?"],["ferien","Sollen Schulferien und Feiertage angezeigt werden?"]].map(([k,q])=>`<label class="pick" style="justify-content:space-between"><span>${q}</span><input type="checkbox" data-mw="${k}" ${k==="ferien"?"checked":""}></label>`).join("")}</div>
+  <div class="actions"><button class="btn" id="mwOk">Weiter</button></div>`);
+  document.getElementById("mwOk").onclick=async()=>{const m={};document.querySelectorAll("[data-mw]").forEach(c=>m[c.dataset.mw]=c.checked);
+    FAMCONF=FAMCONF||{};FAMCONF.module=m;try{await store.conf({module:m})}catch(e){}closeSheet();applyModule();render();if(then)setTimeout(then,300)}}
 function renderInner(){
-  today=iso(new Date());updBrandDate();
+  today=iso(new Date());updBrandDate();applyModule();
   document.querySelectorAll(".tabs [data-view]").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.view===view)));
   document.getElementById("vWoche").hidden=view!=="woche";
   document.getElementById("vOther").hidden=view==="woche";
   document.getElementById("navbar").hidden=view==="ferien"||view==="sterne"||view==="familie";
   if(view==="tag")renderDay();else if(view==="monat")renderMonth();else if(view==="jahr")renderYear();else if(view==="ferien")renderFerien();else if(view==="sterne")renderStars();else if(view==="familie")renderFamilie();else renderWeek();
-  renderMorning();renderNews();renderEve();renderNext();renderRemind();renderWishes();renderPet();
+  renderMorning();renderNews();renderEve();renderNext();renderRemind();renderWishes();renderPet();kompaktKarten();
+  {const en=document.getElementById("emptyNote");if(en)en.innerHTML=entries.some(e=>["termin","arbeit","urlaub","geburtstag"].includes(e.typ))?"Tippe in ein Feld, um dort einen Eintrag anzulegen. Arbeitszeiten und Urlaub trägt jeder in seiner eigenen Spalte ein.":"<b>Noch keine Termine.</b> Tippe unten auf <b>+</b> und schreib einfach z. B. „Zahnarzt Dienstag 15 Uhr“."}
 }
 /* ---------- Tagesübersicht (Zeitstrahl) ---------- */
 const HPX=52;
@@ -3631,8 +3705,9 @@ document.getElementById("mAck").onclick=()=>{try{localStorage.setItem(ackKey(),"
 
 /* ---------- Eingabe-Sheet ---------- */
 let draft=null,editId=null,confirmDel=false;
+var MEHR_OFFEN=false;
 function openSheet(e,preset){
-  editId=e?e.id:null;confirmDel=false;
+  editId=e?e.id:null;confirmDel=false;MEHR_OFFEN=!!(e&&(e.wichtig||e.geschuetzt||e.vorlauf||e.bringt||e.holt||e._privat));
   draft=e?{...e}:{typ:"termin",person:preset?.person||"gemeinsam",titel:"",datum:preset?.day||today,endDatum:"",von:"",bis:"",serie:"",intervall:0,wdh:"keine",wdhBis:addDays(preset?.day||today,364)};
   if(!draft.wdhBis)draft.wdhBis=addDays(draft.datum,364);
   if(!draft.wdh)draft.wdh="keine";
@@ -3655,6 +3730,17 @@ function drawSheet(){
     <div class="seg" style="--n:${Math.min(4,peopleAllowed.length)}">${peopleAllowed.map(([k,n])=>`<button class="p-${k}" data-person="${k}" aria-pressed="${d.person===k}">${n}</button>`).join("")}</div>
     ${bd?`<p class="hint">In welcher Spalte soll der Geburtstag stehen? Für Verwandte und Freunde passt „Gemeinsam“.</p>`:""}
     <label class="f">${bd?"Wer hat Geburtstag?":d.typ==="termin"?"Was?":"Notiz (optional)"}<input id="i-titel" list="dlTitles" autocomplete="off" value="${esc(d.titel)}" placeholder="${bd?"z. B. Oma Helga":d.typ==="termin"?"z. B. Fußballtraining, Zahnarzt …":d.typ==="arbeit"?"z. B. Frühdienst":"z. B. Ostsee"}"></label>
+    ${bd?`<div class="row2"><label class="f">Geburtstag (Tag und Monat)<input type="date" id="i-datum" value="${d.datum}"></label>
+      <label class="f">Geburtsjahr (optional)<input type="number" inputmode="numeric" id="i-jahr" min="1900" max="2100" value="${esc(d.geburtsjahr||"")}" placeholder="z. B. 1956"></label></div>
+      <p class="hint">Kommt jedes Jahr automatisch wieder. Mit Geburtsjahr wird das Alter angezeigt.</p><input type="hidden" id="i-end" value="">`:`<div class="row2">
+      <label class="f">${isGanz(d.typ)?"Erster Tag":"Datum"}<input type="date" id="i-datum" value="${d.datum}"></label>
+      <label class="f">${isGanz(d.typ)?"Letzter Tag":"Bis Datum (mehrtägig)"}<input type="date" id="i-end" value="${d.endDatum||""}"></label>
+    </div>`}
+    ${showTime?`<div class="row2">
+      <label class="f">${d.typ==="arbeit"?"Arbeitsbeginn":"Von (optional)"}<input type="time" id="i-von" value="${d.von||""}"></label>
+      <label class="f">${d.typ==="arbeit"?"Arbeitsende":"Bis (optional)"}<input type="time" id="i-bis" value="${d.bis||""}"></label>
+    </div>`:""}
+    <details class="mehropt" ${MEHR_OFFEN?"open":""} ontoggle="MEHR_OFFEN=this.open"><summary>⚙️ Mehr Optionen<span class="meta">${[vlDays(d)?"🔔":"",d.wichtig?"❗":"",d.geschuetzt?"🔒":"",d.bringt||d.holt?"🚗":""].join("")||"Erinnerung, wichtig, Sichtbarkeit, Schutz"+(d.typ==="termin"&&!bd?", Fahrten":"")}</span></summary>
     <div class="box">
       <span class="lbl-s">🔔 Vorher erinnern</span>
       <div class="seg" style="--n:5">${[[0,"Nein"],[1,"1 Tag"],[3,"3 Tage"],[7,"1 Woche"],[14,"2 Wo."]].map(([v,t])=>`<button class="typ" data-vl="${v}" aria-pressed="${vlDays(d)===v}">${t}</button>`).join("")}</div>
@@ -3668,18 +3754,9 @@ function drawSheet(){
       :isPrivObj(d)?`<p class="hint">👥 Nur sichtbar für: ${d.sichtbar.map(memName).join(", ")}</p>`:""}
     ${store&&store.mode==="db"&&(!isEdit||isMine(d))?`<button class="impbtn" id="i-lock" aria-pressed="${!!d.geschuetzt}">🔒 ${d.geschuetzt?"Geschützt: nur du kannst löschen":"Vor dem Löschen durch andere schützen"}</button>`
       :d.geschuetzt&&!canDel(d)?`<p class="hint">🔒 Geschützt von <b>${esc(d.vonName||"der Person, die ihn eingetragen hat")}</b>. Nur sie kann ihn löschen. Ändern darfst du ihn trotzdem.</p>`:""}
-    ${bd?`<div class="row2"><label class="f">Geburtstag (Tag und Monat)<input type="date" id="i-datum" value="${d.datum}"></label>
-      <label class="f">Geburtsjahr (optional)<input type="number" inputmode="numeric" id="i-jahr" min="1900" max="2100" value="${esc(d.geburtsjahr||"")}" placeholder="z. B. 1956"></label></div>
-      <p class="hint">Kommt jedes Jahr automatisch wieder. Mit Geburtsjahr wird das Alter angezeigt.</p><input type="hidden" id="i-end" value="">`:`<div class="row2">
-      <label class="f">${isGanz(d.typ)?"Erster Tag":"Datum"}<input type="date" id="i-datum" value="${d.datum}"></label>
-      <label class="f">${isGanz(d.typ)?"Letzter Tag":"Bis Datum (mehrtägig)"}<input type="date" id="i-end" value="${d.endDatum||""}"></label>
-    </div>`}
-    ${showTime?`<div class="row2">
-      <label class="f">${d.typ==="arbeit"?"Arbeitsbeginn":"Von (optional)"}<input type="time" id="i-von" value="${d.von||""}"></label>
-      <label class="f">${d.typ==="arbeit"?"Arbeitsende":"Bis (optional)"}<input type="time" id="i-bis" value="${d.bis||""}"></label>
-    </div>`:""}
     ${d.typ==="termin"&&!bd?`<div class="box"><span class="lbl-s">🚗 Wer bringt, wer holt? (optional)</span>
       ${[["bringt","Bringen"],["holt","Abholen"]].map(([f,n])=>`<div class="fahrtsel"><span>${n}</span>${[["","–"],["offen","❓ offen"],...persons().map(([k,nm])=>[k,nm])].map(([v,l])=>`<button data-fs="${f}:${v}" aria-pressed="${(d[f]||"")===v}">${esc(l)}</button>`).join("")}</div>`).join("")}</div>`:""}
+    </details>
     <div id="clashBox" class="clashbox" hidden></div>
     ${bd?"":!isEdit?`<div class="box">
       <span class="lbl-s">Wiederholen</span>
@@ -4034,7 +4111,20 @@ document.getElementById("vOther").addEventListener("click",ev=>{
   if(g){weekStart=mondayOf(g.dataset.goday);setView("woche");setTimeout(()=>{const el=document.getElementById("d-"+g.dataset.goday);if(el)el.scrollIntoView({block:"center"})},50);return}
   const mo=ev.target.closest("[data-gomonth]");if(mo){monthCur=mo.dataset.gomonth;setView("monat")}
 });
-document.getElementById("fab").onclick=()=>openSheet(null,{day:today>=weekStart&&today<=addDays(weekStart,6)?today:weekStart,person:"gemeinsam"});
+document.getElementById("fab").onclick=()=>schnellEintrag();
+function schnellEintrag(){
+  const tag=today>=weekStart&&today<=addDays(weekStart,6)?today:weekStart;
+  sheet("➕ Neuer Eintrag",`<p class="hint" style="margin-top:0">Einfach hinschreiben, die App erkennt Person, Tag und Uhrzeit:</p>
+    <div class="ekadd"><input id="qeIn" placeholder="z. B. Fußball ${esc(persons()[1]?persons()[1][1]:"Ben")} Do 17 Uhr" enterkeyhint="go" autocomplete="off"><button class="btn" id="qeGo" aria-label="Weiter">→</button></div>
+    <div class="ekchips">${["Arzt morgen 10 Uhr","Elternabend Mi 19 Uhr","Urlaub 1.8. bis 14.8.","Geburtstag Oma 12.3."].map(t=>`<button data-qe="${esc(t)}">${esc(t)}</button>`).join("")}</div>
+    <div class="actions">${voiceOK()?`<button class="btn ghost" id="qeMic">🎤 Sprechen</button>`:""}<button class="btn ghost" id="qeForm">📝 Formular öffnen</button></div>`);
+  const inp=document.getElementById("qeIn");setTimeout(()=>{try{inp.focus()}catch(e){}},150);
+  const go=()=>{const t=inp.value.trim();if(!t){closeSheet();openSheet(null,{day:tag,person:"gemeinsam"});return}closeSheet();setTimeout(()=>applyVoice(t),150)};
+  document.getElementById("qeGo").onclick=go;inp.onkeydown=ev=>{if(ev.key==="Enter")go()};
+  document.querySelectorAll("[data-qe]").forEach(b=>b.onclick=()=>{inp.value=b.dataset.qe;inp.focus()});
+  document.getElementById("qeForm").onclick=()=>{closeSheet();openSheet(null,{day:tag,person:"gemeinsam"})};
+  const m=document.getElementById("qeMic");if(m)m.onclick=()=>{closeSheet();startVoice()};
+}
 document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&draft)closeSheet()});
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&iso(new Date())!==today)render()});
 /* ---------- Offline & automatische Aktualisierung ---------- */
@@ -4303,6 +4393,15 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-15b",d:"2026-11-15",t:"🧹 Aufgeräumter & einfacher",items:[
+    "➕ Der Plus-Knopf öffnet jetzt die Schnell-Eingabe: einfach „Zahnarzt Dienstag 15 Uhr“ schreiben oder sprechen. Das volle Formular gibt es weiterhin per Knopf",
+    "⚙️ Im Eintrags-Formular sind Erinnerung, Wichtig, Sichtbarkeit, Schutz und Fahrten unter „Mehr Optionen“ zusammengefasst",
+    "📌 Oben steht nur noch der wichtigste Hinweis für heute, die anderen klappst du bei Bedarf auf",
+    "⭐ Der Sterne-Bereich hat für Eltern eigene Reiter: Übersicht, Aufgaben, Belohnungen, Geld, Spiele, Einstellungen",
+    "🔍 Die Einstellungen sind in Gruppen sortiert und haben ein Suchfeld",
+    "🧩 Bereiche wie Sterne, Familie oder Ferien lassen sich ausblenden (Einstellungen → Bereiche). Neue Kalender fragen das gleich beim Anlegen",
+    "💡 Leere Listen zeigen jetzt, wie man anfängt",
+    "🎉 Konfetti gibt es nur noch bei echten Erfolgen, damit es etwas Besonderes bleibt"]},
   {v:"2026-11-15a",d:"2026-11-15",t:"✨ Neue Neuigkeiten-Seite",items:[
     "✨ Alle Neuerungen stehen jetzt auf einer eigenen Seite mit allen Details (Einstellungen oder Hilfe → Neuigkeiten)",
     "🧹 Auf dem Hauptbildschirm erscheint kein Hinweis-Fenster mehr",
