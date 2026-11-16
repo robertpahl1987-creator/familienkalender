@@ -891,6 +891,7 @@ function splitData(all){
   geldBuch=all.filter(e=>e.typ==="geld");wuensche=all.filter(e=>e.typ==="wunsch");
   einkauf=all.filter(e=>e.typ==="einkauf");essen=all.filter(e=>e.typ==="essen");infos=all.filter(e=>e.typ==="info");
   if(KID)setTimeout(umfPopup,1600);
+  {const ft=document.querySelector('.tabs [data-view="familie"]');if(ft)ft.classList.toggle("hasbadge",!KID&&umfNeu()>0)}
   const tb=document.querySelector('[data-view="sterne"]');if(tb)tb.classList.toggle("hasbadge",!KID&&ROLE!=="lesen"&&pendingCount()>0);
 }
 function pendingCount(){return taskLogs.filter(l=>l.offen&&!l.abgelehnt).length+redeems.filter(r=>r.offen).length}
@@ -1516,20 +1517,20 @@ function umfPopZeigen(u){UMF_POP_ID=u.id;
   sheet("📊 Neue Umfrage für dich",`<p class="hint">Mama oder Papa möchten etwas von dir wissen. Tippe auf 🔊, dann wird dir alles vorgelesen.</p>${umfCard(u)}<button class="btn ghost" id="umfSpaeter" style="width:100%">Später antworten</button>`);
   wireUmfragen(true);document.getElementById("umfSpaeter").onclick=()=>{UMF_POP_ID=null;closeSheet()}}
 function umfElternHTML(){
-  const kids=persons();
-  const list=umfragen.slice().sort((a,b)=>String(b.datum).localeCompare(String(a.datum))).map(u=>{const a=umfAntwort(u),wahl=a?(a.wahl||[]):[];
-    return `<div class="umf"><div class="umfkopf"><b>${esc(u.frage)}</b><span class="meta">${esc(PNAME[u.person]||"")} · ${fmt(u.datum)}</span></div>
+  if(KID)return"";const seen=umfSeen();
+  const list=umfragen.slice().sort((a,b)=>String(b.erstellt||b.datum).localeCompare(String(a.erstellt||a.datum))).map(u=>{const a=umfAntwort(u),wahl=a?(a.wahl||[]):[],neu=a&&!seen.includes(a.id);
+    return `<div class="umf"><div class="umfkopf"><b>${esc(u.frage)}</b><span class="meta">${neu?'<span class="svbadge">NEU</span> ':""}${esc(PNAME[u.person]||"")} · ${fmt(u.datum)}</span></div>
       <div class="meta">${a?`✅ Beantwortet am ${fmt(a.datum)}`:"⏳ Noch nicht beantwortet"}</div>
       <ul class="umferg">${(u.optionen||[]).map((o,i)=>`<li class="${wahl.includes(i)?"gew":""}">${wahl.includes(i)?"✅":"▫️"} ${esc(o)}</li>`).join("")}</ul>
       ${READONLY?"":`<div class="rw-btns">${a?`<button data-umfreset="${esc(a.id)}">Neu fragen</button>`:""}<button data-umfdel="${esc(u.id)}">Löschen</button></div>`}</div>`}).join("");
-  return `${READONLY?"":`<div class="actions"><button class="btn" id="umfAdd">+ Umfrage</button></div>`}
-    <p class="hint">Stell eine Frage mit Antworten zum Antippen, z. B. „Was wünschst du dir als Belohnung?“. Das Kind sieht sie in seinem Sterne-Bereich und kann sich alles vorlesen lassen. Das Ergebnis erscheint hier.</p>
-    ${list||`<div class="leer"><b>Noch keine Umfragen</b><p class="hint">Tipp: Kurze Antworten mit Bild-Emoji helfen beim Lesen, z. B. „🎮 Spielzeit“, „🍕 Pizza-Abend“, „👟 Sparen für Schuhe“.</p></div>`}`}
+  return `<section class="famsec"><h3 class="sec">📊 Umfragen${umfNeu()?` <span class="svbadge">${umfNeu()}</span>`:""}</h3>
+    ${READONLY?"":`<div class="actions"><button class="btn" id="umfAdd">+ Umfrage</button></div>`}
+    ${list||`<p class="hint">Fragt euer Kind etwas zum Antippen, z. B. „Was möchtest du am Wochenende essen?“ oder „Wann machst du heute Hausaufgaben?“. Die Umfrage öffnet sich beim Kind sofort, alles lässt sich vorlesen. Das Ergebnis steht dann hier.</p>`}</section>`}
 function openUmfrageSheet(){
   const kids=persons(),def=(kids.find(([k,n])=>k==="john"||/^john$/i.test(n))||kids[0]||[""])[0];
   sheet("📊 Neue Umfrage",`<label class="f">Für wen?<select id="umfP">${kids.map(([k,n])=>`<option value="${k}" ${k===def?"selected":""}>${esc(n)}</option>`).join("")}</select></label>
-    <label class="f">Frage<input id="umfF" placeholder="z. B. Was wünschst du dir für 50 Sterne?" maxlength="140"></label>
-    <label class="f">Antworten (eine pro Zeile, 2 bis 8)<textarea id="umfO" rows="5" placeholder="🎮 30 Minuten Spielzeit&#10;🍕 Pizza-Abend&#10;🎬 Kino&#10;👟 Sparen für Nike-Schuhe"></textarea></label>
+    <label class="f">Frage<input id="umfF" placeholder="z. B. Was möchtest du am Samstag essen?" maxlength="140"></label>
+    <label class="f">Antworten (eine pro Zeile, 2 bis 8)<textarea id="umfO" rows="5" placeholder="🍝 Nudeln&#10;🍕 Pizza&#10;🍔 Burger&#10;🥗 Etwas anderes"></textarea></label>
     <label class="pick" style="justify-content:space-between"><span>Mehrere Antworten erlaubt</span><input type="checkbox" id="umfM"></label>
     <div class="actions"><button class="btn" id="umfOk">Umfrage senden</button><button class="btn ghost" id="umfX">Abbrechen</button></div>`);
   document.getElementById("umfX").onclick=closeSheet;
@@ -1593,11 +1594,11 @@ function renderStars(){
       ${last?`<h3 class="sec">Zuletzt eingelöst</h3><ul class="hint" style="margin:0;padding-left:18px">${last}</ul>`:""}
       <button class="btn ghost" id="kpBtn" style="margin-top:12px">🎒 Startpaket: Kinder-Aufgaben & Belohnungen</button>`;
   }else{
-  const SV=[["ueb","Übersicht"],["auf","Aufgaben"],["bel","Belohnungen"],["geld","Geld"],["spiel","Spiele"],["umf","Umfragen"],["einst","Einstellungen"]];
+  const SV=[["ueb","Übersicht"],["auf","Aufgaben"],["bel","Belohnungen"],["geld","Geld"],["spiel","Spiele"],["einst","Einstellungen"]];
   let sv=lsGet("fk-sv")||"ueb";if(!SV.some(x=>x[0]===sv))sv="ueb";
   const leer=!tasks.length;
   document.getElementById("vOther").innerHTML=`<div class="starcards">${cards}</div>
-    <div class="svtabs" role="tablist">${SV.map(([k,n])=>`<button role="tab" data-svt="${k}" aria-selected="${k===sv}">${n}${k==="ueb"&&pend.length&&!READONLY?` <span class="svbadge">${pend.length}</span>`:""}${k==="umf"&&umfNeu()?` <span class="svbadge">${umfNeu()}</span>`:""}</button>`).join("")}</div>
+    <div class="svtabs" role="tablist">${SV.map(([k,n])=>`<button role="tab" data-svt="${k}" aria-selected="${k===sv}">${n}${k==="ueb"&&pend.length&&!READONLY?` <span class="svbadge">${pend.length}</span>`:""}</button>`).join("")}</div>
     <div class="svwrap sv-${sv}">
     <section data-sv="ueb">
       ${leer?`<div class="leer"><b>So startet ihr</b><p class="hint">1. Aufgaben anlegen (oder das fertige Startpaket nehmen) · 2. Belohnungen festlegen · 3. Das Kind hakt ab, ihr bestätigt.</p><button class="btn" data-kp>🎒 Startpaket nutzen</button><button class="btn ghost" data-tadd>+ Eigene Aufgabe</button></div>`:""}
@@ -1617,16 +1618,15 @@ function renderStars(){
     </section>
     <section data-sv="geld">${kontoHTML()}</section>
     <section data-sv="spiel">${spieleHTML()}</section>
-    <section data-sv="umf">${umfElternHTML()}</section>
     <section data-sv="einst">${abzugHTML()+bonusHTML()+limitEinst()+hilfenEinst()}</section>
     </div>`;
-  document.querySelectorAll("[data-svt]").forEach(b=>b.onclick=()=>{const k=b.dataset.svt;lsSet("fk-sv",k);if(k==="umf"&&umfNeu()){umfGesehen();setTimeout(render,50)}const w=document.querySelector(".svwrap");w.className="svwrap sv-"+k;document.querySelectorAll("[data-svt]").forEach(x=>x.setAttribute("aria-selected",String(x===b)))});
+  document.querySelectorAll("[data-svt]").forEach(b=>b.onclick=()=>{const k=b.dataset.svt;lsSet("fk-sv",k);const w=document.querySelector(".svwrap");w.className="svwrap sv-"+k;document.querySelectorAll("[data-svt]").forEach(x=>x.setAttribute("aria-selected",String(x===b)))});
   document.querySelectorAll("[data-kp]").forEach(b=>b.onclick=kidPackSheet);
   document.querySelectorAll("[data-tadd]").forEach(b=>b.onclick=()=>openTaskSheet(null));
   document.querySelectorAll("[data-radd]").forEach(b=>b.onclick=()=>openRewardSheet(null));
   }
   {const kb=document.getElementById("kpBtn");if(kb)kb.onclick=kidPackSheet}
-  document.getElementById("histBtn").onclick=()=>showHistory(KID||"");wireSpiele();wireUmfragen();wireAbzug();wireBonus();wireLimit();wireHilfen();wireGeld();
+  document.getElementById("histBtn").onclick=()=>showHistory(KID||"");wireSpiele();if(KID)wireUmfragen();wireAbzug();wireBonus();wireLimit();wireHilfen();wireGeld();
   document.querySelectorAll("[data-rad]").forEach(b=>b.onclick=()=>radDrehen(b.dataset.rad));
   document.querySelectorAll("[data-abzshow]").forEach(b=>b.onclick=ev=>{ev.stopPropagation();showAbz(b.dataset.abzshow)});
   if(KID)setTimeout(neueAbz,900);
@@ -1862,7 +1862,7 @@ function wireBonus(){
 }
 /* ---------- Neuigkeiten fürs Kinder-Handy (nur Sterne-System) ---------- */
 const KID_NEWS=[
-  {id:"k15",ic:"📊",t:"Umfragen",x:"Neu: Mama oder Papa können dir Fragen schicken, zum Beispiel was du dir wünschst. Du tippst einfach auf deine Antwort und schickst sie ab. Mit dem Lautsprecher-Knopf wird dir die ganze Frage mit allen Antworten vorgelesen."},
+  {id:"k15",ic:"📊",t:"Umfragen",x:"Neu: Mama oder Papa können dir Fragen schicken, zum Beispiel was du am Wochenende essen möchtest. Du tippst einfach auf deine Antwort und schickst sie ab. Mit dem Lautsprecher-Knopf wird dir die ganze Frage mit allen Antworten vorgelesen."},
   {id:"k14",ic:"🤝",t:"Allein oder mit Hilfe",x:"Wenn du eine Aufgabe ganz allein schaffst, gibt es alle Sterne. Hat dir jemand geholfen, gibt es die Hälfte, also zum Beispiel einen halben Stern. Probier es allein, du schaffst das!"},
   {id:"k13",ic:"💶",t:"Zahltag",x:"Einmal pro Woche ist Zahltag. Dann kannst du Sterne in Geld für dein Erspartes tauschen. Tipp: Je mehr Sterne du auf einmal tauschst, desto mehr Geld bekommst du! 100 Sterne geben 12 Euro statt 10. Sparen lohnt sich also."},
   {id:"k12",ic:"💰",t:"Dein eigenes Geld",x:"Neu: Unter Mein Geld siehst du dein Erspartes und deine Wunschliste. Deine Sterne kannst du gegen echtes Geld für dein Erspartes tauschen. Davon kaufst du dir deine Wünsche selbst, zum Beispiel Nike-Sachen oder Spiele-Guthaben. Wer selbst kauft, bekommt 5 Sterne Stolz-Bonus!"},
@@ -2157,7 +2157,7 @@ function exportStart(p){
 /* Ansicht */
 function renderFamilie(){
   const el=document.getElementById("vOther");
-  el.innerHTML=`<div class="famview">${ekHTML()}${essHTML()}${fahrtenHTML()}${gebHTML()}${infoHTML()}${exportHTML()}</div>`;
+  el.innerHTML=`<div class="famview">${ekHTML()}${umfElternHTML()}${essHTML()}${fahrtenHTML()}${gebHTML()}${infoHTML()}${exportHTML()}</div>`;
   const $=id=>document.getElementById(id);
   if($("ekGo")){const go=async()=>{const v=$("ekIn").value;if(!v.trim())return;$("ekIn").value="";await ekAdd(v)};$("ekGo").onclick=go;$("ekIn").onkeydown=ev=>{if(ev.key==="Enter")go()}}
   el.querySelectorAll("[data-ekq]").forEach(b=>b.onclick=()=>ekAdd(b.dataset.ekq));
@@ -2174,6 +2174,7 @@ function renderFamilie(){
   if($("infoNeu"))$("infoNeu").onclick=()=>infoSheet(null);
   el.querySelectorAll("[data-info]").forEach(b=>b.onclick=()=>infoSheet(infos.find(x=>x.id===b.dataset.info)));
   el.querySelectorAll("[data-ics]").forEach(b=>b.onclick=()=>exportStart(b.dataset.ics));
+  wireUmfragen();if(umfNeu())setTimeout(()=>{umfGesehen();const t=document.querySelector('.tabs [data-view="familie"]');if(t)t.classList.remove("hasbadge")},4000);
 }
 /* ---------- Startseite & Beispiel-Familie ---------- */
 let DEMO=false;
@@ -2610,7 +2611,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v99";
+const APP_VER="v100";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4455,6 +4456,9 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-16c",d:"2026-11-16",t:"📊 Umfragen jetzt unter Familie",items:[
+    "📊 Umfragen sind unabhängig vom Sterne-System und stehen jetzt im Bereich Familie, gedacht für Organisatorisches wie Essen, Termine oder Hausaufgaben-Zeiten",
+    "🔴 Neue Antworten werden am Familie-Reiter mit einem Punkt markiert"]},
   {v:"2026-11-16b",d:"2026-11-16",t:"📊 Umfragen öffnen sich sofort",items:[
     "📊 Eine neue Umfrage öffnet sich beim Kind direkt als eigenes Fenster, sobald es die App öffnet (oder sofort, wenn die App gerade offen ist)",
     "⏰ Mit „Später antworten“ lässt sich das Fenster schließen, beim nächsten Öffnen der App kommt es wieder, bis die Umfrage beantwortet ist"]},
