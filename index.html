@@ -1803,12 +1803,12 @@ async function fotoBewerten(id){
   sheet("📸 Foto bewerten",`<p style="margin:0 0 8px"><b>${esc(PNAME[x.person]||"")}:</b> ${esc(x.titel)}</p><div id="fImg" class="hint" style="text-align:center;padding:30px 0">Foto wird geladen …</div>
     <div class="rate"><button class="btn" data-rt="ok">✅ Allein & gut<br><small>+${sF(+x.sterne||0)} ⭐</small></button><button class="btn" data-rt="perfekt" style="background:linear-gradient(135deg,#ffd166,#ff9f1c);color:#3a2300">🌟 100 % perfekt<br><small>+${2*(+x.sterne||1)} ⭐</small></button></div>
     <button class="btn ghost" data-rt="hilfe" style="width:100%;margin-bottom:8px">🤝 Mit Hilfe geschafft · +${sF(halb(x.sterne))} ⭐</button>
-    <label class="f">Was fehlt noch? (bei „Nochmal“)<input id="fHint" maxlength="80" placeholder="z. B. Schreibtisch auch aufräumen"></label>
+    <label class="f">Was fehlt noch? (bei „Nochmal“)<textarea id="fHint" maxlength="300" rows="3" placeholder="z. B. Schreibtisch auch aufräumen"></textarea></label>
     <div class="actions"><button class="btn ghost" data-rt="nochmal">🔁 Nochmal machen</button><button class="btn ghost" id="fX">Später</button></div>`);
   document.getElementById("fX").onclick=closeSheet;
   fotoLaden(x.foto).then(b=>{const el=document.getElementById("fImg");if(el)el.outerHTML=b?`<img src="${b}" alt="Foto" style="width:100%;border-radius:14px;max-height:50vh;object-fit:contain;background:#000">`:'<p class="hint">Das Foto ist nicht mehr da.</p>'}).catch(()=>{});
   document.querySelectorAll("[data-rt]").forEach(b=>b.onclick=async()=>{const rt=b.dataset.rt;const{id:_i,offen,foto,...o}=x;
-    if(rt==="nochmal"){const h=document.getElementById("fHint").value.trim().slice(0,80);await store.set(x.id,{...o,offen:true,abgelehnt:true,hinweis:h||"Bitte nochmal ordentlich machen"});
+    if(rt==="nochmal"){const h=document.getElementById("fHint").value.trim().slice(0,300);await store.set(x.id,{...o,offen:true,abgelehnt:true,hinweis:h||"Bitte nochmal ordentlich machen"});
       toast(`🔁 ${PNAME[x.person]} soll „${x.titel}“ nochmal machen`)}
     else if(rt==="perfekt"){const w=2*(+x.sterne||1),st=Math.max(+x.sterne||0,capSterne(x.person,x.datum,logArt(x),w,x.id));await store.set(x.id,{...o,sterne:st,perfekt:true});popPerson=x.person;confetti();toast(`🌟 Perfekt! +${st} ⭐ für ${PNAME[x.person]}${capTxt(st,w)}`)}
     else if(rt==="hilfe"){const st=halb(x.sterne);await store.set(x.id,{...o,sterne:st,fotoOk:true,mitHilfe:true});popPerson=x.person;toast(`🤝 Mit Hilfe: +${sF(st)} ⭐ für ${PNAME[x.person]}`)}
@@ -2299,10 +2299,10 @@ function fixStars(p){
   const cur=starBalance(p);
   sheet(`⭐ Sterne von ${esc(PNAME[p]||"")}`,`<p class="hint">Aktueller Stand: <b>${sF(cur)} ⭐</b>. Gib den neuen Stand ein. Die Änderung erscheint im 📜 Verlauf als „Korrektur“. Werden Sterne abgezogen, bekommt ${esc(PNAME[p]||"")} den Grund angezeigt und kann ihn sich vorlesen lassen.</p>
     <label class="f">Neuer Stand<input id="fxN" type="number" inputmode="decimal" step="0.5" min="0" max="9999" value="${cur}"></label>
-    <label class="f">Grund (wird dem Kind vorgelesen)<input id="fxW" maxlength="60" placeholder="z. B. Zimmer nicht aufgeräumt"></label>
+    <label class="f">Grund (wird dem Kind vorgelesen)<textarea id="fxW" maxlength="300" rows="3" placeholder="z. B. Zimmer nicht aufgeräumt, obwohl wir es zweimal gesagt haben"></textarea></label>
     <div class="actions"><button class="btn" id="fxOk">Speichern</button><button class="btn ghost" id="fxX">Abbrechen</button></div>`);
   document.getElementById("fxX").onclick=closeSheet;
-  document.getElementById("fxOk").onclick=async()=>{const nv=Math.max(0,Math.round((+String(document.getElementById("fxN").value).replace(",",".")||0)*2)/2),diff=nv-cur,w=document.getElementById("fxW").value.trim().slice(0,60);
+  document.getElementById("fxOk").onclick=async()=>{const nv=Math.max(0,Math.round((+String(document.getElementById("fxN").value).replace(",",".")||0)*2)/2),diff=nv-cur,w=document.getElementById("fxW").value.trim().slice(0,300);
     if(!diff){closeSheet();return}if(!store)return;closeSheet();
     const titel="✏️ Korrektur"+(w?": "+w:"");
     if(diff>0)await store.add({typ:"erledigt",aufgabe:"korrektur",person:p,sterne:diff,datum:today,titel});
@@ -2650,7 +2650,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v103";
+const APP_VER="v104";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4495,6 +4495,8 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-16g",d:"2026-11-16",t:"✍️ Längere Begründungen",items:[
+    "✍️ Grund beim Sterne-Korrigieren und „Was fehlt noch?“ bei „Nochmal“ erlauben jetzt bis zu 300 Zeichen in einem größeren Feld"]},
   {v:"2026-11-16f",d:"2026-11-16",t:"🔊 Abzug wird erklärt",items:[
     "🔊 Werden dem Kind Sterne abgezogen, öffnet sich beim nächsten Öffnen der App ein Fenster mit dem Grund, das sich vorlesen lässt",
     "😴 Auch der automatische Abzug für einen Tag ohne Aufgabe wird erklärt, mit Wochentag",
