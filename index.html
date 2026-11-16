@@ -890,6 +890,7 @@ function splitData(all){
   backups=all.filter(e=>e.typ==="sicherung");
   geldBuch=all.filter(e=>e.typ==="geld");wuensche=all.filter(e=>e.typ==="wunsch");
   einkauf=all.filter(e=>e.typ==="einkauf");essen=all.filter(e=>e.typ==="essen");infos=all.filter(e=>e.typ==="info");
+  if(KID)setTimeout(umfPopup,1600);
   const tb=document.querySelector('[data-view="sterne"]');if(tb)tb.classList.toggle("hasbadge",!KID&&ROLE!=="lesen"&&pendingCount()>0);
 }
 function pendingCount(){return taskLogs.filter(l=>l.offen&&!l.abgelehnt).length+redeems.filter(r=>r.offen).length}
@@ -1499,12 +1500,21 @@ const UMF_SEL={};
 function umfVorlesTxt(u){return `${u.frage}. ${u.mehrfach?"Du darfst mehrere Antworten wählen.":"Wähle eine Antwort."} ${(u.optionen||[]).map((o,i)=>`Antwort ${i+1}: ${o}.`).join(" ")}`}
 function umfKidHTML(){if(!KID)return"";const offen=umfragen.filter(u=>u.person===KID&&!umfAntwort(u)),fertig=umfragen.filter(u=>u.person===KID&&umfAntwort(u));
   if(!offen.length&&!fertig.length)return"";
-  const card=u=>{const sel=UMF_SEL[u.id]||[];return `<div class="umf"><div class="umfkopf"><b>📊 ${esc(u.frage)}</b><button class="umfhoer" data-umfhoer="${esc(u.id)}" aria-label="Ganze Umfrage vorlesen">🔊</button></div>
-    <span class="meta">${u.mehrfach?"Du darfst mehrere antippen.":"Tippe auf eine Antwort."} Mit 🔊 wird alles vorgelesen.</span>
-    <div class="umfopts">${(u.optionen||[]).map((o,i)=>`<div class="umfopt${sel.includes(i)?" an":""}"><button class="umfwahl" data-umfw="${esc(u.id)}" data-i="${i}">${sel.includes(i)?"✅":"⬜"} ${esc(o)}</button><button class="umfhoer klein" data-umfo="${esc(u.id)}" data-i="${i}" aria-label="Antwort vorlesen">🔊</button></div>`).join("")}</div>
-    <button class="btn" data-umfsend="${esc(u.id)}" ${sel.length?"":"disabled"} style="width:100%">📨 Abschicken</button></div>`};
+  const card=umfCard;
   return `${offen.length?`<h3 class="sec">📊 Umfrage für dich</h3>${offen.map(card).join("")}`:""}
     ${fertig.length?`<details class="spaeter"><summary>✅ Beantwortete Umfragen (${fertig.length})</summary>${fertig.map(u=>`<p class="hint"><b>${esc(u.frage)}</b><br>Deine Antwort: ${esc((umfAntwort(u).antworten||[]).join(", "))}</p>`).join("")}</details>`:""}`}
+function umfCard(u){const sel=UMF_SEL[u.id]||[];return `<div class="umf"><div class="umfkopf"><b>📊 ${esc(u.frage)}</b><button class="umfhoer" data-umfhoer="${esc(u.id)}" aria-label="Ganze Umfrage vorlesen">🔊</button></div>
+    <span class="meta">${u.mehrfach?"Du darfst mehrere antippen.":"Tippe auf eine Antwort."} Mit 🔊 wird alles vorgelesen.</span>
+    <div class="umfopts">${(u.optionen||[]).map((o,i)=>`<div class="umfopt${sel.includes(i)?" an":""}"><button class="umfwahl" data-umfw="${esc(u.id)}" data-i="${i}">${sel.includes(i)?"✅":"⬜"} ${esc(o)}</button><button class="umfhoer klein" data-umfo="${esc(u.id)}" data-i="${i}" aria-label="Antwort vorlesen">🔊</button></div>`).join("")}</div>
+    <button class="btn" data-umfsend="${esc(u.id)}" ${sel.length?"":"disabled"} style="width:100%">📨 Abschicken</button></div>`}
+/* Neue Umfrage öffnet sich beim Kind sofort als eigenes Fenster */
+const UMF_POP=new Set();let UMF_POP_ID=null;
+function umfPopup(){if(!KID||!store)return;const u=umfragen.find(x=>x.person===KID&&!umfAntwort(x)&&!UMF_POP.has(x.id));if(!u)return;
+  const host=document.getElementById("sheetHost");if(host&&host.innerHTML.trim()){setTimeout(umfPopup,2500);return}
+  UMF_POP.add(u.id);umfPopZeigen(u)}
+function umfPopZeigen(u){UMF_POP_ID=u.id;
+  sheet("📊 Neue Umfrage für dich",`<p class="hint">Mama oder Papa möchten etwas von dir wissen. Tippe auf 🔊, dann wird dir alles vorgelesen.</p>${umfCard(u)}<button class="btn ghost" id="umfSpaeter" style="width:100%">Später antworten</button>`);
+  wireUmfragen(true);document.getElementById("umfSpaeter").onclick=()=>{UMF_POP_ID=null;closeSheet()}}
 function umfElternHTML(){
   const kids=persons();
   const list=umfragen.slice().sort((a,b)=>String(b.datum).localeCompare(String(a.datum))).map(u=>{const a=umfAntwort(u),wahl=a?(a.wahl||[]):[];
@@ -1527,18 +1537,18 @@ function openUmfrageSheet(){
     if(!f){toast("Bitte eine Frage eingeben");return}if(o.length<2){toast("Bitte mindestens 2 Antworten eingeben");return}
     await store.add({typ:"umfrage",person:document.getElementById("umfP").value,frage:f,optionen:o,mehrfach:document.getElementById("umfM").checked,datum:today});
     closeSheet();toast("📊 Umfrage verschickt");render()}}
-function wireUmfragen(){
-  const a=document.getElementById("umfAdd");if(a)a.onclick=openUmfrageSheet;
+function wireUmfragen(pop){const R=document.getElementById(pop?"sheetHost":"vOther");if(!R)return;
+  const a=R.querySelector("#umfAdd");if(a)a.onclick=openUmfrageSheet;
   const U=id=>umfragen.find(u=>u.id===id);
-  document.querySelectorAll("[data-umfhoer]").forEach(b=>b.onclick=()=>{const u=U(b.dataset.umfhoer);if(u)speak(umfVorlesTxt(u))});
-  document.querySelectorAll("[data-umfo]").forEach(b=>b.onclick=()=>{const u=U(b.dataset.umfo);if(u)speak(`Antwort ${+b.dataset.i+1}: ${u.optionen[+b.dataset.i]}.`)});
-  document.querySelectorAll("[data-umfw]").forEach(b=>b.onclick=()=>{const u=U(b.dataset.umfw);if(!u)return;const i=+b.dataset.i;let s=UMF_SEL[u.id]||[];
-    s=u.mehrfach?(s.includes(i)?s.filter(x=>x!==i):[...s,i]):[i];UMF_SEL[u.id]=s;if(ttsAuto())speak(u.optionen[i]);render()});
-  document.querySelectorAll("[data-umfsend]").forEach(b=>b.onclick=async()=>{const u=U(b.dataset.umfsend);const s=(UMF_SEL[u.id]||[]).slice().sort((x,y)=>x-y);if(!u||!s.length)return;
+  R.querySelectorAll("[data-umfhoer]").forEach(b=>b.onclick=()=>{const u=U(b.dataset.umfhoer);if(u)speak(umfVorlesTxt(u))});
+  R.querySelectorAll("[data-umfo]").forEach(b=>b.onclick=()=>{const u=U(b.dataset.umfo);if(u)speak(`Antwort ${+b.dataset.i+1}: ${u.optionen[+b.dataset.i]}.`)});
+  R.querySelectorAll("[data-umfw]").forEach(b=>b.onclick=()=>{const u=U(b.dataset.umfw);if(!u)return;const i=+b.dataset.i;let s=UMF_SEL[u.id]||[];
+    s=u.mehrfach?(s.includes(i)?s.filter(x=>x!==i):[...s,i]):[i];UMF_SEL[u.id]=s;if(ttsAuto())speak(u.optionen[i]);if(pop)umfPopZeigen(u);else render()});
+  R.querySelectorAll("[data-umfsend]").forEach(b=>b.onclick=async()=>{const u=U(b.dataset.umfsend);const s=(UMF_SEL[u.id]||[]).slice().sort((x,y)=>x-y);if(!u||!s.length)return;
     await store.add({typ:"erledigt",umfrage:u.id,aufgabe:"umfrage-"+u.id,person:KID||u.person,offen:true,sterne:0,datum:today,titel:"Umfrage: "+u.frage,wahl:s,antworten:s.map(i=>u.optionen[i])});
-    delete UMF_SEL[u.id];toast("📨 Danke! Deine Antwort ist verschickt");speak("Danke! Deine Antwort ist verschickt.");render()});
-  document.querySelectorAll("[data-umfreset]").forEach(b=>b.onclick=async()=>{if(!await askConfirm("Antwort löschen und die Umfrage noch einmal stellen?"))return;await store.del(b.dataset.umfreset);render()});
-  document.querySelectorAll("[data-umfdel]").forEach(b=>b.onclick=async()=>{if(!await askConfirm("Umfrage samt Antwort löschen?"))return;const id=b.dataset.umfdel;for(const x of umfAntw.filter(x=>x.umfrage===id))await store.del(x.id);await store.del(id);render()})}
+    delete UMF_SEL[u.id];if(pop){UMF_POP_ID=null;closeSheet()}toast("📨 Danke! Deine Antwort ist verschickt");speak("Danke! Deine Antwort ist verschickt.");render()});
+  R.querySelectorAll("[data-umfreset]").forEach(b=>b.onclick=async()=>{if(!await askConfirm("Antwort löschen und die Umfrage noch einmal stellen?"))return;await store.del(b.dataset.umfreset);render()});
+  R.querySelectorAll("[data-umfdel]").forEach(b=>b.onclick=async()=>{if(!await askConfirm("Umfrage samt Antwort löschen?"))return;const id=b.dataset.umfdel;for(const x of umfAntw.filter(x=>x.umfrage===id))await store.del(x.id);await store.del(id);render()})}
 function renderStars(){
   applyHilfen();
   const P=persons();
@@ -2600,7 +2610,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v98";
+const APP_VER="v99";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4445,6 +4455,9 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-16b",d:"2026-11-16",t:"📊 Umfragen öffnen sich sofort",items:[
+    "📊 Eine neue Umfrage öffnet sich beim Kind direkt als eigenes Fenster, sobald es die App öffnet (oder sofort, wenn die App gerade offen ist)",
+    "⏰ Mit „Später antworten“ lässt sich das Fenster schließen, beim nächsten Öffnen der App kommt es wieder, bis die Umfrage beantwortet ist"]},
   {v:"2026-11-16a",d:"2026-11-16",t:"📊 Umfragen für Kinder",items:[
     "📊 Neu im Sterne-Bereich: Reiter „Umfragen“. Stellt eurem Kind eine Frage mit Antworten zum Antippen, z. B. „Was wünschst du dir als Belohnung?“",
     "🔊 Das Kind kann sich die ganze Umfrage vorlesen lassen, jede Antwort hat zusätzlich einen eigenen Vorlese-Knopf",
