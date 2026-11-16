@@ -601,6 +601,7 @@ body.mod-aus-sterne .tabs [data-view="sterne"],body.mod-aus-familie .tabs [data-
 .setgrp{border:1px solid var(--line,#3335);border-radius:12px;margin:8px 0;padding:0 12px}.setgrp>summary{cursor:pointer;font-weight:600;padding:12px 0;list-style:none}.setgrp>summary::-webkit-details-marker{display:none}.setgrp>summary::after{content:"›";float:right;transition:transform .2s}.setgrp[open]>summary::after{transform:rotate(90deg)}.setgrp[open]{padding-bottom:10px}.setsuche{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;border:1px solid var(--line,#3335);background:transparent;color:inherit;font:inherit;margin:4px 0 6px}
 .svtabs{display:flex;gap:6px;overflow-x:auto;margin:10px 0 8px;padding-bottom:2px;scrollbar-width:none}.svtabs button{flex:0 0 auto;border:1px solid var(--line,#3335);background:transparent;color:inherit;border-radius:999px;padding:7px 12px;font:inherit;font-size:.9em}.svtabs button[aria-selected="true"]{background:var(--accent,#5b8def);color:#fff;border-color:transparent}.svbadge{background:#e5484d;color:#fff;border-radius:999px;padding:0 6px;font-size:.8em}.svwrap>section{display:none}.svwrap.sv-ueb>[data-sv="ueb"],.svwrap.sv-auf>[data-sv="auf"],.svwrap.sv-bel>[data-sv="bel"],.svwrap.sv-geld>[data-sv="geld"],.svwrap.sv-spiel>[data-sv="spiel"],.svwrap.sv-umf>[data-sv="umf"],.svwrap.sv-einst>[data-sv="einst"]{display:block}.leer{border:1px dashed var(--line,#3337);border-radius:14px;padding:14px;margin:8px 0;display:grid;gap:8px}.leer p{margin:0}
 .umf{border:1px solid var(--line,#3335);border-radius:14px;padding:12px;margin:8px 0;display:grid;gap:8px}.umfkopf{display:flex;justify-content:space-between;align-items:center;gap:8px}.umfhoer{border:0;background:var(--accent,#5b8def);color:#fff;border-radius:999px;width:44px;height:44px;font-size:1.3em;flex:0 0 auto}.umfhoer.klein{width:40px;height:40px;font-size:1.1em;background:transparent;border:1px solid var(--line,#3335)}.umfopts{display:grid;gap:6px}.umfopt{display:flex;gap:6px;align-items:center}.umfwahl{flex:1;text-align:left;font:inherit;font-size:1.05em;padding:12px;border-radius:12px;border:1px solid var(--line,#3335);background:transparent;color:inherit}.umfopt.an .umfwahl{border-color:var(--accent,#5b8def);background:color-mix(in srgb,var(--accent,#5b8def) 18%,transparent)}.umferg{margin:0;padding-left:4px;list-style:none}.umferg li{padding:3px 0;opacity:.6}.umferg li.gew{opacity:1;font-weight:700}
+.minus{border-left:3px solid #e5484d;padding:4px 10px}
 .umfan{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.umfwer{display:grid;gap:6px}.umfp{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.95em}.umfp button{flex:0 0 auto}
 canvas.confetti{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9999}
 .premcta{background:linear-gradient(180deg,#ffe9a8,#ffcc4d 50%,#e0a21f);color:#3a2600;border:0;font-weight:800;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 2px 0 #a8730f,0 6px 14px rgba(0,0,0,.25)}
@@ -1643,7 +1644,7 @@ function renderStars(){
   document.getElementById("histBtn").onclick=()=>showHistory(KID||"");wireSpiele();if(KID)wireUmfragen();wireAbzug();wireBonus();wireLimit();wireHilfen();wireGeld();
   document.querySelectorAll("[data-rad]").forEach(b=>b.onclick=()=>radDrehen(b.dataset.rad));
   document.querySelectorAll("[data-abzshow]").forEach(b=>b.onclick=ev=>{ev.stopPropagation();showAbz(b.dataset.abzshow)});
-  if(KID)setTimeout(neueAbz,900);
+  if(KID){setTimeout(neueAbz,900);setTimeout(minusPopup,2000)}
   {const tb=document.getElementById("ttsBtn");if(tb)tb.onclick=()=>{if(speechSynthesis.speaking){speechSynthesis.cancel();return}readTasks()}}
   document.getElementById("tAdd").onclick=()=>openTaskSheet(null);
   document.getElementById("rAdd").onclick=()=>openRewardSheet(null);
@@ -1876,6 +1877,7 @@ function wireBonus(){
 }
 /* ---------- Neuigkeiten fürs Kinder-Handy (nur Sterne-System) ---------- */
 const KID_NEWS=[
+  {id:"k16",ic:"🔊",t:"Warum Sterne weg sind",x:"Wenn dir Sterne abgezogen werden, siehst du jetzt sofort warum. Mit dem Lautsprecher-Knopf wird dir der Grund vorgelesen."},
   {id:"k15",ic:"📊",t:"Umfragen",x:"Neu: Mama oder Papa können dir Fragen schicken, zum Beispiel was du am Wochenende essen möchtest. Du tippst einfach auf deine Antwort und schickst sie ab. Mit dem Lautsprecher-Knopf wird dir die ganze Frage mit allen Antworten vorgelesen."},
   {id:"k14",ic:"🤝",t:"Allein oder mit Hilfe",x:"Wenn du eine Aufgabe ganz allein schaffst, gibt es alle Sterne. Hat dir jemand geholfen, gibt es die Hälfte, also zum Beispiel einen halben Stern. Probier es allein, du schaffst das!"},
   {id:"k13",ic:"💶",t:"Zahltag",x:"Einmal pro Woche ist Zahltag. Dann kannst du Sterne in Geld für dein Erspartes tauschen. Tipp: Je mehr Sterne du auf einmal tauschst, desto mehr Geld bekommst du! 100 Sterne geben 12 Euro statt 10. Sparen lohnt sich also."},
@@ -2295,9 +2297,9 @@ function kompaktKarten(){
 }
 function fixStars(p){
   const cur=starBalance(p);
-  sheet(`⭐ Sterne von ${esc(PNAME[p]||"")}`,`<p class="hint">Aktueller Stand: <b>${sF(cur)} ⭐</b>. Gib den neuen Stand ein. Die Änderung erscheint im 📜 Verlauf als „Korrektur“.</p>
+  sheet(`⭐ Sterne von ${esc(PNAME[p]||"")}`,`<p class="hint">Aktueller Stand: <b>${sF(cur)} ⭐</b>. Gib den neuen Stand ein. Die Änderung erscheint im 📜 Verlauf als „Korrektur“. Werden Sterne abgezogen, bekommt ${esc(PNAME[p]||"")} den Grund angezeigt und kann ihn sich vorlesen lassen.</p>
     <label class="f">Neuer Stand<input id="fxN" type="number" inputmode="decimal" step="0.5" min="0" max="9999" value="${cur}"></label>
-    <label class="f">Grund (optional)<input id="fxW" maxlength="60" placeholder="z. B. Streit mit der Schwester"></label>
+    <label class="f">Grund (wird dem Kind vorgelesen)<input id="fxW" maxlength="60" placeholder="z. B. Zimmer nicht aufgeräumt"></label>
     <div class="actions"><button class="btn" id="fxOk">Speichern</button><button class="btn ghost" id="fxX">Abbrechen</button></div>`);
   document.getElementById("fxX").onclick=closeSheet;
   document.getElementById("fxOk").onclick=async()=>{const nv=Math.max(0,Math.round((+String(document.getElementById("fxN").value).replace(",",".")||0)*2)/2),diff=nv-cur,w=document.getElementById("fxW").value.trim().slice(0,60);
@@ -2477,6 +2479,29 @@ const abzVon=p=>ABZ.map(([id,ic,n,txt,f,ziel])=>{const ist=Math.min(f(p),ziel);r
 function abzHTML(p,klein){let a=abzVon(p);if(klein){const ok=a.filter(b=>b.ok),nah=a.filter(b=>!b.ok).sort((x,y)=>y.ist/y.ziel-x.ist/x.ziel).slice(0,3);a=[...ok,...nah]}return `<div class="abzgrid${klein?" klein":""}">${a.map(b=>`<div class="abz${b.ok?" ok":""}" title="${esc(b.txt)}"><span class="abzi">${b.ok?b.ic:"🔒"}</span><b>${esc(b.n)}</b><span class="meta">${b.ok?"geschafft!":`${b.ist}/${b.ziel} · ${esc(b.txt)}`}</span></div>`).join("")}</div>`}
 function levelHTML(p){const L=levelVon(p);return `<div class="lvlcard"><span class="lvli">${L.ic}</span><div class="lvlt"><b>Level ${L.i+1}: ${L.n}</b><span class="thbar"><i style="width:${L.pct}%"></i></span><span class="meta">${L.nx?`${sF(L.v)} ⭐ gesammelt · noch ${L.nx[0]-L.v} ⭐ bis ${L.nx[1]} ${L.nx[2]}`:`${sF(L.v)} ⭐ gesammelt · höchstes Level!`}</span></div></div>`}
 function showAbz(p){sheet(`🏅 ${esc(PNAME[p]||"")}: Level & Abzeichen`,`${levelHTML(p)}<p class="hint">${abzVon(p).filter(b=>b.ok).length} von ${ABZ.length} Abzeichen geschafft</p>${abzHTML(p)}<button class="btn ghost" id="abX" style="margin-top:10px">Schließen</button>`);document.getElementById("abX").onclick=closeSheet}
+/* ---------- Abzug erklären: John bekommt den Grund angezeigt und vorgelesen ---------- */
+const WTAG=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+function minusGrund(r){if(r.auto)return `weil du am ${WTAG[new Date(r.datum+"T12:00").getDay()]} keine Aufgabe gemacht hast`;
+  const g=String(r.titel||"").replace(/^✏️\s*Korrektur:?\s*/,"").trim();return g?`Der Grund: ${g}`:"Es wurde kein Grund eingetragen. Frag Mama oder Papa."}
+const minusIst=r=>r.person===KID&&+r.kosten>0&&(r.auto||/^✏️\s*Korrektur/.test(r.titel||""));
+const ohneEmoji=t=>String(t).replace(/[\p{Extended_Pictographic}️]/gu,"").replace(/\s+/g," ").trim();
+function minusPopup(){
+  if(!KID||!DATA_READY)return;let seen=null;try{seen=JSON.parse(localStorage.getItem("fk-minus")||"null")}catch(e){}
+  const alle=redeems.filter(minusIst);
+  if(!seen){seen=alle.filter(r=>r.datum<addDays(today,-2)).map(r=>r.id);try{localStorage.setItem("fk-minus",JSON.stringify(seen))}catch(e){}}
+  const neu=alle.filter(r=>!seen.includes(r.id)).sort((a,b)=>String(a.datum).localeCompare(String(b.datum)));if(!neu.length)return;
+  if(document.querySelector("#sheetHost .sheet"))return setTimeout(minusPopup,3000);
+  const summe=neu.reduce((a,r)=>a+(+r.kosten||0),0);
+  const satz=r=>`${+r.kosten===1?"Dir wurde 1 Stern":`Dir wurden ${sF(+r.kosten)} Sterne`} abgezogen${r.auto?", ":". "}${minusGrund(r)}.`;
+  const vorlesen=()=>speak(ohneEmoji(neu.map(satz).join(" ")+" Du kannst dir die Sterne mit Aufgaben wieder verdienen."));
+  sheet("⭐ Sterne abgezogen",`<div class="umf"><div class="umfkopf"><b>${summe===1?"1 Stern":sF(summe)+" Sterne"} weniger</b><button class="umfhoer" id="miHoer" aria-label="Vorlesen">🔊</button></div>
+    ${neu.map(r=>`<div class="minus"><b>−${sF(+r.kosten)} ⭐</b> <span class="meta">${fmt(r.datum)}</span><br>${esc(r.auto?"Weil"+minusGrund(r).slice(4):minusGrund(r))}</div>`).join("")}
+    <p class="hint" style="margin:0">Du kannst dir die Sterne mit Aufgaben wieder verdienen. 💪</p></div>
+    <button class="btn" id="miOk" style="width:100%;margin-top:10px">Verstanden</button>`);
+  document.getElementById("miHoer").onclick=vorlesen;
+  document.getElementById("miOk").onclick=()=>{try{localStorage.setItem("fk-minus",JSON.stringify([...seen,...neu.map(r=>r.id)].slice(-300)))}catch(e){}closeSheet()};
+  if(ttsAuto())vorlesen();
+}
 function neueAbz(){
   if(!KID||!DATA_READY)return;let seen=null;try{seen=JSON.parse(localStorage.getItem("fk-abz")||"null")}catch(e){}
   const ok=abzVon(KID).filter(b=>b.ok),L=levelVon(KID);
@@ -2625,7 +2650,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v102";
+const APP_VER="v103";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4470,6 +4495,10 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-16f",d:"2026-11-16",t:"🔊 Abzug wird erklärt",items:[
+    "🔊 Werden dem Kind Sterne abgezogen, öffnet sich beim nächsten Öffnen der App ein Fenster mit dem Grund, das sich vorlesen lässt",
+    "😴 Auch der automatische Abzug für einen Tag ohne Aufgabe wird erklärt, mit Wochentag",
+    "✏️ Beim Korrigieren heißt das Feld jetzt „Grund (wird dem Kind vorgelesen)“"]},
   {v:"2026-11-16e",d:"2026-11-16",t:"📊 Umfragen erinnern, bis alle geantwortet haben",items:[
     "🔁 Eine offene Umfrage öffnet sich bei jeder Person immer wieder als Fenster, bei jedem Öffnen der App und nach „Später antworten“ erneut nach 10 Minuten, bis sie beantwortet ist",
     "🙋 Erwachsene werden einmal gefragt „Wer bist du?“, damit sich ihre Umfragen auf dem eigenen Handy öffnen"]},
