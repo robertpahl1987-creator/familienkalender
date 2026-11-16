@@ -1511,13 +1511,20 @@ function umfCard(u){const sel=UMF_SEL[u.id]||[];return `<div class="umf"><div cl
     <button class="btn" data-umfsend="${esc(u.id)}" ${sel.length?"":"disabled"} style="width:100%">📨 Abschicken</button></div>`}
 /* Neue Umfrage öffnet sich beim Kind sofort als eigenes Fenster */
 const UMF_POP=new Set();let UMF_POP_ID=null;
-const umfFuerMich=x=>KID?x.person===KID:(!!myName()&&String(PNAME[x.person]||"").trim().toLowerCase()===myName().toLowerCase());
-function umfPopup(){if(!store||READONLY)return;const u=umfragen.find(x=>umfFuerMich(x)&&!umfAntwort(x)&&!UMF_POP.has(x.id));if(!u)return;
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){UMF_POP.clear();setTimeout(umfPopup,1200)}});
+const umfIch=()=>{const k=lsGet("fk-ich");if(k==="-")return"-";if(k&&PNAME[k]!==undefined)return k;const n=myName().toLowerCase();if(!n)return"";const f=persons().find(([k2,nm])=>String(nm).trim().toLowerCase()===n);return f?f[0]:""};
+const umfFuerMich=x=>KID?x.person===KID:umfIch()===x.person;
+function umfWerBistDu(){sheet("📊 Wer bist du?",`<p class="hint">Es gibt eine Umfrage in eurer Familie. Damit sie sich bei dir öffnet, sag kurz, wer du bist. Das wird nur auf diesem Handy gespeichert.</p>
+  <div class="actions" style="flex-wrap:wrap">${persons().map(([k,n])=>`<button class="btn ghost" data-ich="${k}">${esc(n)}</button>`).join("")}</div><button class="btn ghost" data-ich="-" style="width:100%">Keiner davon</button>`);
+  document.querySelectorAll("[data-ich]").forEach(b=>b.onclick=()=>{lsSet("fk-ich",b.dataset.ich);closeSheet();setTimeout(umfPopup,400)})}
+let UMF_FRAGE=false;
+function umfPopup(){if(!store||READONLY)return;
+  if(!KID&&!umfIch()&&!UMF_FRAGE&&umfragen.some(x=>!umfAntwort(x))){const host=document.getElementById("sheetHost");if(host&&host.innerHTML.trim()){setTimeout(umfPopup,2500);return}UMF_FRAGE=true;umfWerBistDu();return}const u=umfragen.find(x=>umfFuerMich(x)&&!umfAntwort(x)&&!UMF_POP.has(x.id));if(!u)return;
   const host=document.getElementById("sheetHost");if(host&&host.innerHTML.trim()){setTimeout(umfPopup,2500);return}
   UMF_POP.add(u.id);umfPopZeigen(u)}
 function umfPopZeigen(u){UMF_POP_ID=u.id;const ich=umfFuerMich(u);
   sheet(ich?"📊 Neue Umfrage für dich":`📊 Umfrage für ${esc(PNAME[u.person]||"")}`,`<p class="hint">${KID?"Mama oder Papa möchten etwas von dir wissen. Tippe auf 🔊, dann wird dir alles vorgelesen.":ich?"Jemand aus der Familie möchte etwas von dir wissen.":`Hier kannst du für ${esc(PNAME[u.person]||"")} antworten.`}</p>${umfCard(u)}<button class="btn ghost" id="umfSpaeter" style="width:100%">Später antworten</button>`);
-  wireUmfragen(true);document.getElementById("umfSpaeter").onclick=()=>{UMF_POP_ID=null;closeSheet()}}
+  wireUmfragen(true);document.getElementById("umfSpaeter").onclick=()=>{UMF_POP_ID=null;closeSheet();setTimeout(()=>{UMF_POP.delete(u.id);umfPopup()},10*60*1000)}}
 function umfElternHTML(){
   if(KID)return"";const seen=umfSeen(),grp=new Map();
   for(const u of umfragen){const g=u.gruppe||u.id;if(!grp.has(g))grp.set(g,[]);grp.get(g).push(u)}
@@ -2618,7 +2625,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v101";
+const APP_VER="v102";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4463,6 +4470,9 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-16e",d:"2026-11-16",t:"📊 Umfragen erinnern, bis alle geantwortet haben",items:[
+    "🔁 Eine offene Umfrage öffnet sich bei jeder Person immer wieder als Fenster, bei jedem Öffnen der App und nach „Später antworten“ erneut nach 10 Minuten, bis sie beantwortet ist",
+    "🙋 Erwachsene werden einmal gefragt „Wer bist du?“, damit sich ihre Umfragen auf dem eigenen Handy öffnen"]},
   {v:"2026-11-16d",d:"2026-11-16",t:"📊 Umfragen an mehrere Personen",items:[
     "👥 Eine Umfrage kann jetzt an mehrere Personen gleichzeitig gehen",
     "📈 Im Ergebnis siehst du bei jeder Antwort, wer sie gewählt hat, und wer noch nicht geantwortet hat",
