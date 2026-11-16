@@ -601,6 +601,7 @@ body.mod-aus-sterne .tabs [data-view="sterne"],body.mod-aus-familie .tabs [data-
 .setgrp{border:1px solid var(--line,#3335);border-radius:12px;margin:8px 0;padding:0 12px}.setgrp>summary{cursor:pointer;font-weight:600;padding:12px 0;list-style:none}.setgrp>summary::-webkit-details-marker{display:none}.setgrp>summary::after{content:"›";float:right;transition:transform .2s}.setgrp[open]>summary::after{transform:rotate(90deg)}.setgrp[open]{padding-bottom:10px}.setsuche{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;border:1px solid var(--line,#3335);background:transparent;color:inherit;font:inherit;margin:4px 0 6px}
 .svtabs{display:flex;gap:6px;overflow-x:auto;margin:10px 0 8px;padding-bottom:2px;scrollbar-width:none}.svtabs button{flex:0 0 auto;border:1px solid var(--line,#3335);background:transparent;color:inherit;border-radius:999px;padding:7px 12px;font:inherit;font-size:.9em}.svtabs button[aria-selected="true"]{background:var(--accent,#5b8def);color:#fff;border-color:transparent}.svbadge{background:#e5484d;color:#fff;border-radius:999px;padding:0 6px;font-size:.8em}.svwrap>section{display:none}.svwrap.sv-ueb>[data-sv="ueb"],.svwrap.sv-auf>[data-sv="auf"],.svwrap.sv-bel>[data-sv="bel"],.svwrap.sv-geld>[data-sv="geld"],.svwrap.sv-spiel>[data-sv="spiel"],.svwrap.sv-umf>[data-sv="umf"],.svwrap.sv-einst>[data-sv="einst"]{display:block}.leer{border:1px dashed var(--line,#3337);border-radius:14px;padding:14px;margin:8px 0;display:grid;gap:8px}.leer p{margin:0}
 .umf{border:1px solid var(--line,#3335);border-radius:14px;padding:12px;margin:8px 0;display:grid;gap:8px}.umfkopf{display:flex;justify-content:space-between;align-items:center;gap:8px}.umfhoer{border:0;background:var(--accent,#5b8def);color:#fff;border-radius:999px;width:44px;height:44px;font-size:1.3em;flex:0 0 auto}.umfhoer.klein{width:40px;height:40px;font-size:1.1em;background:transparent;border:1px solid var(--line,#3335)}.umfopts{display:grid;gap:6px}.umfopt{display:flex;gap:6px;align-items:center}.umfwahl{flex:1;text-align:left;font:inherit;font-size:1.05em;padding:12px;border-radius:12px;border:1px solid var(--line,#3335);background:transparent;color:inherit}.umfopt.an .umfwahl{border-color:var(--accent,#5b8def);background:color-mix(in srgb,var(--accent,#5b8def) 18%,transparent)}.umferg{margin:0;padding-left:4px;list-style:none}.umferg li{padding:3px 0;opacity:.6}.umferg li.gew{opacity:1;font-weight:700}
+.umfan{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.umfwer{display:grid;gap:6px}.umfp{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.95em}.umfp button{flex:0 0 auto}
 canvas.confetti{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9999}
 .premcta{background:linear-gradient(180deg,#ffe9a8,#ffcc4d 50%,#e0a21f);color:#3a2600;border:0;font-weight:800;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 2px 0 #a8730f,0 6px 14px rgba(0,0,0,.25)}
 .premhero{text-align:center;border-radius:16px;padding:16px 14px;background:linear-gradient(160deg,#3a2a10,#1d1408);color:#fff3cf;border:1px solid rgba(255,204,77,.35);display:grid;gap:6px;justify-items:center}
@@ -890,7 +891,7 @@ function splitData(all){
   backups=all.filter(e=>e.typ==="sicherung");
   geldBuch=all.filter(e=>e.typ==="geld");wuensche=all.filter(e=>e.typ==="wunsch");
   einkauf=all.filter(e=>e.typ==="einkauf");essen=all.filter(e=>e.typ==="essen");infos=all.filter(e=>e.typ==="info");
-  if(KID)setTimeout(umfPopup,1600);
+  setTimeout(umfPopup,1600);
   {const ft=document.querySelector('.tabs [data-view="familie"]');if(ft)ft.classList.toggle("hasbadge",!KID&&umfNeu()>0)}
   const tb=document.querySelector('[data-view="sterne"]');if(tb)tb.classList.toggle("hasbadge",!KID&&ROLE!=="lesen"&&pendingCount()>0);
 }
@@ -1510,25 +1511,28 @@ function umfCard(u){const sel=UMF_SEL[u.id]||[];return `<div class="umf"><div cl
     <button class="btn" data-umfsend="${esc(u.id)}" ${sel.length?"":"disabled"} style="width:100%">📨 Abschicken</button></div>`}
 /* Neue Umfrage öffnet sich beim Kind sofort als eigenes Fenster */
 const UMF_POP=new Set();let UMF_POP_ID=null;
-function umfPopup(){if(!KID||!store)return;const u=umfragen.find(x=>x.person===KID&&!umfAntwort(x)&&!UMF_POP.has(x.id));if(!u)return;
+const umfFuerMich=x=>KID?x.person===KID:(!!myName()&&String(PNAME[x.person]||"").trim().toLowerCase()===myName().toLowerCase());
+function umfPopup(){if(!store||READONLY)return;const u=umfragen.find(x=>umfFuerMich(x)&&!umfAntwort(x)&&!UMF_POP.has(x.id));if(!u)return;
   const host=document.getElementById("sheetHost");if(host&&host.innerHTML.trim()){setTimeout(umfPopup,2500);return}
   UMF_POP.add(u.id);umfPopZeigen(u)}
-function umfPopZeigen(u){UMF_POP_ID=u.id;
-  sheet("📊 Neue Umfrage für dich",`<p class="hint">Mama oder Papa möchten etwas von dir wissen. Tippe auf 🔊, dann wird dir alles vorgelesen.</p>${umfCard(u)}<button class="btn ghost" id="umfSpaeter" style="width:100%">Später antworten</button>`);
+function umfPopZeigen(u){UMF_POP_ID=u.id;const ich=umfFuerMich(u);
+  sheet(ich?"📊 Neue Umfrage für dich":`📊 Umfrage für ${esc(PNAME[u.person]||"")}`,`<p class="hint">${KID?"Mama oder Papa möchten etwas von dir wissen. Tippe auf 🔊, dann wird dir alles vorgelesen.":ich?"Jemand aus der Familie möchte etwas von dir wissen.":`Hier kannst du für ${esc(PNAME[u.person]||"")} antworten.`}</p>${umfCard(u)}<button class="btn ghost" id="umfSpaeter" style="width:100%">Später antworten</button>`);
   wireUmfragen(true);document.getElementById("umfSpaeter").onclick=()=>{UMF_POP_ID=null;closeSheet()}}
 function umfElternHTML(){
-  if(KID)return"";const seen=umfSeen();
-  const list=umfragen.slice().sort((a,b)=>String(b.erstellt||b.datum).localeCompare(String(a.erstellt||a.datum))).map(u=>{const a=umfAntwort(u),wahl=a?(a.wahl||[]):[],neu=a&&!seen.includes(a.id);
-    return `<div class="umf"><div class="umfkopf"><b>${esc(u.frage)}</b><span class="meta">${neu?'<span class="svbadge">NEU</span> ':""}${esc(PNAME[u.person]||"")} · ${fmt(u.datum)}</span></div>
-      <div class="meta">${a?`✅ Beantwortet am ${fmt(a.datum)}`:"⏳ Noch nicht beantwortet"}</div>
-      <ul class="umferg">${(u.optionen||[]).map((o,i)=>`<li class="${wahl.includes(i)?"gew":""}">${wahl.includes(i)?"✅":"▫️"} ${esc(o)}</li>`).join("")}</ul>
-      ${READONLY?"":`<div class="rw-btns">${a?`<button data-umfreset="${esc(a.id)}">Neu fragen</button>`:""}<button data-umfdel="${esc(u.id)}">Löschen</button></div>`}</div>`}).join("");
+  if(KID)return"";const seen=umfSeen(),grp=new Map();
+  for(const u of umfragen){const g=u.gruppe||u.id;if(!grp.has(g))grp.set(g,[]);grp.get(g).push(u)}
+  const list=[...grp.values()].sort((a,b)=>String(b[0].erstellt||b[0].datum).localeCompare(String(a[0].erstellt||a[0].datum))).map(us=>{const u0=us[0],ans=us.map(u=>[u,umfAntwort(u)]),fertig=ans.filter(x=>x[1]).length,neu=ans.some(([u,a])=>a&&!seen.includes(a.id));
+    return `<div class="umf"><div class="umfkopf"><b>${esc(u0.frage)}</b><span class="meta">${neu?'<span class="svbadge">NEU</span> ':""}${fmt(u0.datum)}</span></div>
+      <div class="meta">${fertig===us.length?"✅ Alle haben geantwortet":`${fertig} von ${us.length} haben geantwortet`}${u0.mehrfach?" · Mehrfachauswahl":""}</div>
+      <ul class="umferg">${(u0.optionen||[]).map((o,i)=>{const wer=ans.filter(([u,a])=>a&&(a.wahl||[]).includes(i)).map(([u])=>esc(PNAME[u.person]||""));return `<li class="${wer.length?"gew":""}">${wer.length?"✅":"▫️"} ${esc(o)}${wer.length?` <span class="meta">· ${wer.join(", ")}</span>`:""}</li>`}).join("")}</ul>
+      <div class="umfwer">${ans.map(([u,a])=>`<div class="umfp"><span><b class="p-${u.person}" style="background:none">${esc(PNAME[u.person]||"")}</b>: ${a?esc((a.antworten||[]).join(", ")):"⏳ offen"}</span>${READONLY?"":a?`<button data-umfreset="${esc(a.id)}">Neu fragen</button>`:`<button data-umfans="${esc(u.id)}">Antworten</button>`}</div>`).join("")}</div>
+      ${READONLY?"":`<div class="rw-btns"><button data-umfdel="${esc(u0.gruppe||u0.id)}">Umfrage löschen</button></div>`}</div>`}).join("");
   return `<section class="famsec"><h3 class="sec">📊 Umfragen${umfNeu()?` <span class="svbadge">${umfNeu()}</span>`:""}</h3>
     ${READONLY?"":`<div class="actions"><button class="btn" id="umfAdd">+ Umfrage</button></div>`}
-    ${list||`<p class="hint">Fragt euer Kind etwas zum Antippen, z. B. „Was möchtest du am Wochenende essen?“ oder „Wann machst du heute Hausaufgaben?“. Die Umfrage öffnet sich beim Kind sofort, alles lässt sich vorlesen. Das Ergebnis steht dann hier.</p>`}</section>`}
+    ${list||`<p class="hint">Fragt eine oder mehrere Personen etwas zum Antippen, z. B. „Was möchtest du am Wochenende essen?“ oder „Wann passt euch der Ausflug?“. Die Umfrage öffnet sich bei Kindern sofort, alles lässt sich vorlesen. Die Ergebnisse stehen dann hier.</p>`}</section>`}
 function openUmfrageSheet(){
   const kids=persons(),def=(kids.find(([k,n])=>k==="john"||/^john$/i.test(n))||kids[0]||[""])[0];
-  sheet("📊 Neue Umfrage",`<label class="f">Für wen?<select id="umfP">${kids.map(([k,n])=>`<option value="${k}" ${k===def?"selected":""}>${esc(n)}</option>`).join("")}</select></label>
+  sheet("📊 Neue Umfrage",`<div class="f">An wen? (mehrere möglich)<div class="umfan">${kids.map(([k,n])=>`<label class="pick"><input type="checkbox" data-umfan="${k}" ${k===def?"checked":""}> ${esc(n)}</label>`).join("")}</div></div>
     <label class="f">Frage<input id="umfF" placeholder="z. B. Was möchtest du am Samstag essen?" maxlength="140"></label>
     <label class="f">Antworten (eine pro Zeile, 2 bis 8)<textarea id="umfO" rows="5" placeholder="🍝 Nudeln&#10;🍕 Pizza&#10;🍔 Burger&#10;🥗 Etwas anderes"></textarea></label>
     <label class="pick" style="justify-content:space-between"><span>Mehrere Antworten erlaubt</span><input type="checkbox" id="umfM"></label>
@@ -1536,7 +1540,9 @@ function openUmfrageSheet(){
   document.getElementById("umfX").onclick=closeSheet;
   document.getElementById("umfOk").onclick=async()=>{const f=document.getElementById("umfF").value.trim(),o=document.getElementById("umfO").value.split("\n").map(x=>x.trim()).filter(Boolean).slice(0,8);
     if(!f){toast("Bitte eine Frage eingeben");return}if(o.length<2){toast("Bitte mindestens 2 Antworten eingeben");return}
-    await store.add({typ:"umfrage",person:document.getElementById("umfP").value,frage:f,optionen:o,mehrfach:document.getElementById("umfM").checked,datum:today});
+    const an=[...document.querySelectorAll("[data-umfan]")].filter(c=>c.checked).map(c=>c.dataset.umfan);if(!an.length){toast("Bitte mindestens eine Person wählen");return}
+    const g="g"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),m=document.getElementById("umfM").checked;
+    for(const p of an)await store.add({typ:"umfrage",person:p,gruppe:g,frage:f,optionen:o,mehrfach:m,datum:today});
     closeSheet();toast("📊 Umfrage verschickt");render()}}
 function wireUmfragen(pop){const R=document.getElementById(pop?"sheetHost":"vOther");if(!R)return;
   const a=R.querySelector("#umfAdd");if(a)a.onclick=openUmfrageSheet;
@@ -1549,7 +1555,8 @@ function wireUmfragen(pop){const R=document.getElementById(pop?"sheetHost":"vOth
     await store.add({typ:"erledigt",umfrage:u.id,aufgabe:"umfrage-"+u.id,person:KID||u.person,offen:true,sterne:0,datum:today,titel:"Umfrage: "+u.frage,wahl:s,antworten:s.map(i=>u.optionen[i])});
     delete UMF_SEL[u.id];if(pop){UMF_POP_ID=null;closeSheet()}toast("📨 Danke! Deine Antwort ist verschickt");speak("Danke! Deine Antwort ist verschickt.");render()});
   R.querySelectorAll("[data-umfreset]").forEach(b=>b.onclick=async()=>{if(!await askConfirm("Antwort löschen und die Umfrage noch einmal stellen?"))return;await store.del(b.dataset.umfreset);render()});
-  R.querySelectorAll("[data-umfdel]").forEach(b=>b.onclick=async()=>{if(!await askConfirm("Umfrage samt Antwort löschen?"))return;const id=b.dataset.umfdel;for(const x of umfAntw.filter(x=>x.umfrage===id))await store.del(x.id);await store.del(id);render()})}
+  R.querySelectorAll("[data-umfdel]").forEach(b=>b.onclick=async()=>{if(!await askConfirm("Umfrage samt allen Antworten löschen?"))return;const id=b.dataset.umfdel;for(const u of umfragen.filter(u=>(u.gruppe||u.id)===id)){for(const x of umfAntw.filter(x=>x.umfrage===u.id))await store.del(x.id);await store.del(u.id)}render()});
+  R.querySelectorAll("[data-umfans]").forEach(b=>b.onclick=()=>{const u=U(b.dataset.umfans);if(u)umfPopZeigen(u)})}
 function renderStars(){
   applyHilfen();
   const P=persons();
@@ -2611,7 +2618,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v100";
+const APP_VER="v101";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4456,6 +4463,10 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-16d",d:"2026-11-16",t:"📊 Umfragen an mehrere Personen",items:[
+    "👥 Eine Umfrage kann jetzt an mehrere Personen gleichzeitig gehen",
+    "📈 Im Ergebnis siehst du bei jeder Antwort, wer sie gewählt hat, und wer noch nicht geantwortet hat",
+    "✍️ Mit „Antworten“ kann man auch direkt am Handy für eine Person antworten"]},
   {v:"2026-11-16c",d:"2026-11-16",t:"📊 Umfragen jetzt unter Familie",items:[
     "📊 Umfragen sind unabhängig vom Sterne-System und stehen jetzt im Bereich Familie, gedacht für Organisatorisches wie Essen, Termine oder Hausaufgaben-Zeiten",
     "🔴 Neue Antworten werden am Familie-Reiter mit einem Punkt markiert"]},
