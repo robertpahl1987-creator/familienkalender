@@ -599,7 +599,8 @@ body.lang-x #micBtn,body.lang-x #voiceIn{display:none!important}
 @keyframes sfall{0%{transform:translate(0,-10px) rotate(0)}50%{transform:translate(var(--sw,10px),120px) rotate(180deg)}100%{transform:translate(0,260px) rotate(360deg);opacity:0}}
 body.mod-aus-sterne .tabs [data-view="sterne"],body.mod-aus-familie .tabs [data-view="familie"],body.mod-aus-ferien .tabs [data-view="ferien"]{display:none!important}
 .setgrp{border:1px solid var(--line,#3335);border-radius:12px;margin:8px 0;padding:0 12px}.setgrp>summary{cursor:pointer;font-weight:600;padding:12px 0;list-style:none}.setgrp>summary::-webkit-details-marker{display:none}.setgrp>summary::after{content:"›";float:right;transition:transform .2s}.setgrp[open]>summary::after{transform:rotate(90deg)}.setgrp[open]{padding-bottom:10px}.setsuche{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;border:1px solid var(--line,#3335);background:transparent;color:inherit;font:inherit;margin:4px 0 6px}
-.svtabs{display:flex;gap:6px;overflow-x:auto;margin:10px 0 8px;padding-bottom:2px;scrollbar-width:none}.svtabs button{flex:0 0 auto;border:1px solid var(--line,#3335);background:transparent;color:inherit;border-radius:999px;padding:7px 12px;font:inherit;font-size:.9em}.svtabs button[aria-selected="true"]{background:var(--accent,#5b8def);color:#fff;border-color:transparent}.svbadge{background:#e5484d;color:#fff;border-radius:999px;padding:0 6px;font-size:.8em}.svwrap>section{display:none}.svwrap.sv-ueb>[data-sv="ueb"],.svwrap.sv-auf>[data-sv="auf"],.svwrap.sv-bel>[data-sv="bel"],.svwrap.sv-geld>[data-sv="geld"],.svwrap.sv-spiel>[data-sv="spiel"],.svwrap.sv-einst>[data-sv="einst"]{display:block}.leer{border:1px dashed var(--line,#3337);border-radius:14px;padding:14px;margin:8px 0;display:grid;gap:8px}.leer p{margin:0}
+.svtabs{display:flex;gap:6px;overflow-x:auto;margin:10px 0 8px;padding-bottom:2px;scrollbar-width:none}.svtabs button{flex:0 0 auto;border:1px solid var(--line,#3335);background:transparent;color:inherit;border-radius:999px;padding:7px 12px;font:inherit;font-size:.9em}.svtabs button[aria-selected="true"]{background:var(--accent,#5b8def);color:#fff;border-color:transparent}.svbadge{background:#e5484d;color:#fff;border-radius:999px;padding:0 6px;font-size:.8em}.svwrap>section{display:none}.svwrap.sv-ueb>[data-sv="ueb"],.svwrap.sv-auf>[data-sv="auf"],.svwrap.sv-bel>[data-sv="bel"],.svwrap.sv-geld>[data-sv="geld"],.svwrap.sv-spiel>[data-sv="spiel"],.svwrap.sv-umf>[data-sv="umf"],.svwrap.sv-einst>[data-sv="einst"]{display:block}.leer{border:1px dashed var(--line,#3337);border-radius:14px;padding:14px;margin:8px 0;display:grid;gap:8px}.leer p{margin:0}
+.umf{border:1px solid var(--line,#3335);border-radius:14px;padding:12px;margin:8px 0;display:grid;gap:8px}.umfkopf{display:flex;justify-content:space-between;align-items:center;gap:8px}.umfhoer{border:0;background:var(--accent,#5b8def);color:#fff;border-radius:999px;width:44px;height:44px;font-size:1.3em;flex:0 0 auto}.umfhoer.klein{width:40px;height:40px;font-size:1.1em;background:transparent;border:1px solid var(--line,#3335)}.umfopts{display:grid;gap:6px}.umfopt{display:flex;gap:6px;align-items:center}.umfwahl{flex:1;text-align:left;font:inherit;font-size:1.05em;padding:12px;border-radius:12px;border:1px solid var(--line,#3335);background:transparent;color:inherit}.umfopt.an .umfwahl{border-color:var(--accent,#5b8def);background:color-mix(in srgb,var(--accent,#5b8def) 18%,transparent)}.umferg{margin:0;padding-left:4px;list-style:none}.umferg li{padding:3px 0;opacity:.6}.umferg li.gew{opacity:1;font-weight:700}
 canvas.confetti{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9999}
 .premcta{background:linear-gradient(180deg,#ffe9a8,#ffcc4d 50%,#e0a21f);color:#3a2600;border:0;font-weight:800;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 2px 0 #a8730f,0 6px 14px rgba(0,0,0,.25)}
 .premhero{text-align:center;border-radius:16px;padding:16px 14px;background:linear-gradient(160deg,#3a2a10,#1d1408);color:#fff3cf;border:1px solid rgba(255,204,77,.35);display:grid;gap:6px;justify-items:center}
@@ -876,14 +877,14 @@ const MON=["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","D
 const TYPN={termin:"Termin",arbeit:"Arbeit",urlaub:"Urlaub",ferien:"Ferien",geburtstag:"Geburtstag"};
 const CAL_TYPES=["termin","arbeit","urlaub","ferien","geburtstag"];
 const isGanz=t=>t==="urlaub"||t==="ferien";
-let tasks=[],taskLogs=[],rewards=[],redeems=[],backups=[],geldBuch=[],wuensche=[];
+let umfragen=[],umfAntw=[],tasks=[],taskLogs=[],rewards=[],redeems=[],backups=[],geldBuch=[],wuensche=[];
 function splitData(all){
   _ALL=all;
   if(KID){const ok=p=>p===KID||(KIDGEM&&p==="gemeinsam");
-    all=all.filter(e=>{const t=e.typ;if(t==="sicherung")return false;if(t==="belohnung")return true;if(t==="aufgabe"||t==="erledigt"||t==="einloesung"||t==="geld"||t==="wunsch")return e.person===KID;return ok(e.person)})}
+    all=all.filter(e=>{const t=e.typ;if(t==="sicherung")return false;if(t==="belohnung")return true;if(t==="aufgabe"||t==="erledigt"||t==="einloesung"||t==="geld"||t==="wunsch"||t==="umfrage")return e.person===KID;return ok(e.person)})}
   entries=all.filter(e=>!e.typ||CAL_TYPES.includes(e.typ));
   tasks=all.filter(e=>e.typ==="aufgabe");
-  taskLogs=all.filter(e=>e.typ==="erledigt");
+  taskLogs=all.filter(e=>e.typ==="erledigt"&&!e.umfrage);umfragen=all.filter(e=>e.typ==="umfrage");umfAntw=all.filter(e=>e.typ==="erledigt"&&e.umfrage);
   rewards=all.filter(e=>e.typ==="belohnung");
   redeems=all.filter(e=>e.typ==="einloesung");
   backups=all.filter(e=>e.typ==="sicherung");
@@ -1489,6 +1490,55 @@ const THEMEN=[["routine","🪥","Morgens & abends",/zähne|zahn|dusch|wasch|anzi
   ["sonst","⭐","Sonstiges",/$^/]];
 const THEMA=Object.fromEntries(THEMEN.map(t=>[t[0],t]));
 function taskThema(t){if(t.thema&&THEMA[t.thema])return t.thema;const x=THEMEN.find(([k,,,re])=>re.test(t.titel||""));return x?x[0]:"sonst"}
+/* ---------- Umfragen (Eltern fragen, Kind wählt, alles vorlesbar) ---------- */
+const umfAntwort=u=>umfAntw.filter(a=>a.umfrage===u.id&&!a.abgelehnt).sort((a,b)=>String(b.erstellt||b.datum).localeCompare(String(a.erstellt||a.datum)))[0];
+const umfSeen=()=>{try{return JSON.parse(lsGet("fk-umf-seen")||"[]")}catch(e){return[]}};
+function umfNeu(){const s=umfSeen();return umfragen.filter(u=>{const a=umfAntwort(u);return a&&!s.includes(a.id)}).length}
+function umfGesehen(){lsSet("fk-umf-seen",JSON.stringify(umfAntw.map(a=>a.id).slice(-200)))}
+const UMF_SEL={};
+function umfVorlesTxt(u){return `${u.frage}. ${u.mehrfach?"Du darfst mehrere Antworten wählen.":"Wähle eine Antwort."} ${(u.optionen||[]).map((o,i)=>`Antwort ${i+1}: ${o}.`).join(" ")}`}
+function umfKidHTML(){if(!KID)return"";const offen=umfragen.filter(u=>u.person===KID&&!umfAntwort(u)),fertig=umfragen.filter(u=>u.person===KID&&umfAntwort(u));
+  if(!offen.length&&!fertig.length)return"";
+  const card=u=>{const sel=UMF_SEL[u.id]||[];return `<div class="umf"><div class="umfkopf"><b>📊 ${esc(u.frage)}</b><button class="umfhoer" data-umfhoer="${esc(u.id)}" aria-label="Ganze Umfrage vorlesen">🔊</button></div>
+    <span class="meta">${u.mehrfach?"Du darfst mehrere antippen.":"Tippe auf eine Antwort."} Mit 🔊 wird alles vorgelesen.</span>
+    <div class="umfopts">${(u.optionen||[]).map((o,i)=>`<div class="umfopt${sel.includes(i)?" an":""}"><button class="umfwahl" data-umfw="${esc(u.id)}" data-i="${i}">${sel.includes(i)?"✅":"⬜"} ${esc(o)}</button><button class="umfhoer klein" data-umfo="${esc(u.id)}" data-i="${i}" aria-label="Antwort vorlesen">🔊</button></div>`).join("")}</div>
+    <button class="btn" data-umfsend="${esc(u.id)}" ${sel.length?"":"disabled"} style="width:100%">📨 Abschicken</button></div>`};
+  return `${offen.length?`<h3 class="sec">📊 Umfrage für dich</h3>${offen.map(card).join("")}`:""}
+    ${fertig.length?`<details class="spaeter"><summary>✅ Beantwortete Umfragen (${fertig.length})</summary>${fertig.map(u=>`<p class="hint"><b>${esc(u.frage)}</b><br>Deine Antwort: ${esc((umfAntwort(u).antworten||[]).join(", "))}</p>`).join("")}</details>`:""}`}
+function umfElternHTML(){
+  const kids=persons();
+  const list=umfragen.slice().sort((a,b)=>String(b.datum).localeCompare(String(a.datum))).map(u=>{const a=umfAntwort(u),wahl=a?(a.wahl||[]):[];
+    return `<div class="umf"><div class="umfkopf"><b>${esc(u.frage)}</b><span class="meta">${esc(PNAME[u.person]||"")} · ${fmt(u.datum)}</span></div>
+      <div class="meta">${a?`✅ Beantwortet am ${fmt(a.datum)}`:"⏳ Noch nicht beantwortet"}</div>
+      <ul class="umferg">${(u.optionen||[]).map((o,i)=>`<li class="${wahl.includes(i)?"gew":""}">${wahl.includes(i)?"✅":"▫️"} ${esc(o)}</li>`).join("")}</ul>
+      ${READONLY?"":`<div class="rw-btns">${a?`<button data-umfreset="${esc(a.id)}">Neu fragen</button>`:""}<button data-umfdel="${esc(u.id)}">Löschen</button></div>`}</div>`}).join("");
+  return `${READONLY?"":`<div class="actions"><button class="btn" id="umfAdd">+ Umfrage</button></div>`}
+    <p class="hint">Stell eine Frage mit Antworten zum Antippen, z. B. „Was wünschst du dir als Belohnung?“. Das Kind sieht sie in seinem Sterne-Bereich und kann sich alles vorlesen lassen. Das Ergebnis erscheint hier.</p>
+    ${list||`<div class="leer"><b>Noch keine Umfragen</b><p class="hint">Tipp: Kurze Antworten mit Bild-Emoji helfen beim Lesen, z. B. „🎮 Spielzeit“, „🍕 Pizza-Abend“, „👟 Sparen für Schuhe“.</p></div>`}`}
+function openUmfrageSheet(){
+  const kids=persons(),def=(kids.find(([k,n])=>k==="john"||/^john$/i.test(n))||kids[0]||[""])[0];
+  sheet("📊 Neue Umfrage",`<label class="f">Für wen?<select id="umfP">${kids.map(([k,n])=>`<option value="${k}" ${k===def?"selected":""}>${esc(n)}</option>`).join("")}</select></label>
+    <label class="f">Frage<input id="umfF" placeholder="z. B. Was wünschst du dir für 50 Sterne?" maxlength="140"></label>
+    <label class="f">Antworten (eine pro Zeile, 2 bis 8)<textarea id="umfO" rows="5" placeholder="🎮 30 Minuten Spielzeit&#10;🍕 Pizza-Abend&#10;🎬 Kino&#10;👟 Sparen für Nike-Schuhe"></textarea></label>
+    <label class="pick" style="justify-content:space-between"><span>Mehrere Antworten erlaubt</span><input type="checkbox" id="umfM"></label>
+    <div class="actions"><button class="btn" id="umfOk">Umfrage senden</button><button class="btn ghost" id="umfX">Abbrechen</button></div>`);
+  document.getElementById("umfX").onclick=closeSheet;
+  document.getElementById("umfOk").onclick=async()=>{const f=document.getElementById("umfF").value.trim(),o=document.getElementById("umfO").value.split("\n").map(x=>x.trim()).filter(Boolean).slice(0,8);
+    if(!f){toast("Bitte eine Frage eingeben");return}if(o.length<2){toast("Bitte mindestens 2 Antworten eingeben");return}
+    await store.add({typ:"umfrage",person:document.getElementById("umfP").value,frage:f,optionen:o,mehrfach:document.getElementById("umfM").checked,datum:today});
+    closeSheet();toast("📊 Umfrage verschickt");render()}}
+function wireUmfragen(){
+  const a=document.getElementById("umfAdd");if(a)a.onclick=openUmfrageSheet;
+  const U=id=>umfragen.find(u=>u.id===id);
+  document.querySelectorAll("[data-umfhoer]").forEach(b=>b.onclick=()=>{const u=U(b.dataset.umfhoer);if(u)speak(umfVorlesTxt(u))});
+  document.querySelectorAll("[data-umfo]").forEach(b=>b.onclick=()=>{const u=U(b.dataset.umfo);if(u)speak(`Antwort ${+b.dataset.i+1}: ${u.optionen[+b.dataset.i]}.`)});
+  document.querySelectorAll("[data-umfw]").forEach(b=>b.onclick=()=>{const u=U(b.dataset.umfw);if(!u)return;const i=+b.dataset.i;let s=UMF_SEL[u.id]||[];
+    s=u.mehrfach?(s.includes(i)?s.filter(x=>x!==i):[...s,i]):[i];UMF_SEL[u.id]=s;if(ttsAuto())speak(u.optionen[i]);render()});
+  document.querySelectorAll("[data-umfsend]").forEach(b=>b.onclick=async()=>{const u=U(b.dataset.umfsend);const s=(UMF_SEL[u.id]||[]).slice().sort((x,y)=>x-y);if(!u||!s.length)return;
+    await store.add({typ:"erledigt",umfrage:u.id,aufgabe:"umfrage-"+u.id,person:KID||u.person,offen:true,sterne:0,datum:today,titel:"Umfrage: "+u.frage,wahl:s,antworten:s.map(i=>u.optionen[i])});
+    delete UMF_SEL[u.id];toast("📨 Danke! Deine Antwort ist verschickt");speak("Danke! Deine Antwort ist verschickt.");render()});
+  document.querySelectorAll("[data-umfreset]").forEach(b=>b.onclick=async()=>{if(!await askConfirm("Antwort löschen und die Umfrage noch einmal stellen?"))return;await store.del(b.dataset.umfreset);render()});
+  document.querySelectorAll("[data-umfdel]").forEach(b=>b.onclick=async()=>{if(!await askConfirm("Umfrage samt Antwort löschen?"))return;const id=b.dataset.umfdel;for(const x of umfAntw.filter(x=>x.umfrage===id))await store.del(x.id);await store.del(id);render()})}
 function renderStars(){
   applyHilfen();
   const P=persons();
@@ -1517,7 +1567,7 @@ function renderStars(){
     kidH=levelHTML(KID)+`<div class="kidbar">${sternPause(KID)?`<div class="pausebox">🏠 <b>Heute bist du bei Papa.</b><br>Das Sterne-System macht Pause: keine Aufgaben, kein Abzug. Morgen geht es weiter!</div>`:""}<b>Hallo ${esc(PNAME[KID]||"")}! 👋</b><div class="kidsum"><span>⭐ Heute verdient<b>+${sF(heute)}</b></span><span>🎯 Noch möglich<b>${sF(noch)}</b></span><span>💰 Kontostand<b>${sF(b)}</b></span></div>${nx?`<div class="pbar"><i style="width:${Math.min(100,Math.round(b/(+nx.kosten)*100))}%"></i></div><span class="meta">${zr&&nx===zr?"🎯 Dein Sparziel":"Nächstes Ziel"}: <b>${esc(nx.titel)}</b> · noch ${sF(+nx.kosten-b)} ⭐</span>`:rewards.length?`<br><span class="meta">Du kannst dir jede Belohnung leisten! 🎉</span>`:""}${np?`<br><span class="meta">⏳ ${np} ⭐ warten noch auf Bestätigung</span>`:""}${limitHTML(KID)}${abzugHTML()}${bonusHTML()}</div>`}
   const tlH=tl||'<p class="hint">Noch keine Aufgaben. Leg zum Beispiel „Zimmer aufräumen“ für dein Kind mit 2 Sternen an. Wer eine Aufgabe erledigt, tippt auf den Kreis und bekommt die Sterne.</p>';
   if(KID){
-  document.getElementById("vOther").innerHTML=`<div class="starcards">${cards}</div>${kidH}
+  document.getElementById("vOther").innerHTML=`<div class="starcards">${cards}</div>${kidH}${umfKidHTML()}
       ${KID?`<h3 class="sec">✅ Deine Aufgaben</h3>${hilfe(KID,"fokus")?jetztH():""}${hilfe(KID,"fokus")?`<details class="spaeter"><summary>📋 Alle Aufgaben ansehen</summary>${tlH}</details>`:tlH}${radHTML()}`:""}
       <div class="actions" style="margin:8px 0">${TTS_OK&&tasks.length?`<button class="btn${KID?"":" ghost"}" id="ttsBtn">🔊 Vorlesen</button>`:""}<button class="btn ghost" id="histBtn">📜 Verlauf</button></div>
       ${KID?"":radHTML()}
@@ -1533,11 +1583,11 @@ function renderStars(){
       ${last?`<h3 class="sec">Zuletzt eingelöst</h3><ul class="hint" style="margin:0;padding-left:18px">${last}</ul>`:""}
       <button class="btn ghost" id="kpBtn" style="margin-top:12px">🎒 Startpaket: Kinder-Aufgaben & Belohnungen</button>`;
   }else{
-  const SV=[["ueb","Übersicht"],["auf","Aufgaben"],["bel","Belohnungen"],["geld","Geld"],["spiel","Spiele"],["einst","Einstellungen"]];
+  const SV=[["ueb","Übersicht"],["auf","Aufgaben"],["bel","Belohnungen"],["geld","Geld"],["spiel","Spiele"],["umf","Umfragen"],["einst","Einstellungen"]];
   let sv=lsGet("fk-sv")||"ueb";if(!SV.some(x=>x[0]===sv))sv="ueb";
   const leer=!tasks.length;
   document.getElementById("vOther").innerHTML=`<div class="starcards">${cards}</div>
-    <div class="svtabs" role="tablist">${SV.map(([k,n])=>`<button role="tab" data-svt="${k}" aria-selected="${k===sv}">${n}${k==="ueb"&&pend.length&&!READONLY?` <span class="svbadge">${pend.length}</span>`:""}</button>`).join("")}</div>
+    <div class="svtabs" role="tablist">${SV.map(([k,n])=>`<button role="tab" data-svt="${k}" aria-selected="${k===sv}">${n}${k==="ueb"&&pend.length&&!READONLY?` <span class="svbadge">${pend.length}</span>`:""}${k==="umf"&&umfNeu()?` <span class="svbadge">${umfNeu()}</span>`:""}</button>`).join("")}</div>
     <div class="svwrap sv-${sv}">
     <section data-sv="ueb">
       ${leer?`<div class="leer"><b>So startet ihr</b><p class="hint">1. Aufgaben anlegen (oder das fertige Startpaket nehmen) · 2. Belohnungen festlegen · 3. Das Kind hakt ab, ihr bestätigt.</p><button class="btn" data-kp>🎒 Startpaket nutzen</button><button class="btn ghost" data-tadd>+ Eigene Aufgabe</button></div>`:""}
@@ -1557,15 +1607,16 @@ function renderStars(){
     </section>
     <section data-sv="geld">${kontoHTML()}</section>
     <section data-sv="spiel">${spieleHTML()}</section>
+    <section data-sv="umf">${umfElternHTML()}</section>
     <section data-sv="einst">${abzugHTML()+bonusHTML()+limitEinst()+hilfenEinst()}</section>
     </div>`;
-  document.querySelectorAll("[data-svt]").forEach(b=>b.onclick=()=>{const k=b.dataset.svt;lsSet("fk-sv",k);const w=document.querySelector(".svwrap");w.className="svwrap sv-"+k;document.querySelectorAll("[data-svt]").forEach(x=>x.setAttribute("aria-selected",String(x===b)))});
+  document.querySelectorAll("[data-svt]").forEach(b=>b.onclick=()=>{const k=b.dataset.svt;lsSet("fk-sv",k);if(k==="umf"&&umfNeu()){umfGesehen();setTimeout(render,50)}const w=document.querySelector(".svwrap");w.className="svwrap sv-"+k;document.querySelectorAll("[data-svt]").forEach(x=>x.setAttribute("aria-selected",String(x===b)))});
   document.querySelectorAll("[data-kp]").forEach(b=>b.onclick=kidPackSheet);
   document.querySelectorAll("[data-tadd]").forEach(b=>b.onclick=()=>openTaskSheet(null));
   document.querySelectorAll("[data-radd]").forEach(b=>b.onclick=()=>openRewardSheet(null));
   }
   {const kb=document.getElementById("kpBtn");if(kb)kb.onclick=kidPackSheet}
-  document.getElementById("histBtn").onclick=()=>showHistory(KID||"");wireSpiele();wireAbzug();wireBonus();wireLimit();wireHilfen();wireGeld();
+  document.getElementById("histBtn").onclick=()=>showHistory(KID||"");wireSpiele();wireUmfragen();wireAbzug();wireBonus();wireLimit();wireHilfen();wireGeld();
   document.querySelectorAll("[data-rad]").forEach(b=>b.onclick=()=>radDrehen(b.dataset.rad));
   document.querySelectorAll("[data-abzshow]").forEach(b=>b.onclick=ev=>{ev.stopPropagation();showAbz(b.dataset.abzshow)});
   if(KID)setTimeout(neueAbz,900);
@@ -1801,6 +1852,7 @@ function wireBonus(){
 }
 /* ---------- Neuigkeiten fürs Kinder-Handy (nur Sterne-System) ---------- */
 const KID_NEWS=[
+  {id:"k15",ic:"📊",t:"Umfragen",x:"Neu: Mama oder Papa können dir Fragen schicken, zum Beispiel was du dir wünschst. Du tippst einfach auf deine Antwort und schickst sie ab. Mit dem Lautsprecher-Knopf wird dir die ganze Frage mit allen Antworten vorgelesen."},
   {id:"k14",ic:"🤝",t:"Allein oder mit Hilfe",x:"Wenn du eine Aufgabe ganz allein schaffst, gibt es alle Sterne. Hat dir jemand geholfen, gibt es die Hälfte, also zum Beispiel einen halben Stern. Probier es allein, du schaffst das!"},
   {id:"k13",ic:"💶",t:"Zahltag",x:"Einmal pro Woche ist Zahltag. Dann kannst du Sterne in Geld für dein Erspartes tauschen. Tipp: Je mehr Sterne du auf einmal tauschst, desto mehr Geld bekommst du! 100 Sterne geben 12 Euro statt 10. Sparen lohnt sich also."},
   {id:"k12",ic:"💰",t:"Dein eigenes Geld",x:"Neu: Unter Mein Geld siehst du dein Erspartes und deine Wunschliste. Deine Sterne kannst du gegen echtes Geld für dein Erspartes tauschen. Davon kaufst du dir deine Wünsche selbst, zum Beispiel Nike-Sachen oder Spiele-Guthaben. Wer selbst kauft, bekommt 5 Sterne Stolz-Bonus!"},
@@ -2548,7 +2600,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v97";
+const APP_VER="v98";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4393,6 +4445,11 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-16a",d:"2026-11-16",t:"📊 Umfragen für Kinder",items:[
+    "📊 Neu im Sterne-Bereich: Reiter „Umfragen“. Stellt eurem Kind eine Frage mit Antworten zum Antippen, z. B. „Was wünschst du dir als Belohnung?“",
+    "🔊 Das Kind kann sich die ganze Umfrage vorlesen lassen, jede Antwort hat zusätzlich einen eigenen Vorlese-Knopf",
+    "✅ Das Ergebnis seht ihr sofort im Reiter Umfragen, neue Antworten sind mit einer Zahl markiert",
+    "🔁 Mit „Neu fragen“ lässt sich eine Umfrage noch einmal stellen"]},
   {v:"2026-11-15b",d:"2026-11-15",t:"🧹 Aufgeräumter & einfacher",items:[
     "➕ Der Plus-Knopf öffnet jetzt die Schnell-Eingabe: einfach „Zahnarzt Dienstag 15 Uhr“ schreiben oder sprechen. Das volle Formular gibt es weiterhin per Knopf",
     "⚙️ Im Eintrags-Formular sind Erinnerung, Wichtig, Sichtbarkeit, Schutz und Fahrten unter „Mehr Optionen“ zusammengefasst",
