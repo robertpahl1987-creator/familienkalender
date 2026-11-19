@@ -2658,7 +2658,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v108";
+const APP_VER="v109";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -3055,7 +3055,7 @@ function scheduleMirror(){clearTimeout(mirrorTimer);mirrorTimer=setTimeout(syncM
 async function syncMirrors(){
   if(KID||ROLE==="lesen"||!memberOK||!FS||!LESE.length)return;
   for(const l of LESE){
-    const body={farben:Object.fromEntries(Object.entries(FARBEN).filter(([k])=>(l.spalten||[]).includes(k))),personen:SLOTS,namen:SLOTS.map((k,i)=>(l.spalten||[]).includes(k)?NAMES[i]:""),bilder:Object.fromEntries(Object.entries(PHOTOS).filter(([k])=>(l.spalten||[]).includes(k))),spalten:l.spalten,name:l.name||"",eintraege:mirrorData(l)};
+    const body={farben:Object.fromEntries(Object.entries(FARBEN).filter(([k])=>(l.spalten||[]).includes(k))),personen:SLOTS.map((k,i)=>(l.spalten||[]).includes(k)?k:"x"+i),namen:SLOTS.map((k,i)=>(l.spalten||[]).includes(k)?NAMES[i]:""),bilder:Object.fromEntries(Object.entries(PHOTOS).filter(([k])=>(l.spalten||[]).includes(k))),spalten:l.spalten,name:l.name||"",eintraege:mirrorData(l)};
     const key=JSON.stringify(body);let last="";try{last=localStorage.getItem("fk-mirror-"+l.rc)||""}catch(e){}
     if(key===last)continue;
     try{await FS.doc(`lesen/${l.rc}`).set({...body,stand:new Date().toISOString()});try{localStorage.setItem("fk-mirror-"+l.rc,key)}catch(e){}}catch(e){console.warn("Spiegel",e)}
@@ -3068,7 +3068,7 @@ async function createReadLink(name,spalten){
     await FS.doc(`leselinks/${rc}`).set({fam:cfg.code});
     const neu=[...LESE.filter(l=>l.rc!==rc),{rc,name,spalten}];
     await store.conf({lesen:neu});LESE=neu;
-    await FS.doc(`lesen/${rc}`).set({personen:SLOTS,namen:SLOTS.map((k,i)=>spalten.includes(k)?NAMES[i]:""),spalten,name,eintraege:mirrorData({spalten}),stand:new Date().toISOString()});
+    await FS.doc(`lesen/${rc}`).set({personen:SLOTS.map((k,i)=>spalten.includes(k)?k:"x"+i),namen:SLOTS.map((k,i)=>spalten.includes(k)?NAMES[i]:""),spalten,name,eintraege:mirrorData({spalten}),stand:new Date().toISOString()});
     toast("Nur-Lese-Link erstellt");showSettings();
   }catch(e){console.warn(e);showAuthHelp()}
 }
