@@ -1606,7 +1606,7 @@ function renderStars(){
   let kidH="";
   if(KID){const b=starBalance(KID),zr=rewards.find(r=>r.id===zielGet()),nx=zr&&+zr.kosten>b?zr:rewards.filter(r=>+r.kosten>b).sort((a,b2)=>(+a.kosten)-(+b2.kosten))[0],np=taskLogs.filter(l=>l.offen&&!l.abgelehnt).reduce((a,l)=>a+(+l.sterne||0),0);
     const heute=taskLogs.filter(l=>l.person===KID&&l.datum===today&&!l.abgelehnt).reduce((a,l)=>a+(+l.sterne||0),0),noch=vis.filter(t=>t.person===KID&&!logFor(t)).reduce((a,t)=>a+(+t.sterne||1),0);
-    kidH=levelHTML(KID)+`<div class="kidbar">${sternPause(KID)?`<div class="pausebox">🏠 <b>Heute bist du bei Papa.</b><br>Das Sterne-System macht Pause: keine Aufgaben, kein Abzug. Morgen geht es weiter!</div>`:""}<b>Hallo ${esc(PNAME[KID]||"")}! 👋</b><div class="kidsum"><span>⭐ Heute verdient<b>+${sF(heute)}</b></span><span>🎯 Noch möglich<b>${sF(noch)}</b></span><span>💰 Kontostand<b>${sF(b)}</b></span></div>${nx?`<div class="pbar"><i style="width:${Math.min(100,Math.round(b/(+nx.kosten)*100))}%"></i></div><span class="meta">${zr&&nx===zr?"🎯 Dein Sparziel":"Nächstes Ziel"}: <b>${esc(nx.titel)}</b> · noch ${sF(+nx.kosten-b)} ⭐</span>`:rewards.length?`<br><span class="meta">Du kannst dir jede Belohnung leisten! 🎉</span>`:""}${np?`<br><span class="meta">⏳ ${np} ⭐ warten noch auf Bestätigung</span>`:""}${limitHTML(KID)}${abzugHTML()}${bonusHTML()}</div>`}
+    kidH=levelHTML(KID)+`<div class="kidbar">${sternPause(KID)?(manuellAus(KID,today)?`<div class="pausebox">⏸️ <b>Das Sterne-System macht gerade Pause.</b><br>Du musst nichts abhaken, und es werden keine Sterne abgezogen. Deine Sterne bleiben dir erhalten.</div>`:`<div class="pausebox">🏠 <b>Heute bist du bei Papa.</b><br>Das Sterne-System macht Pause: keine Aufgaben, kein Abzug. Morgen geht es weiter!</div>`):""}<b>Hallo ${esc(PNAME[KID]||"")}! 👋</b><div class="kidsum"><span>⭐ Heute verdient<b>+${sF(heute)}</b></span><span>🎯 Noch möglich<b>${sF(noch)}</b></span><span>💰 Kontostand<b>${sF(b)}</b></span></div>${nx?`<div class="pbar"><i style="width:${Math.min(100,Math.round(b/(+nx.kosten)*100))}%"></i></div><span class="meta">${zr&&nx===zr?"🎯 Dein Sparziel":"Nächstes Ziel"}: <b>${esc(nx.titel)}</b> · noch ${sF(+nx.kosten-b)} ⭐</span>`:rewards.length?`<br><span class="meta">Du kannst dir jede Belohnung leisten! 🎉</span>`:""}${np?`<br><span class="meta">⏳ ${np} ⭐ warten noch auf Bestätigung</span>`:""}${limitHTML(KID)}${abzugHTML()}${bonusHTML()}</div>`}
   const tlH=tl||'<p class="hint">Noch keine Aufgaben. Leg zum Beispiel „Zimmer aufräumen“ für dein Kind mit 2 Sternen an. Wer eine Aufgabe erledigt, tippt auf den Kreis und bekommt die Sterne.</p>';
   if(KID){
   document.getElementById("vOther").innerHTML=`<div class="starcards">${cards}</div>${kidH}${umfKidHTML()}
@@ -1632,6 +1632,7 @@ function renderStars(){
     <div class="svtabs" role="tablist">${SV.map(([k,n])=>`<button role="tab" data-svt="${k}" aria-selected="${k===sv}">${n}${k==="ueb"&&pend.length&&!READONLY?` <span class="svbadge">${pend.length}</span>`:""}</button>`).join("")}</div>
     <div class="svwrap sv-${sv}">
     <section data-sv="ueb">
+      ${persons().filter(([k])=>manuellAus(k,today)).map(([k,n])=>`<div class="pausebox">⏸️ Das Belohnungssystem von <b>${esc(n)}</b> ist pausiert. Einschalten unter Einstellungen.</div>`).join("")}
       ${leer?`<div class="leer"><b>So startet ihr</b><p class="hint">1. Aufgaben anlegen (oder das fertige Startpaket nehmen) · 2. Belohnungen festlegen · 3. Das Kind hakt ab, ihr bestätigt.</p><button class="btn" data-kp>🎒 Startpaket nutzen</button><button class="btn ghost" data-tadd>+ Eigene Aufgabe</button></div>`:""}
       ${pendH||(leer?"":`<p class="hint">✅ Nichts zu bestätigen.</p>`)}
       <div class="actions" style="margin:8px 0">${TTS_OK&&tasks.length?`<button class="btn ghost" id="ttsBtn">🔊 Vorlesen</button>`:""}<button class="btn ghost" id="histBtn">📜 Verlauf</button></div>
@@ -1649,7 +1650,7 @@ function renderStars(){
     </section>
     <section data-sv="geld">${kontoHTML()}</section>
     <section data-sv="spiel">${spieleHTML()}</section>
-    <section data-sv="einst">${abzugHTML()+bonusHTML()+limitEinst()+elternEinst()+hilfenEinst()}</section>
+    <section data-sv="einst">${pauseEinst()+abzugHTML()+bonusHTML()+limitEinst()+elternEinst()+hilfenEinst()}</section>
     </div>`;
   document.querySelectorAll("[data-svt]").forEach(b=>b.onclick=()=>{const k=b.dataset.svt;lsSet("fk-sv",k);const w=document.querySelector(".svwrap");w.className="svwrap sv-"+k;document.querySelectorAll("[data-svt]").forEach(x=>x.setAttribute("aria-selected",String(x===b)))});
   document.querySelectorAll("[data-kp]").forEach(b=>b.onclick=kidPackSheet);
@@ -1743,8 +1744,21 @@ function readTasks(){
 }
 /* ---------- Verlauf ---------- */
 /* ---------- Sterne-Pause an Papa-Tagen ---------- */
-const sternPause=p=>!!p&&istWeg(p,today);
-const pauseToast=p=>toast(KID?"🏠 Heute bist du bei Papa: Sterne machen Pause. Morgen geht's weiter!":`🏠 ${PNAME[p]} ist heute bei Papa: Sterne-System gesperrt`);
+/* Manuell pausiert (nur Eltern): FAMCONF.pause={person:[[von,bis|""],...]} */
+const pauseCfg=()=>{const a=FAMCONF&&FAMCONF.pause;return a&&typeof a==="object"?a:{}};
+const manuellAus=(p,day)=>(pauseCfg()[p]||[]).some(z=>Array.isArray(z)&&z[0]<=day&&(!z[1]||day<=z[1]));
+const sternPause=p=>!!p&&(manuellAus(p,today)||istWeg(p,today));
+const pauseToast=p=>manuellAus(p,today)?toast(KID?"⏸️ Das Sterne-System ist gerade pausiert.":`⏸️ Das Sterne-System von ${PNAME[p]} ist pausiert`):toast(KID?"🏠 Heute bist du bei Papa: Sterne machen Pause. Morgen geht's weiter!":`🏠 ${PNAME[p]} ist heute bei Papa: Sterne-System gesperrt`);
+async function setPause(p,aus){const c=JSON.parse(JSON.stringify(pauseCfg())),l=Array.isArray(c[p])?c[p]:[];
+  if(aus){if(!manuellAus(p,today))l.push([today,""])}else{for(const z of l)if(!z[1]||z[1]>=today)z[1]=addDays(today,-1);}
+  c[p]=l.filter(z=>!z[1]||z[1]>=z[0]).slice(-30);
+  try{await store.conf({pause:c});FAMCONF=FAMCONF||{};FAMCONF.pause=c;toast(aus?`⏸️ Sterne-System für ${PNAME[p]} pausiert`:`▶️ Sterne-System für ${PNAME[p]} wieder aktiv`);render()}catch(e){toast("Speichern ging nicht")}}
+function pauseEinst(){if(KID||READONLY||ROLE!=="schreiben")return"";const P=persons().filter(([k])=>tasks.some(t=>t.person===k)||starBalance(k));if(!P.length)return"";
+  return `<h3 class="sec">⏯️ Belohnungssystem ein/aus</h3><p class="hint">Pausiert heißt: keine Aufgaben abhaken, nichts einlösen, kein Abzug fürs Nichtstun. Die gesammelten Sterne bleiben erhalten. Nur Eltern können das umschalten.</p>
+  ${P.map(([k,n])=>{const aus=manuellAus(k,today);return `<label class="pick" style="justify-content:space-between"><span><b>${esc(n)}</b><br><small class="hint">${aus?"⏸️ pausiert":"▶️ aktiv"}</small></span><input type="checkbox" data-pause="${k}" ${aus?"":"checked"}></label>`}).join("")}`}
+function wirePause(){document.querySelectorAll("[data-pause]").forEach(c=>c.onchange=async()=>{const p=c.dataset.pause,aus=!c.checked;
+  if(!await askConfirm(aus?`Belohnungssystem für ${PNAME[p]} pausieren?`:`Belohnungssystem für ${PNAME[p]} wieder einschalten?`,aus?"Pausieren":"Einschalten")){c.checked=!c.checked;return}
+  setPause(p,aus)})}
 /* ---------- Abzug für Tage ohne Aufgabe ---------- */
 const abzugCfg=()=>{const a=FAMCONF&&FAMCONF.abzug;return a&&typeof a==="object"?a:{}};
 const istWeg=(p,day)=>entries.some(e=>e.person===p&&e.typ==="termin"&&/papa|pascal/i.test(e.titel||"")&&onDay(e,day));
@@ -1755,7 +1769,7 @@ function abzugPlan(){
     for(let d=start;d<today;d=addDays(d,1)){
       if(redeems.some(r=>r.id===`abzug-${p}-${d}`))continue;
       if(taskLogs.some(l=>l.person===p&&l.datum===d&&l.aufgabe!=="korrektur"))continue;
-      if(istWeg(p,d))continue;
+      if(istWeg(p,d)||manuellAus(p,d))continue;
       if(bal<=0)continue;bal--;out.push([p,d]);
     }}
   return out;
@@ -1895,6 +1909,7 @@ function wireBonus(){
 const ELT=()=>String((typeof FAMCONF!=="undefined"&&FAMCONF&&FAMCONF.eltern)||"Mama oder Papa").trim()||"Mama oder Papa";
 const eltTxt=t=>String(t).replace(/Mama oder Papa/g,ELT());
 const KID_NEWS=[
+  {id:"k17",ic:"⏸️",t:"Pause-Knopf",x:"Mama oder Papa können das Sterne-System auch mal pausieren. Dann musst du nichts abhaken, und es wird nichts abgezogen. Deine Sterne bleiben."},
   {id:"k16",ic:"🔊",t:"Warum Sterne weg sind",x:"Wenn dir Sterne abgezogen werden, siehst du jetzt sofort warum. Mit dem Lautsprecher-Knopf wird dir der Grund vorgelesen."},
   {id:"k15",ic:"📊",t:"Umfragen",x:"Neu: Mama oder Papa können dir Fragen schicken, zum Beispiel was du am Wochenende essen möchtest. Du tippst einfach auf deine Antwort und schickst sie ab. Mit dem Lautsprecher-Knopf wird dir die ganze Frage mit allen Antworten vorgelesen."},
   {id:"k14",ic:"🤝",t:"Allein oder mit Hilfe",x:"Wenn du eine Aufgabe ganz allein schaffst, gibt es alle Sterne. Hat dir jemand geholfen, gibt es die Hälfte, also zum Beispiel einen halben Stern. Probier es allein, du schaffst das!"},
@@ -1953,7 +1968,7 @@ function wireEltern(){elternAuto();const b=document.getElementById("eltOk");if(!
 function hilfenEinst(){if(KID||READONLY)return "";const P=persons().filter(([k])=>tasks.some(t=>t.person===k));if(!P.length)return "";
   return `<h3 class="sec">🧩 Lern- & Fokus-Hilfen</h3><p class="hint"><b>📖 Lese-Hilfe</b> (z. B. bei LRS): größere Schrift mit mehr Abstand, alles zum Anhören, beim Deutsch-Detektiv mehr Zeit und schon ab 7 von 10 ein Stern.<br><b>🎯 Fokus-Hilfe</b> (z. B. bei ADHS): immer nur die nächsten 3 Aufgaben im Blick, Aufgaben in kleinen Schritten mit Timer, kürzere Spielrunden (6 statt 10 Aufgaben).</p>
     ${P.map(([k,n])=>`<div class="nameq"><b style="align-self:center;min-width:60px">${esc(n)}</b><button data-hilfe="${k}:lesen">${hilfe(k,"lesen")?"✅":"⬜"} 📖 Lese-Hilfe</button><button data-hilfe="${k}:fokus">${hilfe(k,"fokus")?"✅":"⬜"} 🎯 Fokus-Hilfe</button></div>`).join("")}`}
-function wireHilfen(){wireEltern();document.querySelectorAll("[data-hilfe]").forEach(b=>b.onclick=async()=>{const [p,k]=b.dataset.hilfe.split(":"),h=JSON.parse(JSON.stringify(hilfenCfg()));h[p]=h[p]||{};h[p][k]=!h[p][k];
+function wireHilfen(){wireEltern();wirePause();document.querySelectorAll("[data-hilfe]").forEach(b=>b.onclick=async()=>{const [p,k]=b.dataset.hilfe.split(":"),h=JSON.parse(JSON.stringify(hilfenCfg()));h[p]=h[p]||{};h[p][k]=!h[p][k];
   try{await store.conf({hilfen:h});FAMCONF.hilfen=h;toast(h[p][k]?"✅ Eingeschaltet":"Ausgeschaltet");render()}catch(e){toast("Speichern ging nicht")}})}
 const SCHRITTE=[[/zimmer|aufräum/i,["👕 Kleidung in den Schrank oder Wäschekorb","🧸 Spielzeug in die Kisten","📚 Schreibtisch frei machen","🧦 Boden frei: nichts liegt mehr rum","🗑️ Müll in den Mülleimer"]],
   [/bett/i,["🛏️ Decke ausschütteln","🧸 Kissen ordentlich hinlegen","✨ Decke glatt ziehen"]],
@@ -2673,7 +2688,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v112";
+const APP_VER="v113";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4536,6 +4551,10 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-19d",d:"2026-11-19",t:"⏯️ Belohnungssystem pausieren",items:[
+    "⏯️ Unter Sterne → Einstellungen lässt sich das Belohnungssystem pro Kind pausieren und wieder einschalten. Das können nur Eltern",
+    "⏸️ Während der Pause: kein Abhaken, kein Einlösen, kein Abzug fürs Nichtstun. Die Sterne bleiben erhalten",
+    "👀 Das Kind sieht einen Hinweis, dass gerade Pause ist"]},
   {v:"2026-11-19c",d:"2026-11-19",t:"🗣️ Eigene Namen in den Kindertexten",items:[
     "🗣️ Unter Sterne → Einstellungen legt ihr fest, wie euer Kind euch nennt, z. B. „Mama oder Tom“. Das steht dann überall in seinen Texten und wird so vorgelesen"]},
   {v:"2026-11-19b",d:"2026-11-19",t:"🚫 Absagen auch im Lese-Link",items:[
