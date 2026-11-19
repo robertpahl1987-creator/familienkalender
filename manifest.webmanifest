@@ -1,6 +1,6 @@
 {
-  "name": "Familienkalender",
-  "short_name": "Familie",
+  "name": "Unser Familienplaner",
+  "short_name": "Familienplaner",
   "lang": "de",
   "start_url": "./",
   "scope": "./",

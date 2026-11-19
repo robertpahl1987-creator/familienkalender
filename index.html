@@ -679,6 +679,7 @@ body.wallon{overflow:hidden}
 @media (prefers-reduced-motion:reduce){.petemo,.petbig span,.wbig,#wrapped{animation:none}}
 
 body.premking .appbar h1.t3d{font-size:clamp(1rem,4.8vw,1.7rem)}
+.appbar h1.t3d.lang{font-size:clamp(.95rem,4.9vw,1.6rem)}
 body.premking .year3d{padding:4px 6px 3px}
 
 .pcol{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);padding:0;cursor:pointer;flex:none}
@@ -1093,7 +1094,7 @@ function showSettings(){
     <div class="linkbox" id="inv">${esc(link)}</div>
     <p class="hint" id="invHint">Wer diesen Link öffnet, sieht alle Einträge, kann aber nichts ändern. Freischalten kannst du die Person jederzeit unten.</p>
     <div class="actions"><button class="btn" id="invCopy">Link kopieren</button><button class="btn ghost" id="invShare">Teilen …</button></div>
-    <a class="btn ghost" id="invWa" style="text-align:center;text-decoration:none" href="https://wa.me/?text=${encodeURIComponent("Unser Familienkalender: "+link)}" target="_blank" rel="noopener">Per WhatsApp schicken</a>
+    <a class="btn ghost" id="invWa" style="text-align:center;text-decoration:none" href="https://wa.me/?text=${encodeURIComponent((IS_MAIN_SITE?"Unser Familienplaner: ":"Unser Familienkalender: ")+link)}" target="_blank" rel="noopener">Per WhatsApp schicken</a>
     <h4 class="sub">👥 Mitglieder & Rechte</h4>
     <p class="hint">✏️ darf eintragen, ändern und löschen · 👁️ sieht alles, kann aber nichts ändern. Tippe zum Umstellen. Die Nur-Lese-Links weiter unten sind davon nicht betroffen.</p>
     <div id="memList" class="tasklist"><p class="hint">Lade Mitglieder …</p></div>
@@ -1186,10 +1187,10 @@ function showSettings(){
     document.querySelectorAll("[data-inv]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
     document.getElementById("inv").textContent=curLink;
     document.getElementById("invHint").innerHTML=w?"Wer diesen Link öffnet, kann sofort <b>Einträge anlegen, ändern und löschen</b>.":"Wer diesen Link öffnet, sieht alle Einträge, kann aber nichts ändern. Freischalten kannst du die Person jederzeit unten.";
-    document.getElementById("invWa").href="https://wa.me/?text="+encodeURIComponent("Unser Familienkalender: "+curLink)});
+    document.getElementById("invWa").href="https://wa.me/?text="+encodeURIComponent((IS_MAIN_SITE?"Unser Familienplaner: ":"Unser Familienkalender: ")+curLink)});
   document.getElementById("invCopy").onclick=async()=>{try{await navigator.clipboard.writeText(curLink);toast("Link kopiert")}catch(e){const r=document.createRange();r.selectNodeContents(document.getElementById("inv"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Link markiert, jetzt kopieren")}};
   const sh=document.getElementById("invShare");
-  if(navigator.share)sh.onclick=()=>navigator.share({title:"Familienkalender",text:"Unser Familienkalender",url:curLink}).catch(()=>{});else sh.hidden=true;
+  if(navigator.share)sh.onclick=()=>navigator.share({title:IS_MAIN_SITE?"Unser Familienplaner":"Familienkalender",text:IS_MAIN_SITE?"Unser Familienplaner":"Unser Familienkalender",url:curLink}).catch(()=>{});else sh.hidden=true;
   document.getElementById("setClose").onclick=closeSheet;
   wirePhotos();
   wirePersons();
@@ -2658,7 +2659,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v109";
+const APP_VER="v110";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4787,8 +4788,8 @@ async function sendPendingRef(){
 const refLink=r=>"https://familien-kalender.github.io/?ref="+r;
 function applyPremium(){
   const b=document.body;
-  if(!IS_READER_SITE){document.title=premOn(10)?"Premium-Familienkalender":(LANG==="de"?"Familienkalender":T("Familienkalender"));
-    const h=document.querySelector(".appbar h1.t3d");if(h)h.setAttribute("aria-label",premOn(10)?"Premium-Familienkalender":h.textContent)}
+  if(!IS_READER_SITE){document.title=IS_MAIN_SITE?"Unser Familienplaner":premOn(10)?"Premium-Familienkalender":(LANG==="de"?"Familienkalender":T("Familienkalender"));
+    const h=document.querySelector(".appbar h1.t3d");if(h){if(IS_MAIN_SITE){h.textContent="Unser Familienplaner";h.classList.add("lang")}h.setAttribute("aria-label",IS_MAIN_SITE?"Unser Familienplaner":premOn(10)?"Premium-Familienkalender":h.textContent)}}
   b.classList.toggle("premgold",premOn(5)&&lsGet("fk-p-gold")!=="0");
   b.classList.toggle("premking",premOn(10));
   if(premOn(3)&&lsGet("fk-p-season")!=="0")startSeason();else stopSeason();
