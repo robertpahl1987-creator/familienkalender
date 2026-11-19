@@ -1932,7 +1932,8 @@ const hilfe=(p,k)=>!!(p&&hilfenCfg()[p]&&hilfenCfg()[p][k]);
 function applyHilfen(){const p=KID;document.documentElement.classList.toggle("lesehilfe",hilfe(p,"lesen"));document.documentElement.classList.toggle("fokushilfe",hilfe(p,"fokus"))}
 function elternEinst(){if(KID||READONLY)return"";return `<h3 class="sec">🗣️ So nennt euer Kind euch</h3><p class="hint">Das steht in allen Texten für das Kind und wird so vorgelesen, z. B. „Sobald <b>${esc(ELT())}</b> bestätigt haben“.</p>
   <div class="nameq"><input id="eltIn" maxlength="40" value="${esc(ELT())}" placeholder="Mama oder Papa" style="flex:1"><button id="eltOk">Speichern</button></div>`}
-function wireEltern(){const b=document.getElementById("eltOk");if(!b)return;b.onclick=async()=>{const v=document.getElementById("eltIn").value.trim().slice(0,40)||"Mama oder Papa";
+function elternAuto(){if(KID||READONLY||!IS_ADMIN||!PREM.gruender||!FAMCONF||FAMCONF.eltern!==undefined||!myName())return;const v="Mama oder "+myName();FAMCONF.eltern=v;store.conf({eltern:v}).catch(()=>{})}
+function wireEltern(){elternAuto();const b=document.getElementById("eltOk");if(!b)return;b.onclick=async()=>{const v=document.getElementById("eltIn").value.trim().slice(0,40)||"Mama oder Papa";
   try{await store.conf({eltern:v});FAMCONF=FAMCONF||{};FAMCONF.eltern=v;toast("✅ Gespeichert");render()}catch(e){toast("Speichern ging nicht")}}}
 function hilfenEinst(){if(KID||READONLY)return "";const P=persons().filter(([k])=>tasks.some(t=>t.person===k));if(!P.length)return "";
   return `<h3 class="sec">🧩 Lern- & Fokus-Hilfen</h3><p class="hint"><b>📖 Lese-Hilfe</b> (z. B. bei LRS): größere Schrift mit mehr Abstand, alles zum Anhören, beim Deutsch-Detektiv mehr Zeit und schon ab 7 von 10 ein Stern.<br><b>🎯 Fokus-Hilfe</b> (z. B. bei ADHS): immer nur die nächsten 3 Aufgaben im Blick, Aufgaben in kleinen Schritten mit Timer, kürzere Spielrunden (6 statt 10 Aufgaben).</p>
@@ -2657,7 +2658,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v107";
+const APP_VER="v108";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -3376,7 +3377,7 @@ function render(){
 /* ---------- Bereiche an/aus ---------- */
 const MODULE=[["sterne","⭐ Sterne & Aufgaben","Belohnungssystem für Kinder"],["familie","🏠 Familie","Einkaufsliste, Essensplan, Infos"],["ferien","🎒 Ferien","Schulferien & Feiertage"]];
 function modAn(k){if(KID&&k==="sterne")return true;const m=FAMCONF&&FAMCONF.module;return !(m&&m[k]===false)}
-function applyModule(){for(const [k] of MODULE)document.body.classList.toggle("mod-aus-"+k,!modAn(k));
+function applyModule(){try{elternAuto()}catch(e){}for(const [k] of MODULE)document.body.classList.toggle("mod-aus-"+k,!modAn(k));
   if(["sterne","familie","ferien"].includes(view)&&!modAn(view)){view="woche";document.getElementById("vWoche").hidden=false;document.getElementById("vOther").hidden=true}}
 async function setModul(k,an){const m={...((FAMCONF&&FAMCONF.module)||{}),[k]:!!an};try{await store.conf({module:m});FAMCONF.module=m;applyModule();render();toast(an?"✅ Bereich eingeschaltet":"Bereich ausgeblendet")}catch(e){toast("Speichern ging nicht")}}
 function modulBox(){if(ROLE!=="schreiben")return"";return`<div class="rw">${MODULE.map(([k,n,h])=>`<label class="pick" style="justify-content:space-between"><span>${n}<br><small class="hint">${h}</small></span><input type="checkbox" data-mod="${k}" ${modAn(k)?"checked":""}></label>`).join("")}<p class="hint" style="margin:0">Ausgeblendete Bereiche bleiben gespeichert und lassen sich jederzeit wieder einschalten.</p></div>`}
@@ -4513,7 +4514,7 @@ setTimeout(greetUser,2600);
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
   {v:"2026-11-19c",d:"2026-11-19",t:"🗣️ Eigene Namen in den Kindertexten",items:[
-    "🗣️ Unter Sterne → Einstellungen legt ihr fest, wie euer Kind euch nennt, z. B. „Mama oder Robert“. Das steht dann überall in seinen Texten und wird so vorgelesen"]},
+    "🗣️ Unter Sterne → Einstellungen legt ihr fest, wie euer Kind euch nennt, z. B. „Mama oder Tom“. Das steht dann überall in seinen Texten und wird so vorgelesen"]},
   {v:"2026-11-19b",d:"2026-11-19",t:"🚫 Absagen auch im Lese-Link",items:[
     "🚫 Ausgefallene Termine erscheinen jetzt auch über Lese-Links durchgestrichen mit „Fällt aus“"]},
   {v:"2026-11-19a",d:"2026-11-19",t:"🔁 Einzelne Serientermine",items:[
