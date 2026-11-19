@@ -2651,7 +2651,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v105";
+const APP_VER="v106";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -3041,7 +3041,7 @@ function showReaderSettings(){
 function mirrorData(l){
   const sp=l.spalten||[];
   return entries.filter(e=>sp.includes(e.person)&&!e._privat).map(e=>{const o={typ:e.typ,person:e.person,titel:e.titel||"",datum:e.datum};
-    if(e.endDatum)o.endDatum=e.endDatum;if(e.von)o.von=e.von;if(e.bis)o.bis=e.bis;if(e.geburtsjahr)o.geburtsjahr=e.geburtsjahr;if(e.wichtig)o.wichtig=true;return o})
+    if(e.endDatum)o.endDatum=e.endDatum;if(e.von)o.von=e.von;if(e.bis)o.bis=e.bis;if(e.geburtsjahr)o.geburtsjahr=e.geburtsjahr;if(e.wichtig)o.wichtig=true;if(e.ausfall)o.ausfall=true;return o})
     .sort((a,b)=>(a.datum+a.person+(a.von||"")+a.titel)<(b.datum+b.person+(b.von||"")+b.titel)?-1:1);
 }
 function scheduleMirror(){clearTimeout(mirrorTimer);mirrorTimer=setTimeout(syncMirrors,2500)}
@@ -4506,6 +4506,8 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-19b",d:"2026-11-19",t:"🚫 Absagen auch im Lese-Link",items:[
+    "🚫 Ausgefallene Termine erscheinen jetzt auch über Lese-Links durchgestrichen mit „Fällt aus“"]},
   {v:"2026-11-19a",d:"2026-11-19",t:"🔁 Einzelne Serientermine",items:[
     "🚫 Bei wiederkehrenden Terminen kannst du einen einzelnen Tag als „Fällt aus“ markieren. Er bleibt durchgestrichen sichtbar und lässt sich mit „Findet doch statt“ zurücknehmen",
     "🗑️ Oder du löschst nur diesen einen Tag, die übrigen Termine der Serie bleiben",
