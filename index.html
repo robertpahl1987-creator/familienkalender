@@ -1525,7 +1525,7 @@ function umfPopup(){if(!store||READONLY)return;
   const host=document.getElementById("sheetHost");if(host&&host.innerHTML.trim()){setTimeout(umfPopup,2500);return}
   UMF_POP.add(u.id);umfPopZeigen(u)}
 function umfPopZeigen(u){UMF_POP_ID=u.id;const ich=umfFuerMich(u);
-  sheet(ich?"📊 Neue Umfrage für dich":`📊 Umfrage für ${esc(PNAME[u.person]||"")}`,`<p class="hint">${KID?"Mama oder Papa möchten etwas von dir wissen. Tippe auf 🔊, dann wird dir alles vorgelesen.":ich?"Jemand aus der Familie möchte etwas von dir wissen.":`Hier kannst du für ${esc(PNAME[u.person]||"")} antworten.`}</p>${umfCard(u)}<button class="btn ghost" id="umfSpaeter" style="width:100%">Später antworten</button>`);
+  sheet(ich?"📊 Neue Umfrage für dich":`📊 Umfrage für ${esc(PNAME[u.person]||"")}`,`<p class="hint">${KID?""+ELT()+" möchten etwas von dir wissen. Tippe auf 🔊, dann wird dir alles vorgelesen.":ich?"Jemand aus der Familie möchte etwas von dir wissen.":`Hier kannst du für ${esc(PNAME[u.person]||"")} antworten.`}</p>${umfCard(u)}<button class="btn ghost" id="umfSpaeter" style="width:100%">Später antworten</button>`);
   wireUmfragen(true);document.getElementById("umfSpaeter").onclick=()=>{UMF_POP_ID=null;closeSheet();setTimeout(()=>{UMF_POP.delete(u.id);umfPopup()},10*60*1000)}}
 function umfElternHTML(){
   if(KID)return"";const seen=umfSeen(),grp=new Map();
@@ -1634,7 +1634,7 @@ function renderStars(){
     </section>
     <section data-sv="geld">${kontoHTML()}</section>
     <section data-sv="spiel">${spieleHTML()}</section>
-    <section data-sv="einst">${abzugHTML()+bonusHTML()+limitEinst()+hilfenEinst()}</section>
+    <section data-sv="einst">${abzugHTML()+bonusHTML()+limitEinst()+elternEinst()+hilfenEinst()}</section>
     </div>`;
   document.querySelectorAll("[data-svt]").forEach(b=>b.onclick=()=>{const k=b.dataset.svt;lsSet("fk-sv",k);const w=document.querySelector(".svwrap");w.className="svwrap sv-"+k;document.querySelectorAll("[data-svt]").forEach(x=>x.setAttribute("aria-selected",String(x===b)))});
   document.querySelectorAll("[data-kp]").forEach(b=>b.onclick=kidPackSheet);
@@ -1657,7 +1657,7 @@ document.getElementById("vOther").addEventListener("click",async ev=>{
     if(l){if(KID&&!l.offen){toast("Schon bestätigt ✓ Super gemacht!");return}
       if(!await askConfirm(l.offen?"Abhaken zurücknehmen?":`Erledigt zurücknehmen? ${PNAME[t.person]} verliert dafür ${sF(+l.sterne||0)} ⭐.`,"Zurücknehmen"))return;await store.del(l.id);toast("Zurückgenommen")}
     else if(KID&&t.foto){kidFoto(t)}
-    else if(KID){const w=+t.sterne||1,st=capSterne(t.person,today,artVon(t),w);await store.add({typ:"erledigt",aufgabe:t.id,person:t.person,sterne:st,datum:today,titel:t.titel});render();toast(st?`⏳ Super! +${st} ⭐, sobald Mama oder Papa bestätigt haben${capTxt(st,w)}`:"✅ Super gemacht! Für heute ist das Sterne-Limit erreicht.");if(ttsAuto())speak(`Super gemacht, ${PNAME[KID]||""}! ${t.titel} ist abgehakt. Du bekommst ${sternTxt(+t.sterne||1)}, sobald Mama oder Papa bestätigt haben.`)}
+    else if(KID){const w=+t.sterne||1,st=capSterne(t.person,today,artVon(t),w);await store.add({typ:"erledigt",aufgabe:t.id,person:t.person,sterne:st,datum:today,titel:t.titel});render();toast(st?`⏳ Super! +${st} ⭐, sobald ${ELT()} bestätigt haben${capTxt(st,w)}`:"✅ Super gemacht! Für heute ist das Sterne-Limit erreicht.");if(ttsAuto())speak(`Super gemacht, ${PNAME[KID]||""}! ${t.titel} ist abgehakt. Du bekommst ${sternTxt(+t.sterne||1)}, sobald ${ELT()} bestätigt haben.`)}
     else{const voll=+t.sterne||1;
       const buche=async hilfe=>{closeSheet();const w=hilfe?halb(voll):voll,st=capSterne(t.person,today,artVon(t),w);await store.add({typ:"erledigt",aufgabe:t.id,person:t.person,sterne:st,datum:today,titel:t.titel,...(hilfe?{mitHilfe:true}:{})});popPerson=t.person;render();if(premOn(3)&&!hilfe)confetti();toast(`${hilfe?"🤝":"⭐"} +${sF(st)} für ${PNAME[t.person]}!${capTxt(st,w)}`)};
       sheet(`✅ ${esc(t.titel)}`,`<p class="hint" style="margin-top:0">Wie hat ${esc(PNAME[t.person]||"")} das geschafft?</p>
@@ -1679,7 +1679,7 @@ document.getElementById("vOther").addEventListener("click",async ev=>{
   const re=ev.target.closest("[data-redeem]");
   if(re){const r=rewards.find(x=>x.id===re.dataset.redeem),p=re.dataset.who;if(!r)return;if(sternPause(p)){pauseToast(p);return}
     if(monatVoll(p,r)){toast(`„${r.titel}“ gibt es höchstens ${r.proMonat}× im Monat. Ab dem 1. geht es wieder!`);return}
-    if(KID){if(!await askConfirm(`„${r.titel}“ für ${+r.kosten} ⭐ einlösen? Mama oder Papa bekommen Bescheid und bestätigen.`,"Einlösen",false))return;
+    if(KID){if(!await askConfirm(`„${r.titel}“ für ${+r.kosten} ⭐ einlösen? ${ELT()} bekommen Bescheid und bestätigen.`,"Einlösen",false))return;
       await store.add({typ:"einloesung",person:p,kosten:+r.kosten,titel:r.titel,datum:today,...(+r.zuschuss?{zuschuss:+r.zuschuss}:{})});toast("🎁 Wunsch geschickt! Warte auf die Bestätigung");if(ttsAuto())speak(`Toll! Dein Wunsch ${r.titel} ist verschickt.`);return}
     if(!await askConfirm(`„${r.titel}“ für ${PNAME[p]} einlösen? Dafür werden ${+r.kosten} ⭐ abgezogen.`,"Einlösen",false))return;
     await store.add({typ:"einloesung",person:p,kosten:+r.kosten,titel:r.titel,datum:today,...(+r.zuschuss?{zuschuss:+r.zuschuss}:{})});if(+r.zuschuss)await zuschussBuchen({person:p,zuschuss:+r.zuschuss,titel:r.titel});toast(`🎉 ${PNAME[p]} hat „${r.titel}“ eingelöst${+r.zuschuss?` · ${ctEuro(r.zuschuss)} aufs Ersparte`:""}`);return}
@@ -1788,13 +1788,13 @@ function kidFoto(t){
   inp.onchange=async()=>{const f=inp.files&&inp.files[0];inp.remove();if(!f)return;let bild="";
     try{bild=await bildKlein(f)}catch(e){toast("Das Foto ging nicht · bitte nochmal");return}
     sheet("📸 Foto-Beweis",`<p style="margin:0 0 8px"><b>${esc(t.titel)}</b></p><img src="${bild}" alt="Dein Foto" style="width:100%;border-radius:14px;max-height:55vh;object-fit:contain;background:#000">
-      <p class="hint">Ist alles gut zu sehen? Mama oder Papa schauen sich das Foto an. Ist alles perfekt, gibt es <b>doppelte Sterne</b>! 🌟</p>
+      <p class="hint">Ist alles gut zu sehen? ${ELT()} schauen sich das Foto an. Ist alles perfekt, gibt es <b>doppelte Sterne</b>! 🌟</p>
       <div class="actions"><button class="btn" id="fSend">📤 Foto schicken</button><button class="btn ghost" id="fNeu">🔁 Neues Foto</button></div>`);
     document.getElementById("fNeu").onclick=()=>{closeSheet();setTimeout(()=>kidFoto(t),150)};
     document.getElementById("fSend").onclick=async()=>{const b=document.getElementById("fSend");b.disabled=true;b.textContent="Wird geschickt …";
       try{const fid=await fotoSpeichern(bild,t.person);const alt=abgelehntVon(t);if(alt){try{await store.del(alt.id)}catch(e){}}
         await store.add({typ:"erledigt",aufgabe:t.id,person:t.person,sterne:capSterne(t.person,today,artVon(t),+t.sterne||1),datum:today,titel:t.titel,foto:fid});
-        closeSheet();render();toast("📸 Foto geschickt! Mama oder Papa schauen es sich an");if(ttsAuto())speak(`Super, ${PNAME[KID]||""}! Dein Foto ist verschickt.`)}
+        closeSheet();render();toast("📸 Foto geschickt! "+ELT()+" schauen es sich an");if(ttsAuto())speak(`Super, ${PNAME[KID]||""}! Dein Foto ist verschickt.`)}
       catch(e){b.disabled=false;b.textContent="📤 Foto schicken";toast(e&&e.code==="permission-denied"?"Fotos sind noch nicht freigeschaltet (Firebase-Regeln)":"Schicken ging nicht · bitte nochmal")}};
   };
   inp.click();
@@ -1877,6 +1877,8 @@ function wireBonus(){
   document.querySelectorAll("[data-rate]").forEach(b=>b.onclick=ev=>{ev.stopPropagation();fotoBewerten(b.dataset.rate)});
 }
 /* ---------- Neuigkeiten fürs Kinder-Handy (nur Sterne-System) ---------- */
+const ELT=()=>String((typeof FAMCONF!=="undefined"&&FAMCONF&&FAMCONF.eltern)||"Mama oder Papa").trim()||"Mama oder Papa";
+const eltTxt=t=>String(t).replace(/Mama oder Papa/g,ELT());
 const KID_NEWS=[
   {id:"k16",ic:"🔊",t:"Warum Sterne weg sind",x:"Wenn dir Sterne abgezogen werden, siehst du jetzt sofort warum. Mit dem Lautsprecher-Knopf wird dir der Grund vorgelesen."},
   {id:"k15",ic:"📊",t:"Umfragen",x:"Neu: Mama oder Papa können dir Fragen schicken, zum Beispiel was du am Wochenende essen möchtest. Du tippst einfach auf deine Antwort und schickst sie ab. Mit dem Lautsprecher-Knopf wird dir die ganze Frage mit allen Antworten vorgelesen."},
@@ -1902,9 +1904,9 @@ function showKidNews(force){
   const neu=KID_NEWS.filter(n=>passt(n)&&(force||!seen.includes(n.id)));if(!neu.length)return;
   if(document.querySelector("#sheetHost .sheet"))return setTimeout(()=>showKidNews(force),3000);
   kidNewsShown=true;
-  sheet(`🎉 Neu für dich, ${esc(PNAME[KID]||"")}!`,`<div class="kidnews">${neu.map(n=>`<div class="kn"><span class="kni">${n.ic}</span><div><b>${esc(n.t)}</b><br>${esc(n.x)}</div></div>`).join("")}</div>
+  sheet(`🎉 Neu für dich, ${esc(PNAME[KID]||"")}!`,`<div class="kidnews">${neu.map(n=>`<div class="kn"><span class="kni">${n.ic}</span><div><b>${esc(n.t)}</b><br>${esc(eltTxt(n.x))}</div></div>`).join("")}</div>
     <div class="actions">${TTS_OK?`<button class="btn ghost" id="knSay">🔊 Vorlesen</button>`:""}<button class="btn" id="knOk">👍 Alles klar!</button></div>`);
-  const ks=document.getElementById("knSay");if(ks)ks.onclick=()=>speak(neu.map(n=>n.t+". "+n.x).join(" "));
+  const ks=document.getElementById("knSay");if(ks)ks.onclick=()=>speak(neu.map(n=>n.t+". "+eltTxt(n.x)).join(" "));
   document.getElementById("knOk").onclick=()=>{try{speechSynthesis.cancel()}catch(e){}try{localStorage.setItem("fk-kidnews",JSON.stringify([...new Set([...seen,...neu.map(n=>n.id)])]))}catch(e){}closeSheet();view="sterne";render()};
 }
 /* ---------- Halbe Sterne ---------- */
@@ -1928,10 +1930,14 @@ function wireLimit(){for(const [id,k] of [["limN","limitN"],["limS","limitS"]]){
 const hilfenCfg=()=>{const h=FAMCONF&&FAMCONF.hilfen;return h&&typeof h==="object"?h:{}};
 const hilfe=(p,k)=>!!(p&&hilfenCfg()[p]&&hilfenCfg()[p][k]);
 function applyHilfen(){const p=KID;document.documentElement.classList.toggle("lesehilfe",hilfe(p,"lesen"));document.documentElement.classList.toggle("fokushilfe",hilfe(p,"fokus"))}
+function elternEinst(){if(KID||READONLY)return"";return `<h3 class="sec">🗣️ So nennt euer Kind euch</h3><p class="hint">Das steht in allen Texten für das Kind und wird so vorgelesen, z. B. „Sobald <b>${esc(ELT())}</b> bestätigt haben“.</p>
+  <div class="nameq"><input id="eltIn" maxlength="40" value="${esc(ELT())}" placeholder="Mama oder Papa" style="flex:1"><button id="eltOk">Speichern</button></div>`}
+function wireEltern(){const b=document.getElementById("eltOk");if(!b)return;b.onclick=async()=>{const v=document.getElementById("eltIn").value.trim().slice(0,40)||"Mama oder Papa";
+  try{await store.conf({eltern:v});FAMCONF=FAMCONF||{};FAMCONF.eltern=v;toast("✅ Gespeichert");render()}catch(e){toast("Speichern ging nicht")}}}
 function hilfenEinst(){if(KID||READONLY)return "";const P=persons().filter(([k])=>tasks.some(t=>t.person===k));if(!P.length)return "";
   return `<h3 class="sec">🧩 Lern- & Fokus-Hilfen</h3><p class="hint"><b>📖 Lese-Hilfe</b> (z. B. bei LRS): größere Schrift mit mehr Abstand, alles zum Anhören, beim Deutsch-Detektiv mehr Zeit und schon ab 7 von 10 ein Stern.<br><b>🎯 Fokus-Hilfe</b> (z. B. bei ADHS): immer nur die nächsten 3 Aufgaben im Blick, Aufgaben in kleinen Schritten mit Timer, kürzere Spielrunden (6 statt 10 Aufgaben).</p>
     ${P.map(([k,n])=>`<div class="nameq"><b style="align-self:center;min-width:60px">${esc(n)}</b><button data-hilfe="${k}:lesen">${hilfe(k,"lesen")?"✅":"⬜"} 📖 Lese-Hilfe</button><button data-hilfe="${k}:fokus">${hilfe(k,"fokus")?"✅":"⬜"} 🎯 Fokus-Hilfe</button></div>`).join("")}`}
-function wireHilfen(){document.querySelectorAll("[data-hilfe]").forEach(b=>b.onclick=async()=>{const [p,k]=b.dataset.hilfe.split(":"),h=JSON.parse(JSON.stringify(hilfenCfg()));h[p]=h[p]||{};h[p][k]=!h[p][k];
+function wireHilfen(){wireEltern();document.querySelectorAll("[data-hilfe]").forEach(b=>b.onclick=async()=>{const [p,k]=b.dataset.hilfe.split(":"),h=JSON.parse(JSON.stringify(hilfenCfg()));h[p]=h[p]||{};h[p][k]=!h[p][k];
   try{await store.conf({hilfen:h});FAMCONF.hilfen=h;toast(h[p][k]?"✅ Eingeschaltet":"Ausgeschaltet");render()}catch(e){toast("Speichern ging nicht")}})}
 const SCHRITTE=[[/zimmer|aufräum/i,["👕 Kleidung in den Schrank oder Wäschekorb","🧸 Spielzeug in die Kisten","📚 Schreibtisch frei machen","🧦 Boden frei: nichts liegt mehr rum","🗑️ Müll in den Mülleimer"]],
   [/bett/i,["🛏️ Decke ausschütteln","🧸 Kissen ordentlich hinlegen","✨ Decke glatt ziehen"]],
@@ -1986,7 +1992,7 @@ function kontoHTML(){
         ${KID||READONLY?"":`<div class="rw-btns"><button data-wkauf="${esc(w.id)}" ${fehlt?"disabled":""}>🛍️ Selbst gekauft</button><button data-wdel="${esc(w.id)}">Löschen</button></div>`}</div>`}).join("");
     const last=geldVon(k).slice().sort((a,b)=>(b.datum+(b.erstellt||"")).localeCompare(a.datum+(a.erstellt||""))).slice(0,5);
     return `<div class="geldbox"><div class="geldtop"><span>${KID?"Dein Erspartes":esc(n)+" hat gespart"}</span><b>${ctEuro(e)}</b>${tg?`<span class="meta">Taschengeld: ${ctEuro(tg)} pro Woche</span>`:""}${sm?`<span class="meta">🎮 Spiele diesen Monat: ${ctEuro(sp)} von max. ${ctEuro(sm)}</span>`:""}</div>
-      ${wl||`<p class="hint">${KID?"Noch keine Wünsche. Sag Mama oder Papa, was du dir wünschst, dann kommt es auf deine Wunschliste.":"Noch keine Wünsche eingetragen."}</p>`}
+      ${wl||`<p class="hint">${KID?"Noch keine Wünsche. Sag "+ELT()+", was du dir wünschst, dann kommt es auf deine Wunschliste.":"Noch keine Wünsche eingetragen."}</p>`}
       ${tauschHTML(k)}
       ${KID?`<p class="hint">💡 Von deinem Ersparten kaufst du dir deine Wünsche selbst. Wer selbst kauft, bekommt +5 ⭐ Stolz-Bonus!</p>`:""}
       ${last.length?`<details><summary class="meta">Letzte Buchungen</summary>${last.map(g=>`<div class="meta">${fmt(g.datum)}: ${esc(g.titel)} <b style="color:${+g.betrag<0?"#ff6b6b":"#5fd38d"}">${+g.betrag>0?"+":""}${ctEuro(g.betrag)}</b></div>`).join("")}</details>`:""}
@@ -2043,10 +2049,10 @@ function tauschHTML(p){
 async function tauschen(p,st){
   const t=TAUSCH.find(x=>x[0]===st);if(!t)return;const [,ct]=t;
   if(!istZahltag(p)||schonGetauscht(p)||starBalance(p)<st||getauschtMonat(p)+ct>tauschMax(p)){toast("Tauschen geht gerade nicht");return}
-  if(!await askConfirm(`${st} ⭐ gegen ${ctEuro(ct)} für ${KID?"dein":"das"} Erspartes tauschen?${KID?" Mama oder Papa bestätigen das noch.":""}`,"Tauschen",false))return;
+  if(!await askConfirm(`${st} ⭐ gegen ${ctEuro(ct)} für ${KID?"dein":"das"} Erspartes tauschen?${KID?" "+ELT()+" bestätigen das noch.":""}`,"Tauschen",false))return;
   await store.add({typ:"einloesung",person:p,kosten:st,titel:`💶 Zahltag: ${st} ⭐ → ${ctEuro(ct)}`,zuschuss:ct,tausch:true,datum:today});
   if(!KID)await zuschussBuchen({person:p,zuschuss:ct,titel:`Zahltag ${st} ⭐`});
-  toast(KID?"💶 Getauscht! Sobald Mama oder Papa bestätigen, ist das Geld auf deinem Konto.":`💶 ${ctEuro(ct)} aufs Ersparte von ${PNAME[p]}`);
+  toast(KID?"💶 Getauscht! Sobald "+ELT()+" bestätigen, ist das Geld auf deinem Konto.":`💶 ${ctEuro(ct)} aufs Ersparte von ${PNAME[p]}`);
 }
 function wireGeld(){
   document.querySelectorAll("[data-tausch]").forEach(b=>b.onclick=()=>{const [p,st]=b.dataset.tausch.split(":");tauschen(p,+st)});
@@ -2411,7 +2417,7 @@ function spielRunde(sp,p){
     if(p)try{lsSet("fk-spiel-last",String(Date.now()))}catch(e){}
     sheet(SPIELE[sp].n,`<div class="spiel" style="text-align:center"><div style="font-size:52px">${G.ok>=EIN?"🌟":"🙂"}</div>
       <h3 style="margin:4px 0">${G.ok} von ${N} richtig</h3><p>${msg}</p>
-      ${st?`<p><b style="color:var(--star)">+${st} ⭐</b>${KID?" · sobald Mama oder Papa bestätigt haben":""}</p>`:""}${info?`<p class="hint">${info}</p>`:""}
+      ${st?`<p><b style="color:var(--star)">+${st} ⭐</b>${KID?" · sobald "+ELT()+" bestätigt haben":""}</p>`:""}${info?`<p class="hint">${info}</p>`:""}
       ${p&&G.ok>=9&&lvl<3?`<p class="hint">⬆️ Nächstes Mal geht es eine Stufe schwerer.</p>`:""}</div>
       <details class="loesungen" ${G.ok<N?"open":""}><summary>📋 Lösungen ansehen${G.ok<N?` · ${N-G.ok} ${N-G.ok===1?"Fehler":"Fehler"}`:""}</summary>
         ${G.log.map((x,i)=>`<div class="lsg ${x.ok?"ok":"no"}"><span class="lnr">${x.ok?"✅":"❌"}</span><div><b>${i+1}. ${esc(x.q)}</b>${x.opts&&x.opts.length===2?`<br><span class="meta">${x.opts.map(esc).join(" oder ")}</span>`:""}
@@ -2483,7 +2489,7 @@ function showAbz(p){sheet(`🏅 ${esc(PNAME[p]||"")}: Level & Abzeichen`,`${leve
 /* ---------- Abzug erklären: John bekommt den Grund angezeigt und vorgelesen ---------- */
 const WTAG=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
 function minusGrund(r){if(r.auto)return `weil du am ${WTAG[new Date(r.datum+"T12:00").getDay()]} keine Aufgabe gemacht hast`;
-  const g=String(r.titel||"").replace(/^✏️\s*Korrektur:?\s*/,"").trim();return g?`Der Grund: ${g}`:"Es wurde kein Grund eingetragen. Frag Mama oder Papa."}
+  const g=String(r.titel||"").replace(/^✏️\s*Korrektur:?\s*/,"").trim();return g?`Der Grund: ${g}`:"Es wurde kein Grund eingetragen. Frag "+ELT()+"."}
 const minusIst=r=>r.person===KID&&+r.kosten>0&&(r.auto||/^✏️\s*Korrektur/.test(r.titel||""));
 const ohneEmoji=t=>String(t).replace(/[\p{Extended_Pictographic}️]/gu,"").replace(/\s+/g," ").trim();
 function minusPopup(){
@@ -2545,7 +2551,7 @@ function radDrehen(p){
     const R=document.getElementById("radR");R.style.transition="transform 4.2s cubic-bezier(.12,.75,.15,1)";R.style.transform=`rotate(${ziel}deg)`;
     const radSt=capSterne(p,today,"sonder",x[1]);await store.add({typ:"erledigt",aufgabe:"rad",person:p,sterne:radSt,datum:today,woche:r.wk,titel:`🎡 Glücksrad: ${x[0]}`});
     setTimeout(()=>{const t=document.getElementById("radTxt");if(!t)return;confetti();
-      t.innerHTML=`<b style="font-size:1.3rem">${esc(x[0])}</b><br>${KID?(x[1]?"Die Sterne bekommst du, sobald Mama oder Papa bestätigt haben.":"Zeig das Mama oder Papa, die lösen es für dich ein!"):"Steht jetzt im Verlauf."}`;
+      t.innerHTML=`<b style="font-size:1.3rem">${esc(x[0])}</b><br>${KID?(x[1]?"Die Sterne bekommst du, sobald "+ELT()+" bestätigt haben.":"Zeig das "+ELT()+", die lösen es für dich ein!"):"Steht jetzt im Verlauf."}`;
       b.textContent="👍 Fertig";b.disabled=false;b.onclick=()=>{closeSheet();render()};if(KID&&ttsAuto())speak(`Du hast gewonnen: ${x[0].replace("⭐","Sterne")}`)},4400)};
 }
 function spieleHTML(){
@@ -2584,7 +2590,7 @@ function kidPackSheet(){
   document.getElementById("kpClose").onclick=closeSheet;
 }
 function showKidSettings(){
-  sheet("Einstellungen",`<div class="rolebox">🧒 <b>Kinder-Handy für ${esc(PNAME[KID]||"")}</b><br><span class="hint">Du siehst deine eigenen Termine${KIDGEM?" und die gemeinsamen":""}, deine Aufgaben und Belohnungen. Hak ab, was du geschafft hast. Mama oder Papa bestätigen es, dann bekommst du die ⭐.</span></div>
+  sheet("Einstellungen",`<div class="rolebox">🧒 <b>Kinder-Handy für ${esc(PNAME[KID]||"")}</b><br><span class="hint">Du siehst deine eigenen Termine${KIDGEM?" und die gemeinsamen":""}, deine Aufgaben und Belohnungen. Hak ab, was du geschafft hast. ${ELT()} bestätigen es, dann bekommst du die ⭐.</span></div>
     ${nameBox()}
     ${isStandalone()?"":`<button class="btn" id="installSet">📲 Als App installieren</button>`}
     <h4 class="sub">🎨 Darstellung</h4>
@@ -2651,7 +2657,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v106";
+const APP_VER="v107";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -2896,7 +2902,7 @@ async function _ensureMember(cfg){
       try{await ref.set(o,{merge:true});made=true}catch(e){
         if(o.rolle!=="lesen"){try{o.rolle="lesen";delete o.token;await ref.set(o,{merge:true});made=true;ro=true}catch(e2){}}}
       if(made){try{snap=await ref.get({source:"server"});RULES_OLD=false}catch(e){}}
-      if(!RULES_OLD&&(ro||o.rolle==="lesen")&&!intent)setTimeout(()=>toast(kd?"Dieses Handy wurde neu verbunden. Bitte Mama oder Papa: Einstellungen → Mitglieder & Rechte → bei diesem Handy ✏️ antippen.":"Dieses Handy wurde neu verbunden und kann erst mal nur lesen. Freischalten unter Mitglieder & Rechte."),2500);
+      if(!RULES_OLD&&(ro||o.rolle==="lesen")&&!intent)setTimeout(()=>toast(kd?"Dieses Handy wurde neu verbunden. Bitte "+ELT()+": Einstellungen → Mitglieder & Rechte → bei diesem Handy ✏️ antippen.":"Dieses Handy wurde neu verbunden und kann erst mal nur lesen. Freischalten unter Mitglieder & Rechte."),2500);
     }
     if(RULES_OLD){ // Regeln noch alt: Liste nicht lesbar, Rolle nur auf dem Gerät
       await ref.set(intent?{...base,seit:today,rolle:intent}:{...base,seit:today},{merge:true});
@@ -4506,6 +4512,8 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-19c",d:"2026-11-19",t:"🗣️ Eigene Namen in den Kindertexten",items:[
+    "🗣️ Unter Sterne → Einstellungen legt ihr fest, wie euer Kind euch nennt, z. B. „Mama oder Robert“. Das steht dann überall in seinen Texten und wird so vorgelesen"]},
   {v:"2026-11-19b",d:"2026-11-19",t:"🚫 Absagen auch im Lese-Link",items:[
     "🚫 Ausgefallene Termine erscheinen jetzt auch über Lese-Links durchgestrichen mit „Fällt aus“"]},
   {v:"2026-11-19a",d:"2026-11-19",t:"🔁 Einzelne Serientermine",items:[
