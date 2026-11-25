@@ -1819,7 +1819,7 @@ function abzugHTML(){
   const P=persons().filter(([k])=>tasks.some(t=>t.person===k));if(!P.length)return "";
   return `<h3 class="sec">😴 Abzug fürs Nichtstun</h3><p class="hint">Für jeden Tag ohne erledigte Aufgabe (auch kein Lernspiel) wird 1 ⭐ abgezogen, aber nie unter 0. Tage bei Papa zählen nicht.</p>
     <div class="nameq">${P.map(([k,n])=>`<button data-abz="${k}" ${abzugCfg()[k]?'style="outline:2px solid var(--accent)"':""}>${abzugCfg()[k]?"✅":"⬜"} ${esc(n)}</button>`).join("")}</div>
-    <h3 class="sec">🎮 Abzug ohne Lernspiel</h3><p class="hint">Für jeden Tag ohne Lernspiel (Mathe oder Deutsch) werden ${SPIEL_ABZUG} ⭐ abgezogen, nie unter 0. Zusammen mit der Regel oben gehen höchstens ${MAX_ABZUG_TAG} ⭐ pro Tag verloren. Tage bei Papa und Pausen zählen nicht.</p>
+    <h3 class="sec">🎮 Abzug ohne Lernspiel</h3><p class="hint">Für jeden Tag ohne Lernspiel (Mathe, Deutsch, Uhr oder Geld) werden ${SPIEL_ABZUG} ⭐ abgezogen, nie unter 0. Zusammen mit der Regel oben gehen höchstens ${MAX_ABZUG_TAG} ⭐ pro Tag verloren. Tage bei Papa und Pausen zählen nicht.</p>
     <div class="nameq">${P.map(([k,n])=>`<button data-sabz="${k}" ${spielAbzugCfg()[k]?'style="outline:2px solid var(--accent)"':""}>${spielAbzugCfg()[k]?"✅":"⬜"} ${esc(n)}</button>`).join("")}</div>`;
 }
 function wireAbzug(){
@@ -1943,8 +1943,8 @@ function wireBonus(){
 const ELT=()=>String((typeof FAMCONF!=="undefined"&&FAMCONF&&FAMCONF.eltern)||"Mama oder Papa").trim()||"Mama oder Papa";
 const eltTxt=t=>String(t).replace(/Mama oder Papa/g,ELT());
 const KID_NEWS=[
-  {id:"k19",ic:"🎮",t:"Neue Spielregel",x:"Bei jedem Lernspiel musst du jetzt alle 10 Aufgaben lösen. Wenn mindestens 8 richtig sind, bekommst du 1 Stern. Wer abbricht, bekommt nichts, und das Spiel zählt nicht für heute."},
-  {id:"k18",ic:"🎮",t:"Jeden Tag ein Lernspiel",x:"Neu: Spiel jeden Tag mindestens ein Lernspiel in Mathe oder Deutsch. Wenn du an einem Tag kein Lernspiel machst, werden 2 Sterne abgezogen. Tage bei Papa zählen nicht."},
+  {id:"k19",ic:"🎮",t:"Neue Spielregel",x:"Bei jedem der 4 Lernspiele (Mathe, Deutsch, Uhr und Geld) musst du jetzt alle 10 Aufgaben lösen. Wenn mindestens 8 richtig sind, bekommst du 1 Stern. Wer abbricht, bekommt nichts, und das Spiel zählt nicht für heute."},
+  {id:"k18",ic:"🎮",t:"Jeden Tag ein Lernspiel",x:"Neu: Spiel jeden Tag mindestens ein Lernspiel (Mathe, Deutsch, Uhr oder Geld). Wenn du an einem Tag kein Lernspiel machst, werden 2 Sterne abgezogen. Tage bei Papa zählen nicht."},
   {id:"k17",ic:"⏸️",t:"Pause-Knopf",x:"Mama oder Papa können das Sterne-System auch mal pausieren. Dann musst du nichts abhaken, und es wird nichts abgezogen. Deine Sterne bleiben."},
   {id:"k16",ic:"🔊",t:"Warum Sterne weg sind",x:"Wenn dir Sterne abgezogen werden, siehst du jetzt sofort warum. Mit dem Lautsprecher-Knopf wird dir der Grund vorgelesen."},
   {id:"k15",ic:"📊",t:"Umfragen",x:"Neu: Mama oder Papa können dir Fragen schicken, zum Beispiel was du am Wochenende essen möchtest. Du tippst einfach auf deine Antwort und schickst sie ab. Mit dem Lautsprecher-Knopf wird dir die ganze Frage mit allen Antworten vorgelesen."},
@@ -2724,7 +2724,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v116";
+const APP_VER="v117";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4591,7 +4591,7 @@ const CHANGELOG=[
     "🛡️ Automatische Abzüge (kein Lernspiel, keine Aufgabe) zusammen höchstens 2 ⭐ pro Tag",
     "🏠 An Tagen beim anderen Elternteil und bei manueller Pause gibt es weiterhin gar keinen Abzug"]},
   {v:"2026-11-25b",d:"2026-11-25",t:"🎮 Strengere Lernspiele",items:[
-    "🎮 Jedes Lernspiel hat immer 10 Aufgaben, die alle gelöst werden müssen",
+    "🎮 Jedes der 4 Lernspiele (Mathe, Deutsch, Uhr, Geld) hat immer 10 Aufgaben, die alle gelöst werden müssen",
     "⭐ Mindestens 8 richtig = 1 Stern, sonst kein Stern. Abbrechen bringt nichts",
     "📅 Nur ein so geschafftes Spiel zählt als „Lernspiel gemacht“ für den Tag"]},
   {v:"2026-11-25a",d:"2026-11-25",t:"📅 Tagesübersicht & Lernspiel-Pflicht",items:[
