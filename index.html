@@ -1763,7 +1763,9 @@ function wirePause(){document.querySelectorAll("[data-pause]").forEach(c=>c.onch
   setPause(p,aus)})}
 /* ---------- Abzug für Tage ohne Aufgabe ---------- */
 const abzugCfg=()=>{const a=FAMCONF&&FAMCONF.abzug;return a&&typeof a==="object"?a:{}};
-const SPIEL_ABZUG=2;
+const SPIEL_ABZUG=2,MAX_ABZUG_TAG=2;
+/* Summe der automatischen Abzüge an einem Tag (schon gebucht + geplant) */
+const abzugTag=(p,d,plan)=>redeems.filter(r=>r.person===p&&r.datum===d&&r.auto).reduce((a,r)=>a+(+r.kosten||0),0)+(plan||[]).filter(x=>x[0]===p&&x[1]===d).reduce((a,x)=>a+(x[3]||1),0);
 const spielAbzugCfg=()=>{const a=FAMCONF&&FAMCONF.spielAbzug;return a&&typeof a==="object"?a:{}};
 const hatGespielt=(p,d)=>taskLogs.some(l=>l.person===p&&l.datum===d&&String(l.aufgabe||"").startsWith("spiel-"));
 const istWeg=(p,day)=>entries.some(e=>e.person===p&&e.typ==="termin"&&/papa|pascal/i.test(e.titel||"")&&onDay(e,day));
@@ -1775,7 +1777,8 @@ function abzugPlan(){
       if(redeems.some(r=>r.id===`abzug-${p}-${d}`))continue;
       if(taskLogs.some(l=>l.person===p&&l.datum===d&&l.aufgabe!=="korrektur"))continue;
       if(istWeg(p,d)||manuellAus(p,d))continue;
-      if(bal<=0)continue;bal--;out.push([p,d]);
+      if(abzugTag(p,d,out)>=MAX_ABZUG_TAG)continue;
+      if(bal<=0)continue;bal--;out.push([p,d,"",1]);
     }}
   /* 2 ⭐ Abzug für jeden Tag ohne Lernspiel */
   for(const [p,ab] of Object.entries(spielAbzugCfg())){if(!ab||!PNAME[p])continue;
@@ -1784,7 +1787,7 @@ function abzugPlan(){
       if(redeems.some(r=>r.id===`spielabzug-${p}-${d}`))continue;
       if(hatGespielt(p,d))continue;
       if(istWeg(p,d)||manuellAus(p,d))continue;
-      if(bal<=0)continue;const n=Math.min(SPIEL_ABZUG,bal);bal-=n;out.push([p,d,"spiel",n]);
+      const n=Math.min(SPIEL_ABZUG,bal,MAX_ABZUG_TAG-abzugTag(p,d,out));if(n<=0)continue;bal-=n;out.push([p,d,"spiel",n]);
     }}
   return out;
 }
@@ -1816,7 +1819,7 @@ function abzugHTML(){
   const P=persons().filter(([k])=>tasks.some(t=>t.person===k));if(!P.length)return "";
   return `<h3 class="sec">😴 Abzug fürs Nichtstun</h3><p class="hint">Für jeden Tag ohne erledigte Aufgabe (auch kein Lernspiel) wird 1 ⭐ abgezogen, aber nie unter 0. Tage bei Papa zählen nicht.</p>
     <div class="nameq">${P.map(([k,n])=>`<button data-abz="${k}" ${abzugCfg()[k]?'style="outline:2px solid var(--accent)"':""}>${abzugCfg()[k]?"✅":"⬜"} ${esc(n)}</button>`).join("")}</div>
-    <h3 class="sec">🎮 Abzug ohne Lernspiel</h3><p class="hint">Für jeden Tag ohne Lernspiel (Mathe oder Deutsch) werden ${SPIEL_ABZUG} ⭐ abgezogen, nie unter 0. Gilt zusätzlich zur Regel oben. Tage bei Papa und Pausen zählen nicht.</p>
+    <h3 class="sec">🎮 Abzug ohne Lernspiel</h3><p class="hint">Für jeden Tag ohne Lernspiel (Mathe oder Deutsch) werden ${SPIEL_ABZUG} ⭐ abgezogen, nie unter 0. Zusammen mit der Regel oben gehen höchstens ${MAX_ABZUG_TAG} ⭐ pro Tag verloren. Tage bei Papa und Pausen zählen nicht.</p>
     <div class="nameq">${P.map(([k,n])=>`<button data-sabz="${k}" ${spielAbzugCfg()[k]?'style="outline:2px solid var(--accent)"':""}>${spielAbzugCfg()[k]?"✅":"⬜"} ${esc(n)}</button>`).join("")}</div>`;
 }
 function wireAbzug(){
@@ -2721,7 +2724,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v115";
+const APP_VER="v116";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4584,6 +4587,9 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-25c",d:"2026-11-25",t:"🛡️ Höchstens 2 Sterne Abzug pro Tag",items:[
+    "🛡️ Automatische Abzüge (kein Lernspiel, keine Aufgabe) zusammen höchstens 2 ⭐ pro Tag",
+    "🏠 An Tagen beim anderen Elternteil und bei manueller Pause gibt es weiterhin gar keinen Abzug"]},
   {v:"2026-11-25b",d:"2026-11-25",t:"🎮 Strengere Lernspiele",items:[
     "🎮 Jedes Lernspiel hat immer 10 Aufgaben, die alle gelöst werden müssen",
     "⭐ Mindestens 8 richtig = 1 Stern, sonst kein Stern. Abbrechen bringt nichts",
