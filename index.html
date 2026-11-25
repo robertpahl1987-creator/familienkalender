@@ -1767,7 +1767,9 @@ const SPIEL_ABZUG=2,MAX_ABZUG_TAG=2;
 /* Summe der automatischen Abzüge an einem Tag (schon gebucht + geplant) */
 const abzugTag=(p,d,plan)=>redeems.filter(r=>r.person===p&&r.datum===d&&r.auto).reduce((a,r)=>a+(+r.kosten||0),0)+(plan||[]).filter(x=>x[0]===p&&x[1]===d).reduce((a,x)=>a+(x[3]||1),0);
 const spielAbzugCfg=()=>{const a=FAMCONF&&FAMCONF.spielAbzug;return a&&typeof a==="object"?a:{}};
-const hatGespielt=(p,d)=>taskLogs.some(l=>l.person===p&&l.datum===d&&String(l.aufgabe||"").startsWith("spiel-"));
+const PFLICHT_SPIELE=["mathe","deutsch"];
+const spielGemacht=(p,d,sp)=>taskLogs.some(l=>l.person===p&&l.datum===d&&l.aufgabe==="spiel-"+sp);
+const hatGespielt=(p,d)=>PFLICHT_SPIELE.every(sp=>spielGemacht(p,d,sp));
 const istWeg=(p,day)=>entries.some(e=>e.person===p&&e.typ==="termin"&&/papa|pascal/i.test(e.titel||"")&&onDay(e,day));
 function abzugPlan(){
   const out=[],cfg=abzugCfg();
@@ -1810,16 +1812,16 @@ function tageHTML(){if(KID)return"";
     const flag=istWeg(p,d)?"🏠 bei Papa":manuellAus(p,d)?"⏸️ Pause":"";
     return `<div class="tagzeile"><div class="tagkopf"><b>${d===today?"Heute":fmt(d)}</b><span>${plus?`<span class="plus">+${sF(plus)} ⭐</span>`:""}${minus?` <span class="minus2">−${sF(minus)} ⭐</span>`:""}</span></div>
       ${flag?`<div class="meta">${flag}</div>`:`<div class="tagdet"><span>${ta.length?`✅ ${ta.map(l=>esc(String(l.titel||"Aufgabe").replace(/^.{0,3}Umfrage.*$/,""))).filter(Boolean).slice(0,6).join(", ")}${ta.length>6?" …":""}`:`<span class="leerhin">✅ keine Aufgabe</span>`}</span>
-      <span>${sp.length?`🎮 ${sp.length}× Lernspiel`:`<span class="leerhin">🎮 kein Lernspiel</span>`}</span></div>`}</div>`};
+      <span>🎮 Mathe ${spielGemacht(p,d,"mathe")?"✅":"❌"} · Deutsch ${spielGemacht(p,d,"deutsch")?"✅":"❌"}${sp.filter(l=>!/spiel-(mathe|deutsch)/.test(l.aufgabe)).length?` · +${sp.filter(l=>!/spiel-(mathe|deutsch)/.test(l.aufgabe)).length} weitere`:""}</span></div>`}</div>`};
   return P.map(([p,n])=>{const tage=[];for(let i=0;i<7;i++)tage.push(addDays(today,-i));
     return `<details class="tage" open><summary>📅 Was hat ${esc(n)} gemacht? <span class="meta">(letzte 7 Tage)</span></summary>${tage.map(d=>tag(p,d)).join("")}</details>`}).join("")}
 function abzugHTML(){
-  if(KID){const ab=abzugCfg()[KID],sa=spielAbzugCfg()[KID];return (ab?`<p class="hint" style="margin:6px 0 0">😴 Achtung: An jedem Tag ohne erledigte Aufgabe gibt es <b>1 ⭐ Abzug</b>.</p>`:"")+(sa?`<p class="hint" style="margin:6px 0 0">🎮 Spiel jeden Tag mindestens ein Lernspiel, sonst gibt es <b>${SPIEL_ABZUG} ⭐ Abzug</b>.</p>`:"")}
+  if(KID){const ab=abzugCfg()[KID],sa=spielAbzugCfg()[KID];return (ab?`<p class="hint" style="margin:6px 0 0">😴 Achtung: An jedem Tag ohne erledigte Aufgabe gibt es <b>1 ⭐ Abzug</b>.</p>`:"")+(sa?`<p class="hint" style="margin:6px 0 0">🎮 Mach jeden Tag <b>Mathe und Deutsch</b> (mindestens 8 von 10 richtig), sonst gibt es <b>${SPIEL_ABZUG} ⭐ Abzug</b>. Heute: Mathe ${spielGemacht(KID,today,"mathe")?"✅":"⬜"} · Deutsch ${spielGemacht(KID,today,"deutsch")?"✅":"⬜"}</p>`:"")}
   if(READONLY)return "";
   const P=persons().filter(([k])=>tasks.some(t=>t.person===k));if(!P.length)return "";
   return `<h3 class="sec">😴 Abzug fürs Nichtstun</h3><p class="hint">Für jeden Tag ohne erledigte Aufgabe (auch kein Lernspiel) wird 1 ⭐ abgezogen, aber nie unter 0. Tage bei Papa zählen nicht.</p>
     <div class="nameq">${P.map(([k,n])=>`<button data-abz="${k}" ${abzugCfg()[k]?'style="outline:2px solid var(--accent)"':""}>${abzugCfg()[k]?"✅":"⬜"} ${esc(n)}</button>`).join("")}</div>
-    <h3 class="sec">🎮 Abzug ohne Lernspiel</h3><p class="hint">Für jeden Tag ohne Lernspiel (Mathe, Deutsch, Uhr oder Geld) werden ${SPIEL_ABZUG} ⭐ abgezogen, nie unter 0. Zusammen mit der Regel oben gehen höchstens ${MAX_ABZUG_TAG} ⭐ pro Tag verloren. Tage bei Papa und Pausen zählen nicht.</p>
+    <h3 class="sec">🎮 Abzug ohne Mathe & Deutsch</h3><p class="hint">An jedem Tag müssen <b>Mathe-Blitz und Deutsch-Detektiv</b> geschafft werden (10 Aufgaben, mindestens 8 richtig). Fehlt eins davon, werden ${SPIEL_ABZUG} ⭐ abgezogen, nie unter 0. Zusammen mit der Regel oben gehen höchstens ${MAX_ABZUG_TAG} ⭐ pro Tag verloren. Tage bei Papa und Pausen zählen nicht.</p>
     <div class="nameq">${P.map(([k,n])=>`<button data-sabz="${k}" ${spielAbzugCfg()[k]?'style="outline:2px solid var(--accent)"':""}>${spielAbzugCfg()[k]?"✅":"⬜"} ${esc(n)}</button>`).join("")}</div>`;
 }
 function wireAbzug(){
@@ -1944,7 +1946,7 @@ const ELT=()=>String((typeof FAMCONF!=="undefined"&&FAMCONF&&FAMCONF.eltern)||"M
 const eltTxt=t=>String(t).replace(/Mama oder Papa/g,ELT());
 const KID_NEWS=[
   {id:"k19",ic:"🎮",t:"Neue Spielregel",x:"Bei jedem der 4 Lernspiele (Mathe, Deutsch, Uhr und Geld) musst du jetzt alle 10 Aufgaben lösen. Wenn mindestens 8 richtig sind, bekommst du 1 Stern. Wer abbricht, bekommt nichts, und das Spiel zählt nicht für heute."},
-  {id:"k18",ic:"🎮",t:"Jeden Tag ein Lernspiel",x:"Neu: Spiel jeden Tag mindestens ein Lernspiel (Mathe, Deutsch, Uhr oder Geld). Wenn du an einem Tag kein Lernspiel machst, werden 2 Sterne abgezogen. Tage bei Papa zählen nicht."},
+  {id:"k20",ic:"🎮",t:"Jeden Tag Mathe und Deutsch",x:"Neu: Mach jeden Tag den Mathe-Blitz und den Deutsch-Detektiv, jeweils alle 10 Aufgaben mit mindestens 8 richtigen. Fehlt eins davon, werden 2 Sterne abgezogen. Uhr und Geld kannst du zusätzlich spielen. Tage bei Papa zählen nicht."},
   {id:"k17",ic:"⏸️",t:"Pause-Knopf",x:"Mama oder Papa können das Sterne-System auch mal pausieren. Dann musst du nichts abhaken, und es wird nichts abgezogen. Deine Sterne bleiben."},
   {id:"k16",ic:"🔊",t:"Warum Sterne weg sind",x:"Wenn dir Sterne abgezogen werden, siehst du jetzt sofort warum. Mit dem Lautsprecher-Knopf wird dir der Grund vorgelesen."},
   {id:"k15",ic:"📊",t:"Umfragen",x:"Neu: Mama oder Papa können dir Fragen schicken, zum Beispiel was du am Wochenende essen möchtest. Du tippst einfach auf deine Antwort und schickst sie ab. Mit dem Lautsprecher-Knopf wird dir die ganze Frage mit allen Antworten vorgelesen."},
@@ -2480,7 +2482,7 @@ function spielRunde(sp,p){
     else st=0;
     if(p&&st>0){const c=capSterne(p,today,"sonder",st);if(c<st){info=c?`Heute gibt es nur noch ${c} ⭐ Extra-Sterne.`:"Das Tageslimit für Extra-Sterne ist erreicht. Morgen geht es weiter!";st=c}}
     const msg=G.ok>=N?"🏆 Perfekt! Alles richtig!":G.ok>=EIN?"🎉 Super gemacht!":G.ok>=Math.ceil(N/2)?`👍 Gut! Für einen Stern brauchst du ${EIN} richtige.`:"💪 Übung macht den Meister. Versuch es nochmal!";
-    if(p&&store&&G.ok>=EIN&&(st>0||!hatGespielt(p,today))){store.add({typ:"erledigt",aufgabe:"spiel-"+sp,person:p,sterne:st,datum:today,titel:`${SPIELE[sp].n} · ${G.ok}/${N} richtig`});if(G.ok===N)confetti()}
+    if(p&&store&&G.ok>=EIN&&(st>0||!spielGemacht(p,today,sp))){store.add({typ:"erledigt",aufgabe:"spiel-"+sp,person:p,sterne:st,datum:today,titel:`${SPIELE[sp].n} · ${G.ok}/${N} richtig`});if(G.ok===N)confetti()}
     if(p)try{lsSet("fk-spiel-last",String(Date.now()))}catch(e){}
     sheet(SPIELE[sp].n,`<div class="spiel" style="text-align:center"><div style="font-size:52px">${G.ok>=EIN?"🌟":"🙂"}</div>
       <h3 style="margin:4px 0">${G.ok} von ${N} richtig</h3><p>${msg}</p>
@@ -2555,7 +2557,7 @@ function levelHTML(p){const L=levelVon(p);return `<div class="lvlcard"><span cla
 function showAbz(p){sheet(`🏅 ${esc(PNAME[p]||"")}: Level & Abzeichen`,`${levelHTML(p)}<p class="hint">${abzVon(p).filter(b=>b.ok).length} von ${ABZ.length} Abzeichen geschafft</p>${abzHTML(p)}<button class="btn ghost" id="abX" style="margin-top:10px">Schließen</button>`);document.getElementById("abX").onclick=closeSheet}
 /* ---------- Abzug erklären: John bekommt den Grund angezeigt und vorgelesen ---------- */
 const WTAG=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
-function minusGrund(r){if(r.auto)return `weil du am ${WTAG[new Date(r.datum+"T12:00").getDay()]} ${r.grund==="spiel"?"kein Lernspiel":"keine Aufgabe"} gemacht hast`;
+function minusGrund(r){if(r.auto)return `weil du am ${WTAG[new Date(r.datum+"T12:00").getDay()]} ${r.grund==="spiel"?"nicht Mathe und Deutsch geschafft":"keine Aufgabe gemacht"} hast`;
   const g=String(r.titel||"").replace(/^✏️\s*Korrektur:?\s*/,"").trim();return g?`Der Grund: ${g}`:"Es wurde kein Grund eingetragen. Frag "+ELT()+"."}
 const minusIst=r=>r.person===KID&&+r.kosten>0&&(r.auto||/^✏️\s*Korrektur/.test(r.titel||""));
 const ohneEmoji=t=>String(t).replace(/[\p{Extended_Pictographic}️]/gu,"").replace(/\s+/g," ").trim();
@@ -2724,7 +2726,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v117";
+const APP_VER="v118";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4587,6 +4589,10 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-25d",d:"2026-11-25",t:"🎮 Pflicht: Mathe und Deutsch",items:[
+    "🎮 Jeden Tag müssen Mathe-Blitz und Deutsch-Detektiv geschafft werden (10 Aufgaben, mindestens 8 richtig). Fehlt eins, gibt es 2 ⭐ Abzug",
+    "🕐 Uhr-Profi und Geld-Profi bleiben freiwillig und bringen Extra-Sterne",
+    "📅 Die Tagesübersicht zeigt für jeden Tag, ob Mathe und Deutsch geschafft wurden"]},
   {v:"2026-11-25c",d:"2026-11-25",t:"🛡️ Höchstens 2 Sterne Abzug pro Tag",items:[
     "🛡️ Automatische Abzüge (kein Lernspiel, keine Aufgabe) zusammen höchstens 2 ⭐ pro Tag",
     "🏠 An Tagen beim anderen Elternteil und bei manueller Pause gibt es weiterhin gar keinen Abzug"]},
