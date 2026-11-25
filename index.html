@@ -1940,6 +1940,7 @@ function wireBonus(){
 const ELT=()=>String((typeof FAMCONF!=="undefined"&&FAMCONF&&FAMCONF.eltern)||"Mama oder Papa").trim()||"Mama oder Papa";
 const eltTxt=t=>String(t).replace(/Mama oder Papa/g,ELT());
 const KID_NEWS=[
+  {id:"k19",ic:"🎮",t:"Neue Spielregel",x:"Bei jedem Lernspiel musst du jetzt alle 10 Aufgaben lösen. Wenn mindestens 8 richtig sind, bekommst du 1 Stern. Wer abbricht, bekommt nichts, und das Spiel zählt nicht für heute."},
   {id:"k18",ic:"🎮",t:"Jeden Tag ein Lernspiel",x:"Neu: Spiel jeden Tag mindestens ein Lernspiel in Mathe oder Deutsch. Wenn du an einem Tag kein Lernspiel machst, werden 2 Sterne abgezogen. Tage bei Papa zählen nicht."},
   {id:"k17",ic:"⏸️",t:"Pause-Knopf",x:"Mama oder Papa können das Sterne-System auch mal pausieren. Dann musst du nichts abhaken, und es wird nichts abgezogen. Deine Sterne bleiben."},
   {id:"k16",ic:"🔊",t:"Warum Sterne weg sind",x:"Wenn dir Sterne abgezogen werden, siehst du jetzt sofort warum. Mit dem Lautsprecher-Knopf wird dir der Grund vorgelesen."},
@@ -1956,7 +1957,7 @@ const KID_NEWS=[
   {id:"k6",ic:"🏆",t:"Perfekte Tage",x:"Schaffst du alle Tagesaufgaben und alle Fotos sind perfekt, bekommst du 3 Extra-Sterne. 3 perfekte Tage hintereinander: 5 Sterne extra. 7 Tage: 10 Sterne extra!"},
   {id:"k4",ic:"😴",t:"Achtung, Abzug",x:"An jedem Tag, an dem du gar keine Aufgabe machst, wird dir 1 Stern abgezogen."},
   {id:"k3",ic:"🏠",t:"Pause bei Papa",x:"An den Tagen bei Papa macht das Sterne-System Pause. Dann gibt es keine Aufgaben und keinen Abzug."},
-  {id:"k2",ic:"🎮",t:"Lernspiele",x:"Mit Mathe-Blitz und Deutsch-Detektiv kannst du jeden Tag Sterne erspielen: 8 von 10 richtig gibt 1 Stern, alles richtig 2 Sterne."},
+  {id:"k2",ic:"🎮",t:"Lernspiele",x:"Mit Mathe-Blitz und Deutsch-Detektiv kannst du jeden Tag Sterne erspielen: Du musst alle 10 Aufgaben lösen. Bei mindestens 8 richtigen gibt es 1 Stern."},
   {id:"k1",ic:"🔁",t:"Nochmal machen",x:"Wenn Mama oder Papa „Nochmal“ sagen, steht bei der Aufgabe in Orange, was noch fehlt. Mach es fertig und schick ein neues Foto."}];
 let kidNewsShown=false;
 function showKidNews(force){
@@ -2430,7 +2431,7 @@ function deutschAufgabe(lvl){
 function spielStart(sp){
   if(KID)return spielRunde(sp,KID);
   const P=persons();
-  sheet(SPIELE[sp].n,`<p class="hint">Wer spielt? Sterne gibt es für 8 von 10 richtigen Aufgaben (bei 10 von 10 sogar 2 ⭐), höchstens ${spielLimit()} ⭐ am Tag.</p>
+  sheet(SPIELE[sp].n,`<p class="hint">Wer spielt? Alle 10 Aufgaben müssen gelöst werden. Bei mindestens 8 richtigen gibt es 1 ⭐, höchstens ${spielLimit()} ⭐ am Tag. Wer abbricht, bekommt nichts.</p>
     <div class="nameq">${P.map(([k,n])=>`<button data-sp="${k}">${esc(n)}</button>`).join("")}<button data-sp="">Nur ausprobieren</button></div>
     <button class="btn ghost" id="spX">Abbrechen</button>`);
   document.querySelectorAll("[data-sp]").forEach(b=>b.onclick=()=>spielRunde(sp,b.dataset.sp));
@@ -2438,7 +2439,7 @@ function spielStart(sp){
 }
 function spielRunde(sp,p){
   if(p&&sternPause(p)){pauseToast(p);return}
-  const lese=hilfe(p||KID,"lesen"),fok=hilfe(p||KID,"fokus"),lvl=p?spielLvl(p,sp):1,N=fok?6:10,EIN=Math.ceil(N*(lese&&sp==="deutsch"?.7:.8)),ZWEI=lese&&sp==="deutsch"?Math.ceil(N*.9):N,G={i:0,ok:0,zeit:Math.round((sp==="mathe"?(lvl===1?15:13):sp==="deutsch"?14:18)*(lese?1.5:1)),eing:"",auf:null,t0:0,tim:null,fertig:false,log:[]};
+  const lese=hilfe(p||KID,"lesen"),fok=hilfe(p||KID,"fokus"),lvl=p?spielLvl(p,sp):1,N=10,EIN=8,ZWEI=99,G={i:0,ok:0,zeit:Math.round((sp==="mathe"?(lvl===1?15:13):sp==="deutsch"?14:18)*(lese?1.5:1)),eing:"",auf:null,t0:0,tim:null,fertig:false,log:[]};
   const vorlesen=(sp==="deutsch"||lese)&&TTS_OK,autoV=vorlesen&&(()=>{try{return localStorage.getItem("fk-spiel-tts")!=="0"}catch(e){return true}})();
   const sagFrage=()=>{const A=G.auf;let q=A.q;if(sp==="mathe")q=q.replace(/·/g," mal ").replace(/:/g," geteilt durch ").replace(/−/g," minus ").replace(/\+/g," plus ").replace(/\?/g," wie viel ").replace(/=/g," ist ");
     if(sp==="deutsch"&&lese&&A.opts&&A.opts.length===2)q+=` Das Wort heißt: ${A.a}.`;speak(q)};
@@ -2476,7 +2477,7 @@ function spielRunde(sp,p){
     else st=0;
     if(p&&st>0){const c=capSterne(p,today,"sonder",st);if(c<st){info=c?`Heute gibt es nur noch ${c} ⭐ Extra-Sterne.`:"Das Tageslimit für Extra-Sterne ist erreicht. Morgen geht es weiter!";st=c}}
     const msg=G.ok>=N?"🏆 Perfekt! Alles richtig!":G.ok>=EIN?"🎉 Super gemacht!":G.ok>=Math.ceil(N/2)?`👍 Gut! Für einen Stern brauchst du ${EIN} richtige.`:"💪 Übung macht den Meister. Versuch es nochmal!";
-    if(p&&st>0&&store){store.add({typ:"erledigt",aufgabe:"spiel-"+sp,person:p,sterne:st,datum:today,titel:`${SPIELE[sp].n} · ${G.ok}/${N} richtig`});if(G.ok===N)confetti()}
+    if(p&&store&&G.ok>=EIN&&(st>0||!hatGespielt(p,today))){store.add({typ:"erledigt",aufgabe:"spiel-"+sp,person:p,sterne:st,datum:today,titel:`${SPIELE[sp].n} · ${G.ok}/${N} richtig`});if(G.ok===N)confetti()}
     if(p)try{lsSet("fk-spiel-last",String(Date.now()))}catch(e){}
     sheet(SPIELE[sp].n,`<div class="spiel" style="text-align:center"><div style="font-size:52px">${G.ok>=EIN?"🌟":"🙂"}</div>
       <h3 style="margin:4px 0">${G.ok} von ${N} richtig</h3><p>${msg}</p>
@@ -2622,7 +2623,7 @@ function spieleHTML(){
   const p=KID,frei=p?Math.max(0,spielLimit()-spielHeute(p)):0;
   return `<h3 class="sec">🎮 Lernspiele</h3>
     <div class="actions"><button class="btn${KID?"":" ghost"}" data-spiel="mathe">🧮 Mathe-Blitz</button><button class="btn${KID?"":" ghost"}" data-spiel="deutsch">✏️ Deutsch-Detektiv</button><button class="btn${KID?"":" ghost"}" data-spiel="uhr">🕐 Uhr-Profi</button><button class="btn${KID?"":" ghost"}" data-spiel="geld">💶 Geld-Profi</button></div>
-    <p class="hint">${KID?(spielLimit()?(frei?`Heute kannst du noch <b>${frei} ⭐</b> erspielen. ${hilfe(KID,"fokus")?"5 von 6":"8 von 10"} richtig = 1 ⭐, alle richtig = 2 ⭐.`:"Für heute hast du alle Spiele-Sterne. Üben geht trotzdem!"):"Spielen zum Üben, Sterne gibt es dafür gerade nicht."):`Für die 2.–3. Klasse, mit Zeitlimit und Stufen, die sich anpassen. Sterne pro Tag aus Spielen: <select id="spLim" aria-label="Tageslimit">${[0,1,2,3,4,5].map(n=>`<option value="${n}" ${spielLimit()===n?"selected":""}>${n}</option>`).join("")}</select>`}</p>`;
+    <p class="hint">${KID?(spielLimit()?(frei?`Heute kannst du noch <b>${frei} ⭐</b> erspielen. Alle 10 Aufgaben lösen, mindestens 8 richtig = 1 ⭐.`:"Für heute hast du alle Spiele-Sterne. Üben geht trotzdem!"):"Spielen zum Üben, Sterne gibt es dafür gerade nicht."):`Für die 2.–3. Klasse, mit Zeitlimit und Stufen, die sich anpassen. Sterne pro Tag aus Spielen: <select id="spLim" aria-label="Tageslimit">${[0,1,2,3,4,5].map(n=>`<option value="${n}" ${spielLimit()===n?"selected":""}>${n}</option>`).join("")}</select>`}</p>`;
 }
 function wireSpiele(){
   document.querySelectorAll("[data-spiel]").forEach(b=>b.onclick=()=>spielStart(b.dataset.spiel));
@@ -2720,7 +2721,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v114";
+const APP_VER="v115";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4583,6 +4584,10 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-25b",d:"2026-11-25",t:"🎮 Strengere Lernspiele",items:[
+    "🎮 Jedes Lernspiel hat immer 10 Aufgaben, die alle gelöst werden müssen",
+    "⭐ Mindestens 8 richtig = 1 Stern, sonst kein Stern. Abbrechen bringt nichts",
+    "📅 Nur ein so geschafftes Spiel zählt als „Lernspiel gemacht“ für den Tag"]},
   {v:"2026-11-25a",d:"2026-11-25",t:"📅 Tagesübersicht & Lernspiel-Pflicht",items:[
     "📅 Im Sterne-Bereich (Übersicht) seht ihr für die letzten 7 Tage, was das Kind gemacht hat: erledigte Aufgaben, Lernspiele, verdiente und abgezogene Sterne",
     "🎮 Neue Regel (abschaltbar unter Sterne → Einstellungen): Für jeden Tag ohne Lernspiel werden 2 ⭐ abgezogen, nie unter 0. Tage bei Papa und Pausen zählen nicht",
