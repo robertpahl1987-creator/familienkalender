@@ -617,6 +617,7 @@ body.mod-aus-sterne .tabs [data-view="sterne"],body.mod-aus-familie .tabs [data-
 .umf{border:1px solid var(--line,#3335);border-radius:14px;padding:12px;margin:8px 0;display:grid;gap:8px}.umfkopf{display:flex;justify-content:space-between;align-items:center;gap:8px}.umfhoer{border:0;background:var(--accent,#5b8def);color:#fff;border-radius:999px;width:44px;height:44px;font-size:1.3em;flex:0 0 auto}.umfhoer.klein{width:40px;height:40px;font-size:1.1em;background:transparent;border:1px solid var(--line,#3335)}.umfopts{display:grid;gap:6px}.umfopt{display:flex;gap:6px;align-items:center}.umfwahl{flex:1;text-align:left;font:inherit;font-size:1.05em;padding:12px;border-radius:12px;border:1px solid var(--line,#3335);background:transparent;color:inherit}.umfopt.an .umfwahl{border-color:var(--accent,#5b8def);background:color-mix(in srgb,var(--accent,#5b8def) 18%,transparent)}.umferg{margin:0;padding-left:4px;list-style:none}.umferg li{padding:3px 0;opacity:.6}.umferg li.gew{opacity:1;font-weight:700}
 .minus{border-left:3px solid #e5484d;padding:4px 10px}
 .einzeln{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px}.einzeln .actions{margin-top:8px;flex-wrap:wrap}.chip.ausfall{opacity:.55}.chip.ausfall .chip-label,.chip.ausfall .t{text-decoration:line-through}
+.pflichtb{font-size:.8em;font-weight:700;padding:2px 7px;border-radius:999px;background:color-mix(in srgb,var(--accent) 22%,transparent);white-space:nowrap}
 .nachhol{border:1px solid #f0b42966;background:color-mix(in srgb,#f0b429 8%,transparent);border-radius:14px;padding:10px 12px;margin:10px 0}
 .tage{border:1px solid var(--line);border-radius:14px;padding:4px 12px 10px;margin:10px 0}.tage>summary{cursor:pointer;font-weight:700;padding:8px 0}.tagzeile{border-top:1px solid var(--line);padding:7px 0}.tagkopf{display:flex;justify-content:space-between}.tagdet{display:grid;gap:2px;font-size:.92em;margin-top:2px}.leerhin{opacity:.6}.plus{color:#3fb950;font-weight:700}.minus2{color:#e5484d;font-weight:700}
 .umfan{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.umfwer{display:grid;gap:6px}.umfp{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.95em}.umfp button{flex:0 0 auto}
@@ -1592,12 +1593,12 @@ function renderStars(){
   vis.sort((a,b)=>(!!logFor(a))-(!!logFor(b))||String(a.person).localeCompare(b.person));
   const row=t=>{const l=logFor(t);return `<div class="task${l?" done":""}${sternPause(t.person)?" paused":""}"><button class="chk" data-done="${esc(t.id)}" aria-label="${l?"Als nicht erledigt markieren":"Erledigt"}: ${esc(t.titel)}">${l?(l.offen?"⏳":"✓"):""}</button>
     <button class="tt" data-task="${esc(t.id)}">${esc(t.titel)}<br><span class="meta"><span class="p-${t.person}" style="background:none;font-weight:700">${esc(PNAME[t.person]||"")}</span> · ${WIED[t.wiederholung]||"Einmalig"}${t.foto?" · 📸 mit Foto":""}${KID&&(hilfe(KID,"lesen")||hilfe(KID,"fokus"))?` · ${hilfe(KID,"fokus")?"👆 antippen":"🔊 antippen"}`:""}${l&&l.offen?" · wartet auf Bestätigung":""}${!l&&abgelehntVon(t)?`</span><br><span class="meta" style="color:#ff9f6b;font-weight:700">🔁 Nochmal: ${esc(abgelehntVon(t).hinweis||"")}`:""}</span></button>
-    <span class="st">${"⭐".repeat(Math.min(+t.sterne||1,5))}</span></div>`};
+    <span class="st">${t.pflicht?`<span class="pflichtb">📌 Pflicht</span>`:"⭐".repeat(Math.min(tW(t),5))}</span></div>`};
   const jetztH=()=>{const ord=THEMEN.map(x=>x[0]),offen=vis.filter(t=>t.person===KID&&!logFor(t)&&!sternPause(t.person)).sort((a,b)=>(a.wiederholung==="taeglich"?0:1)-(b.wiederholung==="taeglich"?0:1)||ord.indexOf(taskThema(a))-ord.indexOf(taskThema(b)));
     if(!offen.length)return `<div class="jetzt fertig">🎉 Alles geschafft für heute! Super!</div>`;
     return `<div class="jetzt"><b>🎯 Jetzt dran</b><span class="meta">Eins nach dem anderen. Tipp auf eine Aufgabe für Schritte und Timer.</span><div class="tasklist">${offen.slice(0,3).map(row).join("")}</div>${offen.length>3?`<span class="meta">Danach warten noch ${offen.length-3} weitere.</span>`:""}</div>`};
   const tl=THEMEN.map(([k,ic,nm])=>{const ts=vis.filter(t=>taskThema(t)===k);if(!ts.length)return "";
-    const done=ts.filter(t=>logFor(t)).length,offen=ts.filter(t=>!logFor(t)).reduce((a,t)=>a+(+t.sterne||1),0),pct=Math.round(done/ts.length*100);
+    const done=ts.filter(t=>logFor(t)).length,offen=ts.filter(t=>!logFor(t)).reduce((a,t)=>a+(tW(t)),0),pct=Math.round(done/ts.length*100);
     return `<details class="thema th-${k}" ${done<ts.length?"open":""}><summary><span class="thi">${ic}</span><span class="thn"><b>${nm}</b><span class="meta">${done===ts.length?"✅ alles geschafft!":`${done} von ${ts.length} erledigt · noch ${offen} ⭐ drin`}</span><span class="thbar"><i style="width:${pct}%"></i></span></span></summary>
       <div class="tasklist">${ts.map(row).join("")}</div></details>`}).join("");
   const rws=rewards.slice().sort((a,b)=>(+a.kosten)-(+b.kosten)).map(r=>`<div class="rw${KID&&zielGet()===r.id?" ziel":""}"><div class="rw-head"><b>${KID&&zielGet()===r.id?"🎯 ":""}${esc(r.titel)}</b><span class="st" style="color:var(--star);font-weight:700">${+r.kosten} ⭐</span></div>${+r.proMonat?`<span class="meta">max. ${+r.proMonat}× im Monat${P.length===1?` · diesen Monat noch ${Math.max(0,+r.proMonat-imMonat(P[0][0],r))}×`:""}</span>`:""}
@@ -1607,7 +1608,7 @@ function renderStars(){
   const pendH=!KID&&!READONLY&&pend.length?`<h3 class="sec">✅ Zu bestätigen</h3><div class="tasklist">${pend.map(x=>`<div class="task pend"><span>${x.txt} <b style="color:var(--star)">${x.st}</b></span>${x.foto?`<button data-rate="${esc(x.id)}" aria-label="Foto ansehen und bewerten">📸 ansehen</button>`:`${x.hilfeOk?`<button data-half="${esc(x.id)}" aria-label="Mit Hilfe: halbe Sterne" title="Mit Hilfe = halbe Sterne">🤝 ½</button>`:""}<button data-ok="${esc(x.id)}" aria-label="Allein geschafft: bestätigen">✅</button>`}<button data-no="${esc(x.id)}" aria-label="Ablehnen">✖</button></div>`).join("")}</div>`:"";
   let kidH="";
   if(KID){const b=starBalance(KID),zr=rewards.find(r=>r.id===zielGet()),nx=zr&&+zr.kosten>b?zr:rewards.filter(r=>+r.kosten>b).sort((a,b2)=>(+a.kosten)-(+b2.kosten))[0],np=taskLogs.filter(l=>l.offen&&!l.abgelehnt).reduce((a,l)=>a+(+l.sterne||0),0);
-    const heute=taskLogs.filter(l=>l.person===KID&&l.datum===today&&!l.abgelehnt).reduce((a,l)=>a+(+l.sterne||0),0),noch=vis.filter(t=>t.person===KID&&!logFor(t)).reduce((a,t)=>a+(+t.sterne||1),0);
+    const heute=taskLogs.filter(l=>l.person===KID&&l.datum===today&&!l.abgelehnt).reduce((a,l)=>a+(+l.sterne||0),0),noch=vis.filter(t=>t.person===KID&&!logFor(t)).reduce((a,t)=>a+(tW(t)),0);
     kidH=levelHTML(KID)+`<div class="kidbar">${sternPause(KID)?(manuellAus(KID,today)?`<div class="pausebox">⏸️ <b>Das Sterne-System macht gerade Pause.</b><br>Du musst nichts abhaken, und es werden keine Sterne abgezogen. Deine Sterne bleiben dir erhalten.</div>`:`<div class="pausebox">🏠 <b>Heute bist du bei Papa.</b><br>Das Sterne-System macht Pause: keine Aufgaben, kein Abzug. Morgen geht es weiter!</div>`):""}<b>Hallo ${esc(PNAME[KID]||"")}! 👋</b><div class="kidsum"><span>⭐ Heute verdient<b>+${sF(heute)}</b></span><span>🎯 Noch möglich<b>${sF(noch)}</b></span><span>💰 Kontostand<b>${sF(b)}</b></span></div>${nx?`<div class="pbar"><i style="width:${Math.min(100,Math.round(b/(+nx.kosten)*100))}%"></i></div><span class="meta">${zr&&nx===zr?"🎯 Dein Sparziel":"Nächstes Ziel"}: <b>${esc(nx.titel)}</b> · noch ${sF(+nx.kosten-b)} ⭐</span>`:rewards.length?`<br><span class="meta">Du kannst dir jede Belohnung leisten! 🎉</span>`:""}${np?`<br><span class="meta">⏳ ${np} ⭐ warten noch auf Bestätigung</span>`:""}${limitHTML(KID)}${abzugHTML()}${bonusHTML()}</div>`}
   const tlH=tl||'<p class="hint">Noch keine Aufgaben. Leg zum Beispiel „Zimmer aufräumen“ für dein Kind mit 2 Sternen an. Wer eine Aufgabe erledigt, tippt auf den Kreis und bekommt die Sterne.</p>';
   if(KID){
@@ -1677,8 +1678,8 @@ document.getElementById("vOther").addEventListener("click",async ev=>{
     if(l){if(KID&&!l.offen){toast("Schon bestätigt ✓ Super gemacht!");return}
       if(!await askConfirm(l.offen?"Abhaken zurücknehmen?":`Erledigt zurücknehmen? ${PNAME[t.person]} verliert dafür ${sF(+l.sterne||0)} ⭐.`,"Zurücknehmen"))return;await store.del(l.id);toast("Zurückgenommen")}
     else if(KID&&t.foto){kidFoto(t)}
-    else if(KID){const w=+t.sterne||1,st=capSterne(t.person,today,artVon(t),w);await store.add({typ:"erledigt",aufgabe:t.id,person:t.person,sterne:st,datum:today,titel:t.titel});render();toast(st?`⏳ Super! +${st} ⭐, sobald ${ELT()} bestätigt haben${capTxt(st,w)}`:"✅ Super gemacht! Für heute ist das Sterne-Limit erreicht.");if(ttsAuto())speak(`Super gemacht, ${PNAME[KID]||""}! ${t.titel} ist abgehakt. Du bekommst ${sternTxt(+t.sterne||1)}, sobald ${ELT()} bestätigt haben.`)}
-    else{const voll=+t.sterne||1;
+    else if(KID){const w=tW(t),st=capSterne(t.person,today,artVon(t),w);await store.add({typ:"erledigt",aufgabe:t.id,person:t.person,sterne:st,datum:today,titel:t.titel});render();toast(t.pflicht?"✅ Erledigt! Danke, das war eine Pflicht-Aufgabe.":st?`⏳ Super! +${st} ⭐, sobald ${ELT()} bestätigt haben${capTxt(st,w)}`:"✅ Super gemacht! Für heute ist das Sterne-Limit erreicht.");if(ttsAuto())speak(t.pflicht?`Danke, ${PNAME[KID]||""}! ${t.titel} ist erledigt.`:`Super gemacht, ${PNAME[KID]||""}! ${t.titel} ist abgehakt. Du bekommst ${sternTxt(tW(t))}, sobald ${ELT()} bestätigt haben.`)}
+    else{const voll=tW(t);
       const buche=async hilfe=>{closeSheet();const w=hilfe?halb(voll):voll,st=capSterne(t.person,today,artVon(t),w);await store.add({typ:"erledigt",aufgabe:t.id,person:t.person,sterne:st,datum:today,titel:t.titel,...(hilfe?{mitHilfe:true}:{})});popPerson=t.person;render();if(premOn(3)&&!hilfe)confetti();toast(`${hilfe?"🤝":"⭐"} +${sF(st)} für ${PNAME[t.person]}!${capTxt(st,w)}`)};
       sheet(`✅ ${esc(t.titel)}`,`<p class="hint" style="margin-top:0">Wie hat ${esc(PNAME[t.person]||"")} das geschafft?</p>
         <div class="rate"><button class="btn" id="hAll">💪 Allein<br><small>+${sF(voll)} ⭐</small></button><button class="btn ghost" id="hMit">🤝 Mit Hilfe<br><small>+${sF(halb(voll))} ⭐</small></button></div>
@@ -1695,7 +1696,7 @@ document.getElementById("vOther").addEventListener("click",async ev=>{
     toast(x.typ==="erledigt"?`⭐ +${sF(+x.sterne||0)} für ${PNAME[x.person]} bestätigt`:`🎉 „${x.titel}“ für ${PNAME[x.person]} bestätigt`);return}
   const nob=ev.target.closest("[data-no]");
   if(nob){const x=[...taskLogs,...redeems].find(y=>y.id===nob.dataset.no);if(!x)return;if(!await askConfirm(x.typ==="erledigt"?`„${x.titel}“ nicht bestätigen? Die Sterne gibt es dann nicht.`:`„${x.titel}“ ablehnen? Die Sterne bekommt ${PNAME[x.person]} zurück.`,"Ablehnen"))return;await store.del(x.id);toast("Abgelehnt");return}
-  const tk=ev.target.closest("[data-task]");if(tk){if(KID){const t=tasks.find(x=>x.id===tk.dataset.task);if(t&&hilfe(KID,"fokus")){fokusSheet(t);return}if(t){const l=logFor(t);speak(`${t.titel}. ${sternTxt(+t.sterne||1)}. ${l?(l.offen?"Schon abgehakt, wartet auf Bestätigung.":"Schon erledigt. Super!"):"Noch zu erledigen."}`)}return}openTaskSheet(tasks.find(x=>x.id===tk.dataset.task));return}
+  const tk=ev.target.closest("[data-task]");if(tk){if(KID){const t=tasks.find(x=>x.id===tk.dataset.task);if(t&&hilfe(KID,"fokus")){fokusSheet(t);return}if(t){const l=logFor(t);speak(`${t.titel}. ${sternTxt(tW(t))}. ${l?(l.offen?"Schon abgehakt, wartet auf Bestätigung.":"Schon erledigt. Super!"):"Noch zu erledigen."}`)}return}openTaskSheet(tasks.find(x=>x.id===tk.dataset.task));return}
   const re=ev.target.closest("[data-redeem]");
   if(re){const r=rewards.find(x=>x.id===re.dataset.redeem),p=re.dataset.who;if(!r)return;if(sternPause(p)){pauseToast(p);return}
     if(monatVoll(p,r)){toast(`„${r.titel}“ gibt es höchstens ${r.proMonat}× im Monat. Ab dem 1. geht es wieder!`);return}
@@ -1709,7 +1710,8 @@ document.getElementById("vOther").addEventListener("click",async ev=>{
 /* ---------- Vorlesen ---------- */
 const TTS_OK=typeof speechSynthesis!=="undefined"&&typeof SpeechSynthesisUtterance!=="undefined";
 const ttsAuto=()=>{try{return localStorage.getItem("fk-tts-auto")!=="0"}catch(e){return true}};
-const sternTxt=n=>n===1?"ein Stern":`${n} Sterne`;
+const sternTxt=n=>!n?"keine Sterne, das ist eine Pflicht-Aufgabe":n===1?"ein Stern":`${n} Sterne`;
+const tW=t=>t&&t.pflicht?0:(+t.sterne||1);
 const noEmo=t=>String(t||"").replace(/\bMin\./g,"Minuten").replace(/\bStd\./g,"Stunde").replace(/€/g," Euro").replace(/[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\uFE0F\u200D\u20E3]/gu,"").replace(/\s+/g," ").trim();
 let ttsVoice=null;
 function pickVoice(){if(!TTS_OK)return;const v=speechSynthesis.getVoices().filter(x=>/^de/i.test(x.lang));ttsVoice=v.find(x=>/google|natural|neural|anna|petra|helena/i.test(x.name))||v[0]||null}
@@ -1735,9 +1737,9 @@ function readTasks(){
     if(!open.length)out.push(KID?"Du hast heute alle Aufgaben geschafft. Super gemacht!":"Alle Aufgaben sind erledigt.");
     else{
       out.push(`${KID?"Du hast":"Noch"} ${open.length===1?"eine Aufgabe":open.length+" Aufgaben"}${KID?" offen":" offen"}.`);
-      if(td.length)out.push("Heute: "+td.map(t=>`${t.titel}, ${sternTxt(+t.sterne||1)}`).join(". ")+".");
-      if(wk.length)out.push("Diese Woche: "+wk.map(t=>`${t.titel}, ${sternTxt(+t.sterne||1)}`).join(". ")+".");
-      if(em.length)out.push("Außerdem: "+em.map(t=>`${t.titel}, ${sternTxt(+t.sterne||1)}`).join(". ")+".");
+      if(td.length)out.push("Heute: "+td.map(t=>`${t.titel}, ${sternTxt(tW(t))}`).join(". ")+".");
+      if(wk.length)out.push("Diese Woche: "+wk.map(t=>`${t.titel}, ${sternTxt(tW(t))}`).join(". ")+".");
+      if(em.length)out.push("Außerdem: "+em.map(t=>`${t.titel}, ${sternTxt(tW(t))}`).join(". ")+".");
     }
     const b=starBalance(k);out.push(`${KID?"Du hast":n+" hat"} ${b===1?"einen Stern":b+" Sterne"}.`);
     const nx=rewards.filter(r=>+r.kosten>b).sort((a,c)=>(+a.kosten)-(+c.kosten))[0];
@@ -1885,7 +1887,7 @@ function kidFoto(t){
     document.getElementById("fNeu").onclick=()=>{closeSheet();setTimeout(()=>kidFoto(t),150)};
     document.getElementById("fSend").onclick=async()=>{const b=document.getElementById("fSend");b.disabled=true;b.textContent="Wird geschickt …";
       try{const fid=await fotoSpeichern(bild,t.person);const alt=abgelehntVon(t);if(alt){try{await store.del(alt.id)}catch(e){}}
-        await store.add({typ:"erledigt",aufgabe:t.id,person:t.person,sterne:capSterne(t.person,today,artVon(t),+t.sterne||1),datum:today,titel:t.titel,foto:fid});
+        await store.add({typ:"erledigt",aufgabe:t.id,person:t.person,sterne:capSterne(t.person,today,artVon(t),tW(t)),datum:today,titel:t.titel,foto:fid});
         closeSheet();render();toast("📸 Foto geschickt! "+ELT()+" schauen es sich an");if(ttsAuto())speak(`Super, ${PNAME[KID]||""}! Dein Foto ist verschickt.`)}
       catch(e){b.disabled=false;b.textContent="📤 Foto schicken";toast(e&&e.code==="permission-denied"?"Fotos sind noch nicht freigeschaltet (Firebase-Regeln)":"Schicken ging nicht · bitte nochmal")}};
   };
@@ -1972,6 +1974,7 @@ function wireBonus(){
 const ELT=()=>String((typeof FAMCONF!=="undefined"&&FAMCONF&&FAMCONF.eltern)||"Mama oder Papa").trim()||"Mama oder Papa";
 const eltTxt=t=>String(t).replace(/Mama oder Papa/g,ELT());
 const KID_NEWS=[
+  {id:"k23",ic:"📌",t:"Pflicht-Aufgaben",x:"Manche Aufgaben sind jetzt Pflicht-Aufgaben. Die musst du erledigen, auch wenn es dafür keine Sterne gibt. Du erkennst sie am Zeichen Pflicht."},
   {id:"k21",ic:"💪",t:"Sterne zurückholen",x:"Wenn dir Sterne abgezogen wurden, kannst du sie zurückholen: Für jeden verpassten Tag machst du 1× Mathe und 1× Deutsch extra, zusätzlich zu deinen zwei Pflicht-Runden. Du hast dafür 5 Tage Zeit."},
   {id:"k22",ic:"📈",t:"Spiele werden schwerer",x:"Jedes Mal, wenn du ein Lernspiel schaffst, wird das nächste ein kleines bisschen schwerer. Wenn du richtig gut bist, kommen Aufgaben aus der 3. Klasse."},
   {id:"k19",ic:"🎮",t:"Neue Spielregel",x:"Bei jedem der 4 Lernspiele (Mathe, Deutsch, Uhr und Geld) musst du jetzt alle 10 Aufgaben lösen. Wenn mindestens 8 richtig sind, bekommst du 1 Stern. Wer abbricht, bekommt nichts, und das Spiel zählt nicht für heute."},
@@ -2050,7 +2053,7 @@ let fokusTimer=null;
 function piep(){try{const C=new (window.AudioContext||window.webkitAudioContext)();[0,.35,.7].forEach(t=>{const o=C.createOscillator(),g=C.createGain();o.frequency.value=880;o.connect(g);g.connect(C.destination);g.gain.setValueAtTime(.25,C.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,C.currentTime+t+.3);o.start(C.currentTime+t);o.stop(C.currentTime+t+.3)})}catch(e){}try{navigator.vibrate&&navigator.vibrate([300,150,300])}catch(e){}}
 function fokusSheet(t){
   const st=(SCHRITTE.find(([re])=>re.test(t.titel||""))||[null,[]])[1],l=logFor(t);
-  sheet(`🎯 ${esc(t.titel)}`,`<p class="hint" style="margin-top:0">${sternTxt(+t.sterne||1)}${t.foto?" · 📸 mit Foto":""}${l?(l.offen?" · ⏳ wartet auf Bestätigung":" · ✅ schon erledigt"):""}</p>
+  sheet(`🎯 ${esc(t.titel)}`,`<p class="hint" style="margin-top:0">${sternTxt(tW(t))}${t.foto?" · 📸 mit Foto":""}${l?(l.offen?" · ⏳ wartet auf Bestätigung":" · ✅ schon erledigt"):""}</p>
     ${TTS_OK?`<button class="btn ghost" id="fkSay" style="width:100%">🔊 Vorlesen</button>`:""}
     ${st.length?`<div class="schritte">${st.map((x,i)=>`<label class="schritt"><input type="checkbox" data-st="${i}"><span>${esc(x)}</span></label>`).join("")}</div>`:""}
     <div class="ftimer"><div id="fkZeit" class="fkzeit">⏱️</div><div class="nameq" style="justify-content:center">${[2,5,10,15].map(m=>`<button data-fk="${m}">${m} Min.</button>`).join("")}</div></div>
@@ -2762,7 +2765,8 @@ function openTaskSheet(t){
     <span class="lbl-s">Für wen?</span>
     <div class="seg" style="--n:${Math.min(4,persons().length)}">${persons().map(([k,n])=>`<button class="p-${k}" data-tp="${k}" aria-pressed="${d.person===k}">${esc(n)}</button>`).join("")}</div>
     <span class="lbl-s">Sterne als Belohnung</span>
-    <div class="seg" style="--n:5">${[1,2,3,4,5].map(n=>`<button class="typ" data-ts="${n}" aria-pressed="${+d.sterne===n}">${n} ⭐</button>`).join("")}</div>
+    <div class="seg" style="--n:6">${[0,1,2,3,4,5].map(n=>`<button class="typ" data-ts="${n}" aria-pressed="${n===0?!!d.pflicht:!d.pflicht&&+d.sterne===n}">${n?n+" ⭐":"📌 Pflicht"}</button>`).join("")}</div>
+    ${d.pflicht?`<p class="hint" style="margin:4px 0">📌 <b>Pflicht-Aufgabe:</b> muss erledigt werden, gibt aber keine Sterne.</p>`:""}
     <button class="btn ghost" id="tFoto" style="width:100%;margin:6px 0">${d.foto?"📸 Foto-Beweis nötig ✅":"📸 Foto-Beweis nötig ⬜"}</button>
     <span class="lbl-s">Thema</span>
     <div class="nameq">${THEMEN.map(([k,ic,nm])=>`<button data-tth="${k}" style="${(d.thema||taskThema(d))===k?"outline:2px solid var(--accent)":""}">${ic} ${nm}</button>`).join("")}</div>
@@ -2772,13 +2776,13 @@ function openTaskSheet(t){
     ${t?`<button class="btn danger" id="tDel">Aufgabe löschen</button><p class="hint">Bereits verdiente Sterne bleiben erhalten.</p>`:""}`);
     const $=id=>document.getElementById(id);const rd=()=>{d.titel=$("tTit").value.trim()};
     document.querySelectorAll("[data-tp]").forEach(b=>b.onclick=()=>{rd();d.person=b.dataset.tp;draw()});
-    document.querySelectorAll("[data-ts]").forEach(b=>b.onclick=()=>{rd();d.sterne=+b.dataset.ts;draw()});
+    document.querySelectorAll("[data-ts]").forEach(b=>b.onclick=()=>{rd();const n=+b.dataset.ts;d.pflicht=n===0;if(n)d.sterne=n;draw()});
     document.querySelectorAll("[data-tw]").forEach(b=>b.onclick=()=>{rd();d.wiederholung=b.dataset.tw;draw()});
     document.querySelectorAll("[data-tth]").forEach(b=>b.onclick=()=>{rd();d.thema=b.dataset.tth;draw()});
     $("tFoto").onclick=()=>{rd();d.foto=!d.foto;draw()};
     $("tCancel").onclick=closeSheet;
     $("tSave").onclick=async()=>{rd();if(!d.titel){toast("Bitte eintragen, was zu tun ist");return}if(!store)return;
-      const o={typ:"aufgabe",titel:d.titel.slice(0,120),person:d.person,sterne:+d.sterne||1,wiederholung:d.wiederholung,erstellt:d.erstellt||today};if(d.thema&&THEMA[d.thema])o.thema=d.thema;if(d.foto)o.foto=true;
+      const o={typ:"aufgabe",titel:d.titel.slice(0,120),person:d.person,sterne:d.pflicht?0:(+d.sterne||1),wiederholung:d.wiederholung,erstellt:d.erstellt||today};if(d.pflicht)o.pflicht=true;if(d.thema&&THEMA[d.thema])o.thema=d.thema;if(d.foto)o.foto=true;
       closeSheet();if(t)await store.set(t.id,o);else await store.add(o);toast(t?"Gespeichert":"Aufgabe angelegt")};
     if($("tDel"))$("tDel").onclick=async()=>{rd();if(!await askConfirm(`Aufgabe „${t.titel}“ wirklich löschen?`))return;closeSheet();await store.del(t.id);toast("Aufgabe gelöscht")};
   };draw();
@@ -2804,7 +2808,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v119";
+const APP_VER="v120";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4667,6 +4671,9 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-26b",d:"2026-11-26",t:"📌 Pflicht-Aufgaben",items:[
+    "📌 Beim Anlegen einer Aufgabe gibt es neben 1–5 ⭐ jetzt „📌 Pflicht“: Die Aufgabe muss erledigt werden, bringt aber keine Sterne",
+    "👀 Das Kind sieht Pflicht-Aufgaben mit eigenem Zeichen und hakt sie ganz normal ab"]},
   {v:"2026-11-26a",d:"2026-11-26",t:"💪 Sterne zurückholen & mitwachsende Spiele",items:[
     "💪 Verlorene Sterne zurückholen: Für jeden verpassten Tag 1× Mathe und 1× Deutsch extra schaffen (mindestens 8 von 10), innerhalb von 5 Tagen. Dann gibt es die abgezogenen Sterne dieses Tages zurück",
     "📈 Mathe und Deutsch werden mit jeder geschafften Runde ein kleines bisschen schwerer: 20 Stufen von Klasse 2 bis Klasse 3. In Klasse 3 geht es nur mit 10 von 10 weiter",
