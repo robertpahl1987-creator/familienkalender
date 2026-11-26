@@ -1599,7 +1599,7 @@ function renderStars(){
     return `<div class="jetzt"><b>🎯 Jetzt dran</b><span class="meta">Eins nach dem anderen. Tipp auf eine Aufgabe für Schritte und Timer.</span><div class="tasklist">${offen.slice(0,3).map(row).join("")}</div>${offen.length>3?`<span class="meta">Danach warten noch ${offen.length-3} weitere.</span>`:""}</div>`};
   const tl=THEMEN.map(([k,ic,nm])=>{const ts=vis.filter(t=>taskThema(t)===k);if(!ts.length)return "";
     const done=ts.filter(t=>logFor(t)).length,offen=ts.filter(t=>!logFor(t)).reduce((a,t)=>a+(tW(t)),0),pct=Math.round(done/ts.length*100);
-    return `<details class="thema th-${k}" ${done<ts.length?"open":""}><summary><span class="thi">${ic}</span><span class="thn"><b>${nm}</b><span class="meta">${done===ts.length?"✅ alles geschafft!":`${done} von ${ts.length} erledigt · noch ${offen} ⭐ drin`}</span><span class="thbar"><i style="width:${pct}%"></i></span></span></summary>
+    return `<details class="thema th-${k}" ${done<ts.length?"open":""}><summary><span class="thi">${ic}</span><span class="thn"><b>${nm}</b><span class="meta">${done===ts.length?"✅ alles geschafft!":`${done} von ${ts.length} erledigt · ${offen?`noch ${offen} ⭐ drin`:"📌 Pflicht, ohne Sterne"}`}</span><span class="thbar"><i style="width:${pct}%"></i></span></span></summary>
       <div class="tasklist">${ts.map(row).join("")}</div></details>`}).join("");
   const rws=rewards.slice().sort((a,b)=>(+a.kosten)-(+b.kosten)).map(r=>`<div class="rw${KID&&zielGet()===r.id?" ziel":""}"><div class="rw-head"><b>${KID&&zielGet()===r.id?"🎯 ":""}${esc(r.titel)}</b><span class="st" style="color:var(--star);font-weight:700">${+r.kosten} ⭐</span></div>${+r.proMonat?`<span class="meta">max. ${+r.proMonat}× im Monat${P.length===1?` · diesen Monat noch ${Math.max(0,+r.proMonat-imMonat(P[0][0],r))}×`:""}</span>`:""}
     <div class="rw-btns">${P.map(([k,n])=>`<button data-redeem="${esc(r.id)}" data-who="${k}" ${starBalance(k)>=+r.kosten&&!monatVoll(k,r)?"":"disabled"}>${KID?(starBalance(k)>=+r.kosten?"🎁 Einlösen":`🔒 noch ${sF(+r.kosten-starBalance(k))} ⭐`):"Einlösen für "+esc(n)}</button>`).join("")}${KID&&+r.kosten>starBalance(KID)?`<button data-ziel="${esc(r.id)}">${zielGet()===r.id?"✖ Kein Sparziel":"🎯 Sparziel"}</button>`:""}<button data-rwedit="${esc(r.id)}">Bearbeiten</button></div></div>`).join("");
@@ -2518,7 +2518,7 @@ function spielStart(sp){
 }
 function spielRunde(sp,p){
   if(p&&sternPause(p)){pauseToast(p);return}
-  const lese=hilfe(p||KID,"lesen"),fok=hilfe(p||KID,"fokus"),stf=p?spielStufe(p,sp):1,lvl=stufeLvl(stf),N=10,EIN=8,ZWEI=99,G={i:0,ok:0,zeit:Math.round((sp==="mathe"?(lvl===1?15:13):sp==="deutsch"?14:18)*(lese?1.5:1)),eing:"",auf:null,t0:0,tim:null,fertig:false,log:[]};
+  const lese=hilfe(p||KID,"lesen"),fok=hilfe(p||KID,"fokus"),stf=p?spielStufe(p,sp):1,lvl=stufeLvl(stf),N=10,EIN=8,ZWEI=99,G={i:0,ok:0,zeit:Math.round((sp==="mathe"?(lvl===1?15:13):sp==="deutsch"?14:18)*(lese?1.5:1)),eing:"",auf:null,t0:0,tim:null,fertig:false,log:[]};G.zeit0=G.zeit;
   const vorlesen=(sp==="deutsch"||lese)&&TTS_OK,autoV=vorlesen&&(()=>{try{return localStorage.getItem("fk-spiel-tts")!=="0"}catch(e){return true}})();
   const sagFrage=()=>{const A=G.auf;let q=A.q;if(sp==="mathe")q=q.replace(/·/g," mal ").replace(/:/g," geteilt durch ").replace(/−/g," minus ").replace(/\+/g," plus ").replace(/\?/g," wie viel ").replace(/=/g," ist ");
     if(sp==="deutsch"&&lese&&A.opts&&A.opts.length===2)q+=` Das Wort heißt: ${A.a}.`;speak(q)};
@@ -2545,7 +2545,7 @@ function spielRunde(sp,p){
   };
   let busy=false;
   const antwort=v=>{if(busy)return;busy=true;clearInterval(G.tim);const A=G.auf,ok=v!==null&&String(v)===A.a;G.log.push({q:A.q,opts:A.opts||null,v,a:A.a,ok});
-    if(ok){G.ok++;const t=(Date.now()-G.t0)/1000;if(t<G.zeit*.5)G.zeit=Math.max(sp==="mathe"?7:8,G.zeit-1)}else G.zeit=Math.min(20,G.zeit+2);
+    if(ok){G.ok++;const t=(Date.now()-G.t0)/1000;if(t<G.zeit*.5)G.zeit=Math.max(sp==="mathe"?7:8,G.zeit-1)}else G.zeit=Math.min(Math.max(20,G.zeit0),G.zeit+2);
     const fb=document.getElementById("spFb");if(fb)fb.innerHTML=ok?`<b style="color:#5fd38d">✓ Richtig!</b>`:`<b style="color:#ff6b6b">${v===null?"⏰ Zeit ist um!":"✗ Leider falsch."}</b> Richtig ist: <b>${esc(A.a)}</b>${A.hint?`<br><span class="hint">${esc(A.hint)}</span>`:""}`;
     document.querySelectorAll(".spiel button").forEach(b=>b.disabled=true);
     setTimeout(()=>{busy=false;if(!document.getElementById("spFb"))return;G.i++;if(G.i<N)neu();else ende()},ok?700:1800)};
@@ -2808,7 +2808,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v120";
+const APP_VER="v121";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
