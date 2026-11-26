@@ -912,6 +912,7 @@ function splitData(all){
   geldBuch=all.filter(e=>e.typ==="geld");wuensche=all.filter(e=>e.typ==="wunsch");
   einkauf=all.filter(e=>e.typ==="einkauf");essen=all.filter(e=>e.typ==="essen");infos=all.filter(e=>e.typ==="info");
   setTimeout(umfPopup,1600);
+  if(!KID&&!READONLY&&DATA_READY){clearTimeout(window.__abzT);window.__abzT=setTimeout(runAbzug,4000)}
   {const ft=document.querySelector('.tabs [data-view="familie"]');if(ft)ft.classList.toggle("hasbadge",!KID&&umfNeu()>0)}
   const tb=document.querySelector('[data-view="sterne"]');if(tb)tb.classList.toggle("hasbadge",!KID&&ROLE!=="lesen"&&pendingCount()>0);
 }
@@ -1820,7 +1821,11 @@ function abzugPlan(){
 }
 let abzugBusy=false;
 let nachholBusy=false;
-async function nachholBuchen(){if(nachholBusy||KID||READONLY||ROLE!=="schreiben"||!store)return;nachholBusy=true;const msgs=[];
+const GELD_SPIEL_CENT=5;
+const geldSpielOffen=p=>taskLogs.filter(l=>l.person===p&&l.aufgabe==="spiel-geld"&&(+l.richtig===10||/· 10\/10 richtig/.test(l.titel||""))&&l.datum>="2026-11-26"&&!geldBuch.some(g=>g.id===`geldspiel-${l.id}`));
+async function geldSpielBuchen(){const msgs=[];for(const [p] of persons())for(const l of geldSpielOffen(p)){try{await store.set(`geldspiel-${l.id}`,{typ:"geld",person:p,betrag:GELD_SPIEL_CENT,titel:"💶 Geld-Profi: 10 von 10 richtig",art:"spiel",datum:l.datum});msgs.push(PNAME[p])}catch(e){}}
+  if(msgs.length)toast(`💶 +${ctEuro(GELD_SPIEL_CENT*msgs.length)} gespart (Geld-Profi)`)}
+async function nachholBuchen(){if(nachholBusy||KID||READONLY||ROLE!=="schreiben"||!store)return;nachholBusy=true;const msgs=[];await geldSpielBuchen();
   try{for(const p of Object.keys(spielAbzugCfg())){if(!spielAbzugCfg()[p]||!PNAME[p])continue;
     for(const x of nachholStand(p))if(x.fertig&&!x.zurueck){await store.set(`nachhol-${p}-${x.d}`,{typ:"erledigt",aufgabe:"bonus",person:p,sterne:x.minus,datum:today,titel:`💪 Nachgeholt: Sterne vom ${fmt(x.d)} zurück`});msgs.push(`${PNAME[p]} +${sF(x.minus)} ⭐`)}}}catch(e){}
   nachholBusy=false;if(msgs.length)toast("💪 Nachgeholt: "+msgs.join(", "))}
@@ -1976,6 +1981,7 @@ function wireBonus(){
 const ELT=()=>String((typeof FAMCONF!=="undefined"&&FAMCONF&&FAMCONF.eltern)||"Mama oder Papa").trim()||"Mama oder Papa";
 const eltTxt=t=>String(t).replace(/Mama oder Papa/g,ELT());
 const KID_NEWS=[
+  {id:"k24",ic:"💶",t:"Echtes Geld beim Geld-Profi",x:"Wenn du beim Geld-Profi alle 10 Aufgaben richtig hast, bekommst du 5 Cent auf dein Sparkonto. Das ist echtes Geld für dich!"},
   {id:"k23",ic:"📌",t:"Pflicht-Aufgaben",x:"Manche Aufgaben sind jetzt Pflicht-Aufgaben. Die musst du erledigen, auch wenn es dafür keine Sterne gibt. Du erkennst sie am Zeichen Pflicht."},
   {id:"k21",ic:"💪",t:"Sterne zurückholen",x:"Wenn dir Sterne abgezogen wurden, kannst du sie zurückholen: Für jeden verpassten Tag machst du 1× Mathe und 1× Deutsch extra, zusätzlich zu deinen zwei Pflicht-Runden. Du hast dafür 5 Tage Zeit."},
   {id:"k22",ic:"📈",t:"Spiele werden schwerer",x:"Jedes Mal, wenn du ein Lernspiel schaffst, wird das nächste ein kleines bisschen schwerer. Wenn du richtig gut bist, kommen Aufgaben aus der 3. Klasse."},
@@ -2558,11 +2564,12 @@ function spielRunde(sp,p){
     else st=0;
     if(p&&st>0){const c=capSterne(p,today,"sonder",st);if(c<st){info=c?`Heute gibt es nur noch ${c} ⭐ Extra-Sterne.`:"Das Tageslimit für Extra-Sterne ist erreicht. Morgen geht es weiter!";st=c}}
     const msg=G.ok>=N?"🏆 Perfekt! Alles richtig!":G.ok>=EIN?"🎉 Super gemacht!":G.ok>=Math.ceil(N/2)?`👍 Gut! Für einen Stern brauchst du ${EIN} richtige.`:"💪 Übung macht den Meister. Versuch es nochmal!";
-    if(p&&store&&G.ok>=EIN){store.add({typ:"erledigt",aufgabe:"spiel-"+sp,person:p,sterne:st,datum:today,titel:`${SPIELE[sp].n} · ${G.ok}/${N} richtig`});if(G.ok===N)confetti()}
+    if(p&&store&&G.ok>=EIN){store.add({typ:"erledigt",aufgabe:"spiel-"+sp,person:p,sterne:st,datum:today,titel:`${SPIELE[sp].n} · ${G.ok}/${N} richtig`,richtig:G.ok});if(G.ok===N)confetti()}
     if(p)try{lsSet("fk-spiel-last",String(Date.now()))}catch(e){}
+    const geldPlus=p&&sp==="geld"&&G.ok===N;
     sheet(SPIELE[sp].n,`<div class="spiel" style="text-align:center"><div style="font-size:52px">${G.ok>=EIN?"🌟":"🙂"}</div>
       <h3 style="margin:4px 0">${G.ok} von ${N} richtig</h3><p>${msg}</p>
-      ${st?`<p><b style="color:var(--star)">+${st} ⭐</b>${KID?" · sobald "+ELT()+" bestätigt haben":""}</p>`:""}${info?`<p class="hint">${info}</p>`:""}
+      ${st?`<p><b style="color:var(--star)">+${st} ⭐</b>${KID?" · sobald "+ELT()+" bestätigt haben":""}</p>`:""}${info?`<p class="hint">${info}</p>`:""}${geldPlus?`<p><b style="color:#3fb950">💶 +5 Cent für dein Sparkonto!</b>${KID?" Sie kommen dazu, sobald "+ELT()+" die App öffnen.":""}</p>`:p&&sp==="geld"&&G.ok>=EIN?`<p class="hint">💶 Bei 10 von 10 richtig gibt es 5 Cent fürs Sparkonto.</p>`:""}
       ${p&&G.neuS>stf?`<p class="hint">⬆️ Nächstes Mal wird es ein kleines bisschen schwerer (Stufe ${G.neuS}${stufeKlasse(G.neuS)>stufeKlasse(stf)?", jetzt Klasse 3!":""}).</p>`:p&&G.neuS<stf?`<p class="hint">Nächstes Mal wird es etwas leichter.</p>`:p&&stf>=10&&G.ok>=EIN&&G.ok<N?`<p class="hint">Für die nächste Stufe brauchst du jetzt 10 von 10 richtig.</p>`:""}</div>
       <details class="loesungen" ${G.ok<N?"open":""}><summary>📋 Lösungen ansehen${G.ok<N?` · ${N-G.ok} ${N-G.ok===1?"Fehler":"Fehler"}`:""}</summary>
         ${G.log.map((x,i)=>`<div class="lsg ${x.ok?"ok":"no"}"><span class="lnr">${x.ok?"✅":"❌"}</span><div><b>${i+1}. ${esc(x.q)}</b>${x.opts&&x.opts.length===2?`<br><span class="meta">${x.opts.map(esc).join(" oder ")}</span>`:""}
@@ -2810,7 +2817,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v124";
+const APP_VER="v125";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4673,6 +4680,9 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-26e",d:"2026-11-26",t:"💶 Geld-Profi zahlt aufs Sparkonto",items:[
+    "💶 Wer beim Geld-Profi 10 von 10 richtig hat, bekommt 5 Cent auf das Sparkonto („… hat gespart“)",
+    "🔄 Gebucht wird automatisch, sobald ein Elternteil die App öffnet"]},
   {v:"2026-11-26d",d:"2026-11-26",t:"📌 Bereich „Tägliche Pflichten“",items:[
     "📌 Alle Pflicht-Aufgaben stehen jetzt automatisch im eigenen Bereich „Tägliche Pflichten“, ganz oben",
     "🔁 Neue Pflicht-Aufgaben sind von selbst auf „Jeden Tag“ eingestellt"]},
