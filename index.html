@@ -1605,7 +1605,7 @@ function renderStars(){
   const rws=rewards.slice().sort((a,b)=>(+a.kosten)-(+b.kosten)).map(r=>`<div class="rw${KID&&zielGet()===r.id?" ziel":""}"><div class="rw-head"><b>${KID&&zielGet()===r.id?"🎯 ":""}${esc(r.titel)}</b><span class="st" style="color:var(--star);font-weight:700">${+r.kosten} ⭐</span></div>${+r.proMonat?`<span class="meta">max. ${+r.proMonat}× im Monat${P.length===1?` · diesen Monat noch ${Math.max(0,+r.proMonat-imMonat(P[0][0],r))}×`:""}</span>`:""}
     <div class="rw-btns">${P.map(([k,n])=>`<button data-redeem="${esc(r.id)}" data-who="${k}" ${starBalance(k)>=+r.kosten&&!monatVoll(k,r)?"":"disabled"}>${KID?(starBalance(k)>=+r.kosten?"🎁 Einlösen":`🔒 noch ${sF(+r.kosten-starBalance(k))} ⭐`):"Einlösen für "+esc(n)}</button>`).join("")}${KID&&+r.kosten>starBalance(KID)?`<button data-ziel="${esc(r.id)}">${zielGet()===r.id?"✖ Kein Sparziel":"🎯 Sparziel"}</button>`:""}<button data-rwedit="${esc(r.id)}">Bearbeiten</button></div></div>`).join("");
   const last=redeems.slice().sort((a,b)=>a.datum<b.datum?1:-1).slice(0,5).map(r=>`<li>${fmt(r.datum)}: ${esc(PNAME[r.person]||"")} hat „${esc(r.titel)}“ eingelöst (−${+r.kosten} ⭐)${r.offen?" · ⏳ wartet auf Bestätigung":""}</li>`).join("");
-  const pend=[...taskLogs.filter(l=>l.offen&&!l.abgelehnt&&!(String(l.aufgabe||"").startsWith("spiel-")&&!+l.sterne)).map(l=>({id:l.id,foto:!!l.foto,hilfeOk:!!tasks.find(t=>t.id===l.aufgabe)&&+l.sterne>0,txt:`${l.foto?"📸 ":""}${esc(PNAME[l.person]||"")}: „${esc(l.titel)}“${l.aufgabe==="rad"?"":" erledigt"}`,st:l.aufgabe==="rad"&&!+l.sterne?"🎁":logSt(l)})),...redeems.filter(r=>r.offen).map(r=>({id:r.id,txt:`${esc(PNAME[r.person]||"")} möchte „${esc(r.titel)}“ einlösen`,st:`−${+r.kosten} ⭐`}))];
+  const pend=[...taskLogs.filter(l=>l.offen&&!l.abgelehnt&&!(String(l.aufgabe||"").startsWith("spiel-")&&!+l.sterne)).map(l=>({id:l.id,foto:!!l.foto,hilfeOk:!!tasks.find(t=>t.id===l.aufgabe)&&+l.sterne>0,txt:`${l.foto?"📸 ":""}${esc(PNAME[l.person]||"")}: „${esc(l.titel)}“${l.aufgabe==="rad"?"":" erledigt"}`,st:l.aufgabe==="rad"&&!+l.sterne?"🎁":logSt(l)})),...redeems.filter(r=>r.offen).map(r=>r.geldspiel?{id:r.id,txt:`${esc(PNAME[r.person]||"")}: Geld-Profi ${monName(r.geldspiel)} – ${r.wahl==="bar"?`bitte ${ctEuro(geldSpielSiege(r.person,r.geldspiel)*GELD_SPIEL_CENT)} bar auszahlen (✅ wenn erledigt)`:`möchte ${ctEuro(+r.betrag)} sparen`}`,st:"💶"}:({id:r.id,txt:`${esc(PNAME[r.person]||"")} möchte „${esc(r.titel)}“ einlösen`,st:`−${+r.kosten} ⭐`}))];
   const pendH=!KID&&!READONLY&&pend.length?`<h3 class="sec">✅ Zu bestätigen</h3><div class="tasklist">${pend.map(x=>`<div class="task pend"><span>${x.txt} <b style="color:var(--star)">${x.st}</b></span>${x.foto?`<button data-rate="${esc(x.id)}" aria-label="Foto ansehen und bewerten">📸 ansehen</button>`:`${x.hilfeOk?`<button data-half="${esc(x.id)}" aria-label="Mit Hilfe: halbe Sterne" title="Mit Hilfe = halbe Sterne">🤝 ½</button>`:""}<button data-ok="${esc(x.id)}" aria-label="Allein geschafft: bestätigen">✅</button>`}<button data-no="${esc(x.id)}" aria-label="Ablehnen">✖</button></div>`).join("")}</div>`:"";
   let kidH="";
   if(KID){const b=starBalance(KID),zr=rewards.find(r=>r.id===zielGet()),nx=zr&&+zr.kosten>b?zr:rewards.filter(r=>+r.kosten>b).sort((a,b2)=>(+a.kosten)-(+b2.kosten))[0],np=taskLogs.filter(l=>l.offen&&!l.abgelehnt).reduce((a,l)=>a+(+l.sterne||0),0);
@@ -1613,7 +1613,7 @@ function renderStars(){
     kidH=levelHTML(KID)+`<div class="kidbar">${sternPause(KID)?(manuellAus(KID,today)?`<div class="pausebox">⏸️ <b>Das Sterne-System macht gerade Pause.</b><br>Du musst nichts abhaken, und es werden keine Sterne abgezogen. Deine Sterne bleiben dir erhalten.</div>`:`<div class="pausebox">🏠 <b>Heute bist du bei Papa.</b><br>Das Sterne-System macht Pause: keine Aufgaben, kein Abzug. Morgen geht es weiter!</div>`):""}<b>Hallo ${esc(PNAME[KID]||"")}! 👋</b><div class="kidsum"><span>⭐ Heute verdient<b>+${sF(heute)}</b></span><span>🎯 Noch möglich<b>${sF(noch)}</b></span><span>💰 Kontostand<b>${sF(b)}</b></span></div>${nx?`<div class="pbar"><i style="width:${Math.min(100,Math.round(b/(+nx.kosten)*100))}%"></i></div><span class="meta">${zr&&nx===zr?"🎯 Dein Sparziel":"Nächstes Ziel"}: <b>${esc(nx.titel)}</b> · noch ${sF(+nx.kosten-b)} ⭐</span>`:rewards.length?`<br><span class="meta">Du kannst dir jede Belohnung leisten! 🎉</span>`:""}${np?`<br><span class="meta">⏳ ${np} ⭐ warten noch auf Bestätigung</span>`:""}${limitHTML(KID)}${abzugHTML()}${bonusHTML()}</div>`}
   const tlH=tl||'<p class="hint">Noch keine Aufgaben. Leg zum Beispiel „Zimmer aufräumen“ für dein Kind mit 2 Sternen an. Wer eine Aufgabe erledigt, tippt auf den Kreis und bekommt die Sterne.</p>';
   if(KID){
-  document.getElementById("vOther").innerHTML=`<div class="starcards">${cards}</div>${kidH}${nachholHTML(KID)}${umfKidHTML()}
+  document.getElementById("vOther").innerHTML=`<div class="starcards">${cards}</div>${kidH}${geldWahlHTML(KID)}${nachholHTML(KID)}${umfKidHTML()}
       ${KID?`<h3 class="sec">✅ Deine Aufgaben</h3>${hilfe(KID,"fokus")?jetztH():""}${hilfe(KID,"fokus")?`<details class="spaeter"><summary>📋 Alle Aufgaben ansehen</summary>${tlH}</details>`:tlH}${radHTML()}`:""}
       <div class="actions" style="margin:8px 0">${TTS_OK&&tasks.length?`<button class="btn${KID?"":" ghost"}" id="ttsBtn">🔊 Vorlesen</button>`:""}<button class="btn ghost" id="histBtn">📜 Verlauf</button></div>
       ${KID?"":radHTML()}
@@ -1664,7 +1664,7 @@ function renderStars(){
   document.querySelectorAll("[data-radd]").forEach(b=>b.onclick=()=>openRewardSheet(null));
   }
   {const kb=document.getElementById("kpBtn");if(kb)kb.onclick=kidPackSheet}
-  document.getElementById("histBtn").onclick=()=>showHistory(KID||"");wireSpiele();if(KID)wireUmfragen();wireAbzug();wireBonus();wireLimit();wireHilfen();wireGeld();
+  document.getElementById("histBtn").onclick=()=>showHistory(KID||"");wireSpiele();if(KID){wireUmfragen();wireGeldWahl()}wireAbzug();wireBonus();wireLimit();wireHilfen();wireGeld();
   document.querySelectorAll("[data-rad]").forEach(b=>b.onclick=()=>radDrehen(b.dataset.rad));
   document.querySelectorAll("[data-abzshow]").forEach(b=>b.onclick=ev=>{ev.stopPropagation();showAbz(b.dataset.abzshow)});
   if(KID){setTimeout(neueAbz,900);setTimeout(minusPopup,2000);setTimeout(plusPopup,2600)}
@@ -1822,9 +1822,30 @@ function abzugPlan(){
 let abzugBusy=false;
 let nachholBusy=false;
 const GELD_SPIEL_CENT=5;
-const geldSpielOffen=p=>taskLogs.filter(l=>l.person===p&&l.aufgabe==="spiel-geld"&&(+l.richtig===10||/· 10\/10 richtig/.test(l.titel||""))&&l.datum>="2026-11-26"&&!geldBuch.some(g=>g.id===`geldspiel-${l.id}`));
-async function geldSpielBuchen(){const msgs=[];for(const [p] of persons())for(const l of geldSpielOffen(p)){try{await store.set(`geldspiel-${l.id}`,{typ:"geld",person:p,betrag:GELD_SPIEL_CENT,titel:"💶 Geld-Profi: 10 von 10 richtig",art:"spiel",datum:l.datum});msgs.push(PNAME[p])}catch(e){}}
-  if(msgs.length)toast(`💶 +${ctEuro(GELD_SPIEL_CENT*msgs.length)} gespart (Geld-Profi)`)}
+/* 10/10 beim Geld-Profi = 5 Cent; gesammelt wird im Monat, ausgezahlt am letzten Tag des Monats aufs Sparkonto */
+const monatsEnde=m=>{const [y,mo]=m.split("-").map(Number);return iso(new Date(y,mo,0))};
+const geldSpielSiege=(p,m)=>taskLogs.filter(l=>l.person===p&&l.aufgabe==="spiel-geld"&&(+l.richtig===10||/· 10\/10 richtig/.test(l.titel||""))&&l.datum>="2026-11-26"&&String(l.datum).slice(0,7)===m).length;
+const geldSpielMonat=p=>GELD_SPIEL_CENT*geldSpielSiege(p,today.slice(0,7));
+const monName=m=>MONL[+m.slice(5,7)-1];
+const geldWahl=(p,m)=>redeems.filter(r=>r.person===p&&r.geldspiel===m).sort((a,b)=>String(b.datum).localeCompare(String(a.datum)))[0];
+/* Monate, deren Geld-Profi-Geld fällig ist (Monatsende erreicht) */
+function geldFaellig(p){const ms=new Set(taskLogs.filter(l=>l.person===p&&l.aufgabe==="spiel-geld").map(l=>String(l.datum).slice(0,7)));
+  return [...ms].filter(m=>today>=monatsEnde(m)&&geldSpielSiege(p,m)>0).sort().map(m=>({m,betrag:geldSpielSiege(p,m)*GELD_SPIEL_CENT,wahl:geldWahl(p,m),gebucht:geldBuch.find(g=>g.id===`geldspiel-${p}-${m}`)}))}
+async function geldSpielBuchen(){const msgs=[];
+  for(const [p] of persons())for(const x of geldFaellig(p)){const w=x.wahl,auto=!w&&today>=addDays(monatsEnde(x.m),7);
+    if(w&&w.wahl==="bar")continue;
+    if((w&&w.wahl==="sparen")||auto){const id=`geldspiel-${p}-${x.m}`;
+      if(!x.gebucht||+x.gebucht.betrag!==x.betrag){try{await store.set(id,{typ:"geld",person:p,betrag:x.betrag,titel:`💶 Geld-Profi ${monName(x.m)}: gespart`,art:"spiel",datum:monatsEnde(x.m)});msgs.push(`${PNAME[p]} +${ctEuro(x.betrag-(x.gebucht?+x.gebucht.betrag:0))}`)}catch(e){}}
+      if(w&&w.offen){const{id:wid,offen,...o}=w;try{await store.set(wid,o)}catch(e){}}}}
+  if(msgs.length)toast("🐷 Geld-Profi gespart: "+msgs.join(", "))}
+function geldWahlHTML(p){if(!KID||READONLY)return"";const L=geldFaellig(p).filter(x=>!x.wahl&&!x.gebucht);
+  const lauf=geldSpielMonat(p),m=today.slice(0,7);
+  return L.map(x=>`<div class="nachhol"><b>💶 Dein Geld-Profi-Geld für ${monName(x.m)}: ${ctEuro(x.betrag)}</b><p class="hint" style="margin:4px 0">Was möchtest du damit machen?</p>
+    <div class="actions"><button class="btn" data-gwahl="sparen" data-gm="${x.m}" data-gb="${x.betrag}">🐷 Sparen</button><button class="btn ghost" data-gwahl="bar" data-gm="${x.m}" data-gb="${x.betrag}">💶 Bar auszahlen</button></div></div>`).join("")
+    +(lauf&&today<monatsEnde(m)?`<p class="hint">💶 Geld-Profi diesen Monat: <b>${ctEuro(lauf)}</b> gesammelt · Auszahlung am ${fmt(monatsEnde(m))}</p>`:"")}
+function wireGeldWahl(){document.querySelectorAll("[data-gwahl]").forEach(b=>b.onclick=async()=>{const w=b.dataset.gwahl,m=b.dataset.gm,bt=+b.dataset.gb;
+  await store.add({typ:"einloesung",person:KID,kosten:0,titel:`💶 Geld-Profi ${monName(m)}: ${ctEuro(bt)} ${w==="sparen"?"sparen":"bar auszahlen"}`,geldspiel:m,wahl:w,betrag:bt,datum:today});
+  const t=w==="sparen"?`Super! ${ctEuro(bt)} kommen auf dein Sparkonto.`:`Okay! ${ELT()} zahlen dir ${ctEuro(bt)} bar aus.`;toast(w==="sparen"?"🐷 "+t:"💶 "+t);if(ttsAuto())speak(t);render()})}
 async function nachholBuchen(){if(nachholBusy||KID||READONLY||ROLE!=="schreiben"||!store)return;nachholBusy=true;const msgs=[];await geldSpielBuchen();
   try{for(const p of Object.keys(spielAbzugCfg())){if(!spielAbzugCfg()[p]||!PNAME[p])continue;
     for(const x of nachholStand(p))if(x.fertig&&!x.zurueck){await store.set(`nachhol-${p}-${x.d}`,{typ:"erledigt",aufgabe:"bonus",person:p,sterne:x.minus,datum:today,titel:`💪 Nachgeholt: Sterne vom ${fmt(x.d)} zurück`});msgs.push(`${PNAME[p]} +${sF(x.minus)} ⭐`)}}}catch(e){}
@@ -1981,7 +2002,7 @@ function wireBonus(){
 const ELT=()=>String((typeof FAMCONF!=="undefined"&&FAMCONF&&FAMCONF.eltern)||"Mama oder Papa").trim()||"Mama oder Papa";
 const eltTxt=t=>String(t).replace(/Mama oder Papa/g,ELT());
 const KID_NEWS=[
-  {id:"k24",ic:"💶",t:"Echtes Geld beim Geld-Profi",x:"Wenn du beim Geld-Profi alle 10 Aufgaben richtig hast, bekommst du 5 Cent auf dein Sparkonto. Das ist echtes Geld für dich!"},
+  {id:"k24",ic:"💶",t:"Echtes Geld beim Geld-Profi",x:"Wenn du beim Geld-Profi alle 10 Aufgaben richtig hast, sammelst du 5 Cent. Am letzten Tag im Monat darfst du entscheiden: sparen oder bar auszahlen lassen. Das ist echtes Geld für dich!"},
   {id:"k23",ic:"📌",t:"Pflicht-Aufgaben",x:"Manche Aufgaben sind jetzt Pflicht-Aufgaben. Die musst du erledigen, auch wenn es dafür keine Sterne gibt. Du erkennst sie am Zeichen Pflicht."},
   {id:"k21",ic:"💪",t:"Sterne zurückholen",x:"Wenn dir Sterne abgezogen wurden, kannst du sie zurückholen: Für jeden verpassten Tag machst du 1× Mathe und 1× Deutsch extra, zusätzlich zu deinen zwei Pflicht-Runden. Du hast dafür 5 Tage Zeit."},
   {id:"k22",ic:"📈",t:"Spiele werden schwerer",x:"Jedes Mal, wenn du ein Lernspiel schaffst, wird das nächste ein kleines bisschen schwerer. Wenn du richtig gut bist, kommen Aufgaben aus der 3. Klasse."},
@@ -2569,7 +2590,7 @@ function spielRunde(sp,p){
     const geldPlus=p&&sp==="geld"&&G.ok===N;
     sheet(SPIELE[sp].n,`<div class="spiel" style="text-align:center"><div style="font-size:52px">${G.ok>=EIN?"🌟":"🙂"}</div>
       <h3 style="margin:4px 0">${G.ok} von ${N} richtig</h3><p>${msg}</p>
-      ${st?`<p><b style="color:var(--star)">+${st} ⭐</b>${KID?" · sobald "+ELT()+" bestätigt haben":""}</p>`:""}${info?`<p class="hint">${info}</p>`:""}${geldPlus?`<p><b style="color:#3fb950">💶 +5 Cent für dein Sparkonto!</b>${KID?" Sie kommen dazu, sobald "+ELT()+" die App öffnen.":""}</p>`:p&&sp==="geld"&&G.ok>=EIN?`<p class="hint">💶 Bei 10 von 10 richtig gibt es 5 Cent fürs Sparkonto.</p>`:""}
+      ${st?`<p><b style="color:var(--star)">+${st} ⭐</b>${KID?" · sobald "+ELT()+" bestätigt haben":""}</p>`:""}${info?`<p class="hint">${info}</p>`:""}${geldPlus?`<p><b style="color:#3fb950">💶 +5 Cent gesammelt!</b> Diesen Monat schon ${ctEuro(geldSpielMonat(p)+5)}. Am ${fmt(monatsEnde(today.slice(0,7)))} darfst du entscheiden: sparen oder bar auszahlen.</p>`:p&&sp==="geld"&&G.ok>=EIN?`<p class="hint">💶 Bei 10 von 10 richtig gibt es 5 Cent fürs Sparkonto.</p>`:""}
       ${p&&G.neuS>stf?`<p class="hint">⬆️ Nächstes Mal wird es ein kleines bisschen schwerer (Stufe ${G.neuS}${stufeKlasse(G.neuS)>stufeKlasse(stf)?", jetzt Klasse 3!":""}).</p>`:p&&G.neuS<stf?`<p class="hint">Nächstes Mal wird es etwas leichter.</p>`:p&&stf>=10&&G.ok>=EIN&&G.ok<N?`<p class="hint">Für die nächste Stufe brauchst du jetzt 10 von 10 richtig.</p>`:""}</div>
       <details class="loesungen" ${G.ok<N?"open":""}><summary>📋 Lösungen ansehen${G.ok<N?` · ${N-G.ok} ${N-G.ok===1?"Fehler":"Fehler"}`:""}</summary>
         ${G.log.map((x,i)=>`<div class="lsg ${x.ok?"ok":"no"}"><span class="lnr">${x.ok?"✅":"❌"}</span><div><b>${i+1}. ${esc(x.q)}</b>${x.opts&&x.opts.length===2?`<br><span class="meta">${x.opts.map(esc).join(" oder ")}</span>`:""}
@@ -2817,7 +2838,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v125";
+const APP_VER="v126";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4681,8 +4702,8 @@ setTimeout(greetUser,2600);
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
   {v:"2026-11-26e",d:"2026-11-26",t:"💶 Geld-Profi zahlt aufs Sparkonto",items:[
-    "💶 Wer beim Geld-Profi 10 von 10 richtig hat, bekommt 5 Cent auf das Sparkonto („… hat gespart“)",
-    "🔄 Gebucht wird automatisch, sobald ein Elternteil die App öffnet"]},
+    "💶 Wer beim Geld-Profi 10 von 10 richtig hat, sammelt 5 Cent",
+    "📅 Am letzten Tag des Monats entscheidet das Kind: 🐷 sparen (aufs Sparkonto „… hat gespart“) oder 💶 bar auszahlen. Ohne Entscheidung wird nach 7 Tagen automatisch gespart"]},
   {v:"2026-11-26d",d:"2026-11-26",t:"📌 Bereich „Tägliche Pflichten“",items:[
     "📌 Alle Pflicht-Aufgaben stehen jetzt automatisch im eigenen Bereich „Tägliche Pflichten“, ganz oben",
     "🔁 Neue Pflicht-Aufgaben sind von selbst auf „Jeden Tag“ eingestellt"]},
