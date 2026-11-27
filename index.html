@@ -623,6 +623,7 @@ body.mod-aus-sterne .tabs [data-view="sterne"],body.mod-aus-familie .tabs [data-
 .task.kt .chk{font-size:16px}.mehrliste{display:grid;gap:8px;margin-top:14px}.mehrk{border:1px solid var(--line);border-radius:14px;padding:0 12px}.mehrk>summary{cursor:pointer;font-weight:700;padding:12px 0}.mehrk[open]{padding-bottom:12px}
 .vsbar{position:sticky;top:0;z-index:60;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;background:#f0b429;color:#2b1d00;font-weight:700;font-size:.9em}.vsbar button{border:0;border-radius:999px;padding:6px 12px;background:#2b1d00;color:#fff;font:inherit}
 .petemo,.petbig>span{position:relative;display:inline-block}.petbadge{position:absolute;right:-.25em;bottom:-.1em;font-size:.45em;font-style:normal;line-height:1}
+.kgrp{border:1px solid var(--line);border-radius:14px;padding:8px 8px 4px;margin:8px 0}.kgrpk{display:flex;align-items:center;gap:8px;padding:2px 4px 6px}.kgrpk .kgi{font-size:22px}.kgrpk .meta{margin-left:auto}.kz2.blau{background:color-mix(in srgb,var(--accent) 20%,transparent);color:inherit}.kfertig{margin-top:8px}
 .nachhol{border:1px solid #f0b42966;background:color-mix(in srgb,#f0b429 8%,transparent);border-radius:14px;padding:10px 12px;margin:10px 0}
 .tage{border:1px solid var(--line);border-radius:14px;padding:4px 12px 10px;margin:10px 0}.tage>summary{cursor:pointer;font-weight:700;padding:8px 0}.tagzeile{border-top:1px solid var(--line);padding:7px 0}.tagkopf{display:flex;justify-content:space-between}.tagdet{display:grid;gap:2px;font-size:.92em;margin-top:2px}.leerhin{opacity:.6}.plus{color:#3fb950;font-weight:700}.minus2{color:#e5484d;font-weight:700}
 .umfan{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.umfwer{display:grid;gap:6px}.umfp{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.95em}.umfp button{flex:0 0 auto}
@@ -1600,7 +1601,7 @@ function renderStars(){
   const vis=tasks.filter(t=>{const l=logFor(t);return !(t.wiederholung==="einmalig"&&l&&l.datum<today)});
   vis.sort((a,b)=>(!!logFor(a))-(!!logFor(b))||String(a.person).localeCompare(b.person));
   const row=t=>{const l=logFor(t);return `<div class="task${l?" done":""}${sternPause(t.person)?" paused":""}"><button class="chk" data-done="${esc(t.id)}" aria-label="${l?"Als nicht erledigt markieren":"Erledigt"}: ${esc(t.titel)}">${l?(l.offen?"⏳":"✓"):""}</button>
-    <button class="tt" data-task="${esc(t.id)}">${esc(t.titel)}<br><span class="meta"><span class="p-${t.person}" style="background:none;font-weight:700">${esc(PNAME[t.person]||"")}</span> · ${WIED[t.wiederholung]||"Einmalig"}${t.foto?" · 📸 mit Foto":""}${KID&&(hilfe(KID,"lesen")||hilfe(KID,"fokus"))?` · ${hilfe(KID,"fokus")?"👆 antippen":"🔊 antippen"}`:""}${l&&l.offen?" · wartet auf Bestätigung":""}${!l&&abgelehntVon(t)?`</span><br><span class="meta" style="color:#ff9f6b;font-weight:700">🔁 Nochmal: ${esc(abgelehntVon(t).hinweis||"")}`:""}</span></button>
+    <button class="tt" data-task="${esc(t.id)}">${esc(t.titel)}<br><span class="meta">${KID?"":`<span class="p-${t.person}" style="background:none;font-weight:700">${esc(PNAME[t.person]||"")}</span> · `}${WIED[t.wiederholung]||"Einmalig"}${t.foto?" · 📸 mit Foto":""}${KID&&(hilfe(KID,"lesen")||hilfe(KID,"fokus"))?` · ${hilfe(KID,"fokus")?"👆 antippen":"🔊 antippen"}`:""}${l&&l.offen?" · wartet auf Bestätigung":""}${!l&&abgelehntVon(t)?`</span><br><span class="meta" style="color:#ff9f6b;font-weight:700">🔁 Nochmal: ${esc(abgelehntVon(t).hinweis||"")}`:""}</span></button>
     <span class="st">${t.pflicht?`<span class="pflichtb">📌 Pflicht</span>`:"⭐".repeat(Math.min(tW(t),5))}</span></div>`};
   const jetztH=()=>{const ord=THEMEN.map(x=>x[0]),offen=vis.filter(t=>t.person===KID&&!logFor(t)&&!sternPause(t.person)).sort((a,b)=>(a.wiederholung==="taeglich"?0:1)-(b.wiederholung==="taeglich"?0:1)||ord.indexOf(taskThema(a))-ord.indexOf(taskThema(b)));
     if(!offen.length)return `<div class="jetzt fertig">🎉 Alles geschafft für heute! Super!</div>`;
@@ -1621,7 +1622,7 @@ function renderStars(){
   const tlH=tl||'<p class="hint">Noch keine Aufgaben. Leg zum Beispiel „Zimmer aufräumen“ für dein Kind mit 2 Sternen an. Wer eine Aufgabe erledigt, tippt auf den Kreis und bekommt die Sterne.</p>';
   if(KID){
   const b=starBalance(KID),zr=rewards.find(r=>r.id===zielGet()),nx=zr&&+zr.kosten>b?zr:rewards.filter(r=>+r.kosten>b).sort((a,b2)=>(+a.kosten)-(+b2.kosten))[0],np=taskLogs.filter(l=>l.offen&&!l.abgelehnt&&+l.sterne>0).reduce((a,l)=>a+(+l.sterne||0),0);
-  const meine=vis.filter(t=>t.person===KID),pf=meine.filter(t=>t.pflicht),fr=meine.filter(t=>!t.pflicht).sort((a,c)=>(logFor(a)?1:0)-(logFor(c)?1:0));
+  const meine=vis.filter(t=>t.person===KID),pf=meine.filter(t=>t.pflicht),fr=meine.filter(t=>!t.pflicht),frOffen=fr.filter(t=>!logFor(t)).sort((a,c)=>tW(c)-tW(a)),frFertig=fr.filter(t=>logFor(t));
   const sp=spielAbzugCfg()[KID]?PFLICHT_SPIELE:[];
   const spRow=x=>{const ok=spielGemacht(KID,today,x);return `<div class="task kt${ok?" done":""}"><button class="chk" data-spielstart="${x}" aria-label="${SPIELE[x].n} starten">${ok?"✓":"▶"}</button><button class="tt" data-spielstart="${x}">${esc(SPIELE[x].n)}<br><span class="meta">${ok?"Heute geschafft":"10 Aufgaben, mindestens 8 richtig · antippen zum Starten"}</span></button></div>`};
   const pfDone=pf.filter(t=>logFor(t)).length+sp.filter(x=>spielGemacht(KID,today,x)).length,pfAll=pf.length+sp.length;
@@ -1634,8 +1635,10 @@ function renderStars(){
     ${pause}
     ${pfAll?`<h3 class="sec ksec pfl">📌 Muss ich heute machen <span class="kz2">${pfDone} von ${pfAll}</span></h3>
       <div class="tasklist">${sp.map(spRow).join("")}${pf.map(row).join("")}</div>`:""}
-    <h3 class="sec ksec">⭐ Sterne verdienen</h3>
-    <div class="tasklist">${fr.map(row).join("")||'<p class="hint">Gerade keine Aufgaben mit Sternen.</p>'}</div>
+    <h3 class="sec ksec">⭐ Sterne verdienen ${frOffen.length?`<span class="kz2 blau">noch ${sF(frOffen.reduce((a,t)=>a+tW(t),0))} ⭐</span>`:""}</h3>
+    ${frOffen.length?THEMEN.filter(x=>x[0]!=="pflicht").map(([k,ic,nm])=>{const ts=frOffen.filter(t=>taskThema(t)===k);if(!ts.length)return"";
+      return `<div class="kgrp"><div class="kgrpk"><span class="kgi">${ic}</span><b>${esc(nm)}</b><span class="meta">${ts.length} ${ts.length===1?"Aufgabe":"Aufgaben"} · ${sF(ts.reduce((a,t)=>a+tW(t),0))} ⭐</span></div><div class="tasklist">${ts.map(row).join("")}</div></div>`}).join(""):`<p class="hint">${fr.length?"🎉 Alles erledigt für heute! Super!":"Gerade keine Aufgaben mit Sternen."}</p>`}
+    ${frFertig.length?`<details class="mehrk kfertig"><summary>✅ Schon erledigt (${frFertig.length})</summary><div class="mehrin tasklist">${frFertig.map(row).join("")}</div></details>`:""}
     ${geldWahlHTML(KID)}${nachholHTML(KID)}
     <div class="mehrliste">
     ${mehr("🎁","Belohnungen",`<div class="tasklist">${rws||'<p class="hint">Noch keine Belohnungen.</p>'}</div>${last?`<p class="hint" style="margin:8px 0 0">Zuletzt eingelöst:</p><ul class="hint" style="margin:0;padding-left:18px">${last}</ul>`:""}${radHTML()}`)}
@@ -2859,7 +2862,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v131";
+const APP_VER="v132";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4726,6 +4729,7 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-27e",d:"2026-11-27",t:"⭐ „Sterne verdienen“ übersichtlicher",items:["⭐ Beim Kind sind die Sterne-Aufgaben nach Bereichen sortiert (z. B. Mein Zimmer, Schule, Haushalt), mit Sternen pro Bereich. Erledigtes rutscht in „✅ Schon erledigt“"]},
   {v:"2026-11-27d",d:"2026-11-27",t:"🐉 Mehr Drachen-Stufen",items:["🐉 Das Maskottchen hat jetzt 17 Stufen: nach dem Drachen kommen Feuer-, Wasser-, Sturm-, Eis-, Nacht-, Goldener, Kristall- und Regenbogendrache, dann Drachenkönig und Legendärer Drache"]},
   {v:"2026-11-27c",d:"2026-11-27",t:"📊 Umfragen nur für Erwachsene",items:["📊 Kinder mit Sterne-System bekommen keine Umfragen mehr. Umfragen gehen nur noch an Erwachsene"]},
   {v:"2026-11-27b",d:"2026-11-27",t:"👀 Vorschau: So sieht das Kind die App",items:["👀 Unter Sterne → Übersicht gibt es „So sieht … die App“. Damit seht ihr genau die Ansicht des Kindes. In der Vorschau wird nichts gespeichert"]},
