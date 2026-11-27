@@ -622,6 +622,7 @@ body.mod-aus-sterne .tabs [data-view="sterne"],body.mod-aus-familie .tabs [data-
 .ksec{display:flex;align-items:center;justify-content:space-between;gap:8px}.ksec.pfl{color:#f0b429}.kz2{font-size:.8em;font-weight:700;padding:2px 10px;border-radius:999px;background:color-mix(in srgb,#f0b429 18%,transparent)}
 .task.kt .chk{font-size:16px}.mehrliste{display:grid;gap:8px;margin-top:14px}.mehrk{border:1px solid var(--line);border-radius:14px;padding:0 12px}.mehrk>summary{cursor:pointer;font-weight:700;padding:12px 0}.mehrk[open]{padding-bottom:12px}
 .vsbar{position:sticky;top:0;z-index:60;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;background:#f0b429;color:#2b1d00;font-weight:700;font-size:.9em}.vsbar button{border:0;border-radius:999px;padding:6px 12px;background:#2b1d00;color:#fff;font:inherit}
+.petemo,.petbig>span{position:relative;display:inline-block}.petbadge{position:absolute;right:-.25em;bottom:-.1em;font-size:.45em;font-style:normal;line-height:1}
 .nachhol{border:1px solid #f0b42966;background:color-mix(in srgb,#f0b429 8%,transparent);border-radius:14px;padding:10px 12px;margin:10px 0}
 .tage{border:1px solid var(--line);border-radius:14px;padding:4px 12px 10px;margin:10px 0}.tage>summary{cursor:pointer;font-weight:700;padding:8px 0}.tagzeile{border-top:1px solid var(--line);padding:7px 0}.tagkopf{display:flex;justify-content:space-between}.tagdet{display:grid;gap:2px;font-size:.92em;margin-top:2px}.leerhin{opacity:.6}.plus{color:#3fb950;font-weight:700}.minus2{color:#e5484d;font-weight:700}
 .umfan{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.umfwer{display:grid;gap:6px}.umfp{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.95em}.umfp button{flex:0 0 auto}
@@ -2858,7 +2859,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v130";
+const APP_VER="v131";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4725,6 +4726,7 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-27d",d:"2026-11-27",t:"🐉 Mehr Drachen-Stufen",items:["🐉 Das Maskottchen hat jetzt 17 Stufen: nach dem Drachen kommen Feuer-, Wasser-, Sturm-, Eis-, Nacht-, Goldener, Kristall- und Regenbogendrache, dann Drachenkönig und Legendärer Drache"]},
   {v:"2026-11-27c",d:"2026-11-27",t:"📊 Umfragen nur für Erwachsene",items:["📊 Kinder mit Sterne-System bekommen keine Umfragen mehr. Umfragen gehen nur noch an Erwachsene"]},
   {v:"2026-11-27b",d:"2026-11-27",t:"👀 Vorschau: So sieht das Kind die App",items:["👀 Unter Sterne → Übersicht gibt es „So sieht … die App“. Damit seht ihr genau die Ansicht des Kindes. In der Vorschau wird nichts gespeichert"]},
   {v:"2026-11-27a",d:"2026-11-27",t:"🧒 Einfachere Ansicht für Kinder",items:[
@@ -5253,7 +5255,8 @@ async function shareWrapped(s){
 }
 
 /* ---------- 🐣 Familien-Maskottchen ---------- */
-const PET_STUFEN=[[0,"🥚","Ei"],[30,"🐣","Schlüpfling"],[100,"🐥","Küken"],[250,"🦎","Echse"],[500,"🐲","Mini-Drache"],[1000,"🐉","Drache"]];
+const PET_STUFEN=[[0,"🥚","Ei"],[30,"🐣","Schlüpfling"],[100,"🐥","Küken"],[250,"🦎","Echse"],[500,"🐲","Mini-Drache"],[750,"🐲","Junger Drache"],[1000,"🐉","Drache"],[1500,"🔥🐉","Feuerdrache"],[2200,"🌊🐉","Wasserdrache"],[3000,"⚡🐉","Sturmdrache"],[4000,"❄️🐉","Eisdrache"],[5500,"🌙🐉","Nachtdrache"],[7500,"✨🐉","Goldener Drache"],[10000,"💎🐉","Kristalldrache"],[13000,"🌈🐉","Regenbogendrache"],[17000,"👑🐉","Drachenkönig"],[22000,"🌟🐉","Legendärer Drache"]];
+const petEmo=e=>{e=String(e);if(e.length>2&&e.endsWith("🐉")){return `🐉<i class="petbadge">${e.slice(0,-2)}</i>`}return e};
 function petXP(){const st=taskLogs.reduce((s,l)=>s+(+l.sterne||0),0);return entries.length+st*3+Math.min(redeems.length*5,200)}
 function petInfo(){const xp=petXP();let k=0;for(let i=0;i<PET_STUFEN.length;i++)if(xp>=PET_STUFEN[i][0])k=i;const cur=PET_STUFEN[k],nx=PET_STUFEN[k+1];
   return {xp,k,emo:cur[1],stufe:cur[2],next:nx,pct:nx?Math.round((xp-cur[0])*100/(nx[0]-cur[0])):100,name:(FAMCONF.pet&&FAMCONF.pet.name)||"Flammi"}}
@@ -5273,14 +5276,14 @@ function renderPet(){
   if(!premOn(10)||lsGet("fk-p-pet")==="0"||IS_READER_SITE||annReader()){el.hidden=true;return}
   const p=petInfo(),m=petMood(p);
   el.hidden=false;
-  el.innerHTML=`<div class="petava ${m[0]==="💤"?"sleep":""}"><span class="petemo">${p.emo}</span><span class="petmood">${m[0]}</span></div>
+  el.innerHTML=`<div class="petava ${m[0]==="💤"?"sleep":""}"><span class="petemo">${petEmo(p.emo)}</span><span class="petmood">${m[0]}</span></div>
     <div class="petbody"><b>${esc(p.name)}</b> <span class="meta">· ${p.stufe}</span><div class="petsay">${esc(m[1])}</div>
     <div class="petbar"><i style="width:${p.pct}%"></i></div><span class="meta">${p.next?`${p.xp} / ${p.next[0]} XP bis ${p.next[1]}`:`${p.xp} XP · ausgewachsen!`}</span></div>`;
 }
 function showPet(){
   if(!premOn(10)){premGate(showPet);return}
   const p=petInfo();
-  sheet(`${p.emo} ${esc(p.name)}`,`<div class="petbig"><span>${p.emo}</span></div>
+  sheet(`${p.emo} ${esc(p.name)}`,`<div class="petbig"><span>${petEmo(p.emo)}</span></div>
     <p class="hint" style="text-align:center">Euer Familien-Maskottchen wächst mit jedem Eintrag und jedem Stern, den ihr sammelt.</p>
     <div class="pstufe on"><span class="pn">⚡ ${p.xp} XP</span><div><b>${p.stufe}</b><br><span class="hint" style="margin:0">${p.next?`Noch ${p.next[0]-p.xp} XP bis ${p.next[1]} ${p.next[2]}`:"Ganz ausgewachsen! 🏆"}</span></div></div>
     <h4 class="sub">🍽️ So wächst ${esc(p.name)}</h4>
