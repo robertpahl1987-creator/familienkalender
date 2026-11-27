@@ -1545,7 +1545,7 @@ function umfWerBistDu(){sheet("📊 Wer bist du?",`<p class="hint">Es gibt eine 
   <div class="actions" style="flex-wrap:wrap">${persons().map(([k,n])=>`<button class="btn ghost" data-ich="${k}">${esc(n)}</button>`).join("")}</div><button class="btn ghost" data-ich="-" style="width:100%">Keiner davon</button>`);
   document.querySelectorAll("[data-ich]").forEach(b=>b.onclick=()=>{lsSet("fk-ich",b.dataset.ich);closeSheet();setTimeout(umfPopup,400)})}
 let UMF_FRAGE=false;
-function umfPopup(){if(!store||READONLY)return;
+function umfPopup(){if(!store||READONLY||KID)return;
   if(!KID&&!umfIch()&&!UMF_FRAGE&&umfragen.some(x=>!umfAntwort(x))){const host=document.getElementById("sheetHost");if(host&&host.innerHTML.trim()){setTimeout(umfPopup,2500);return}UMF_FRAGE=true;umfWerBistDu();return}const u=umfragen.find(x=>umfFuerMich(x)&&!umfAntwort(x)&&!UMF_POP.has(x.id));if(!u)return;
   const host=document.getElementById("sheetHost");if(host&&host.innerHTML.trim()){setTimeout(umfPopup,2500);return}
   UMF_POP.add(u.id);umfPopZeigen(u)}
@@ -1563,9 +1563,9 @@ function umfElternHTML(){
       ${READONLY?"":`<div class="rw-btns"><button data-umfdel="${esc(u0.gruppe||u0.id)}">Umfrage löschen</button></div>`}</div>`}).join("");
   return `<section class="famsec"><h3 class="sec">📊 Umfragen${umfNeu()?` <span class="svbadge">${umfNeu()}</span>`:""}</h3>
     ${READONLY?"":`<div class="actions"><button class="btn" id="umfAdd">+ Umfrage</button></div>`}
-    ${list||`<p class="hint">Fragt eine oder mehrere Personen etwas zum Antippen, z. B. „Was möchtest du am Wochenende essen?“ oder „Wann passt euch der Ausflug?“. Die Umfrage öffnet sich bei Kindern sofort, alles lässt sich vorlesen. Die Ergebnisse stehen dann hier.</p>`}</section>`}
+    ${list||`<p class="hint">Fragt eine oder mehrere Personen etwas zum Antippen, z. B. „Was möchtest du am Wochenende essen?“ oder „Wann passt euch der Ausflug?“. Die Umfrage öffnet sich bei den Empfängern als Fenster. Die Ergebnisse stehen dann hier.</p>`}</section>`}
 function openUmfrageSheet(){
-  const kids=persons(),def=(kids.find(([k,n])=>k==="john"||/^john$/i.test(n))||kids[0]||[""])[0];
+  const kids=persons().filter(([k])=>!tasks.some(t=>t.person===k)),def="";
   sheet("📊 Neue Umfrage",`<div class="f">An wen? (mehrere möglich)<div class="umfan">${kids.map(([k,n])=>`<label class="pick"><input type="checkbox" data-umfan="${k}" ${k===def?"checked":""}> ${esc(n)}</label>`).join("")}</div></div>
     <label class="f">Frage<input id="umfF" placeholder="z. B. Was möchtest du am Samstag essen?" maxlength="140"></label>
     <label class="f">Antworten (eine pro Zeile, 2 bis 8)<textarea id="umfO" rows="5" placeholder="🍝 Nudeln&#10;🍕 Pizza&#10;🍔 Burger&#10;🥗 Etwas anderes"></textarea></label>
@@ -2031,7 +2031,6 @@ const KID_NEWS=[
   {id:"k20",ic:"🎮",t:"Jeden Tag Mathe und Deutsch",x:"Neu: Mach jeden Tag den Mathe-Blitz und den Deutsch-Detektiv, jeweils alle 10 Aufgaben mit mindestens 8 richtigen. Fehlt eins davon, werden 2 Sterne abgezogen. Uhr und Geld kannst du zusätzlich spielen. Tage bei Papa zählen nicht."},
   {id:"k17",ic:"⏸️",t:"Pause-Knopf",x:"Mama oder Papa können das Sterne-System auch mal pausieren. Dann musst du nichts abhaken, und es wird nichts abgezogen. Deine Sterne bleiben."},
   {id:"k16",ic:"🔊",t:"Warum Sterne weg sind",x:"Wenn dir Sterne abgezogen werden, siehst du jetzt sofort warum. Mit dem Lautsprecher-Knopf wird dir der Grund vorgelesen."},
-  {id:"k15",ic:"📊",t:"Umfragen",x:"Neu: Mama oder Papa können dir Fragen schicken, zum Beispiel was du am Wochenende essen möchtest. Du tippst einfach auf deine Antwort und schickst sie ab. Mit dem Lautsprecher-Knopf wird dir die ganze Frage mit allen Antworten vorgelesen."},
   {id:"k14",ic:"🤝",t:"Allein oder mit Hilfe",x:"Wenn du eine Aufgabe ganz allein schaffst, gibt es alle Sterne. Hat dir jemand geholfen, gibt es die Hälfte, also zum Beispiel einen halben Stern. Probier es allein, du schaffst das!"},
   {id:"k13",ic:"💶",t:"Zahltag",x:"Einmal pro Woche ist Zahltag. Dann kannst du Sterne in Geld für dein Erspartes tauschen. Tipp: Je mehr Sterne du auf einmal tauschst, desto mehr Geld bekommst du! 100 Sterne geben 12 Euro statt 10. Sparen lohnt sich also."},
   {id:"k12",ic:"💰",t:"Dein eigenes Geld",x:"Neu: Unter Mein Geld siehst du dein Erspartes und deine Wunschliste. Deine Sterne kannst du gegen echtes Geld für dein Erspartes tauschen. Davon kaufst du dir deine Wünsche selbst, zum Beispiel Nike-Sachen oder Spiele-Guthaben. Wer selbst kauft, bekommt 5 Sterne Stolz-Bonus!"},
@@ -2859,7 +2858,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v129";
+const APP_VER="v130";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4726,6 +4725,7 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-27c",d:"2026-11-27",t:"📊 Umfragen nur für Erwachsene",items:["📊 Kinder mit Sterne-System bekommen keine Umfragen mehr. Umfragen gehen nur noch an Erwachsene"]},
   {v:"2026-11-27b",d:"2026-11-27",t:"👀 Vorschau: So sieht das Kind die App",items:["👀 Unter Sterne → Übersicht gibt es „So sieht … die App“. Damit seht ihr genau die Ansicht des Kindes. In der Vorschau wird nichts gespeichert"]},
   {v:"2026-11-27a",d:"2026-11-27",t:"🧒 Einfachere Ansicht für Kinder",items:[
     "🧒 Der Sterne-Bereich des Kindes ist jetzt eine einfache Liste: oben die Sterne, dann „📌 Muss ich heute machen“ (Pflichten plus Mathe und Deutsch) und „⭐ Sterne verdienen“",
