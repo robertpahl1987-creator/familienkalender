@@ -621,6 +621,7 @@ body.mod-aus-sterne .tabs [data-view="sterne"],body.mod-aus-familie .tabs [data-
 .kidtop{border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:6px 0 12px;display:grid;gap:6px}.kidstern{display:flex;align-items:center;gap:8px;font-size:34px;line-height:1}.kidstern b{font-size:40px}
 .ksec{display:flex;align-items:center;justify-content:space-between;gap:8px}.ksec.pfl{color:#f0b429}.kz2{font-size:.8em;font-weight:700;padding:2px 10px;border-radius:999px;background:color-mix(in srgb,#f0b429 18%,transparent)}
 .task.kt .chk{font-size:16px}.mehrliste{display:grid;gap:8px;margin-top:14px}.mehrk{border:1px solid var(--line);border-radius:14px;padding:0 12px}.mehrk>summary{cursor:pointer;font-weight:700;padding:12px 0}.mehrk[open]{padding-bottom:12px}
+.vsbar{position:sticky;top:0;z-index:60;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;background:#f0b429;color:#2b1d00;font-weight:700;font-size:.9em}.vsbar button{border:0;border-radius:999px;padding:6px 12px;background:#2b1d00;color:#fff;font:inherit}
 .nachhol{border:1px solid #f0b42966;background:color-mix(in srgb,#f0b429 8%,transparent);border-radius:14px;padding:10px 12px;margin:10px 0}
 .tage{border:1px solid var(--line);border-radius:14px;padding:4px 12px 10px;margin:10px 0}.tage>summary{cursor:pointer;font-weight:700;padding:8px 0}.tagzeile{border-top:1px solid var(--line);padding:7px 0}.tagkopf{display:flex;justify-content:space-between}.tagdet{display:grid;gap:2px;font-size:.92em;margin-top:2px}.leerhin{opacity:.6}.plus{color:#3fb950;font-weight:700}.minus2{color:#e5484d;font-weight:700}
 .umfan{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.umfwer{display:grid;gap:6px}.umfp{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.95em}.umfp button{flex:0 0 auto}
@@ -874,7 +875,9 @@ function setPersons(keys,names){
 const DEFAULT_NAMES=["Christin","John","Robert"];
 let NAMES=DEFAULT_NAMES.slice();
 let PEOPLE=[],PNAME={};
-var KID="",KIDGEM=false,_ALL=[];try{const k=JSON.parse(localStorage.getItem("fk-kind")||"null");if(k&&k.p){KID=String(k.p);KIDGEM=!!k.g}}catch(e){}
+var KID="",KIDGEM=false,_ALL=[],VORSCHAU=false;try{const k=JSON.parse(localStorage.getItem("fk-kind")||"null");if(k&&k.p){KID=String(k.p);KIDGEM=!!k.g}}catch(e){}
+/* Eltern-Vorschau: #vorschau=<person> zeigt die App so, wie das Kind sie sieht (nichts wird gespeichert) */
+try{const m=location.hash.match(/vorschau=([a-z0-9]{1,12})/);if(m&&!KID){KID=m[1];VORSCHAU=true}}catch(e){}
 if(KID)document.documentElement.classList.add("kidmode");
 var FILTER="";try{FILTER=localStorage.getItem("fk-filter")||""}catch(e){}
 let PHOTOS={};try{PHOTOS=JSON.parse(localStorage.getItem("fk-bilder")||"{}")||{}}catch(e){PHOTOS={}}
@@ -1007,7 +1010,7 @@ async function init(){
     FS=fs;
   }catch(e){store=localStore();setStatus("Verbindung fehlerhaft · Einstellungen prüfen");render();return}
   const failed=e=>{console.error(e);if(e&&e.code==="permission-denied"&&memberOK){memberOK=false;ensureMember(cfg)}toast("Nicht gespeichert: "+(e&&e.code==="permission-denied"?"kein Zugriff auf diesen Kalender":"Verbindungsproblem")+". Bitte App neu laden.")};
-  const roBlock=()=>{if(ROLE==="lesen"){toast("Du hast in diesem Kalender nur Leserechte");return true}return false};
+  const roBlock=()=>{if(VORSCHAU){toast("👀 Vorschau: Hier wird nichts gespeichert");return true}if(ROLE==="lesen"){toast("Du hast in diesem Kalender nur Leserechte");return true}return false};
   store={mode:"db",
     add(o){if(roBlock())return;const x=stampNew(o);if(isPrivObj(x)){if(!MY_UID){toast("Gerade keine Verbindung");return}PRIVCOL.add(x).catch(failed)}else col.add(x).catch(failed)},
     set(id,o){if(roBlock())return;const x=stampEdit(id,o);const wasP=isPrivId(id);
@@ -1655,6 +1658,7 @@ function renderStars(){
       ${leer?`<div class="leer"><b>So startet ihr</b><p class="hint">1. Aufgaben anlegen (oder das fertige Startpaket nehmen) · 2. Belohnungen festlegen · 3. Das Kind hakt ab, ihr bestätigt.</p><button class="btn" data-kp>🎒 Startpaket nutzen</button><button class="btn ghost" data-tadd>+ Eigene Aufgabe</button></div>`:""}
       ${pendH||(leer?"":`<p class="hint">✅ Nichts zu bestätigen.</p>`)}
       <div class="actions" style="margin:8px 0">${TTS_OK&&tasks.length?`<button class="btn ghost" id="ttsBtn">🔊 Vorlesen</button>`:""}<button class="btn ghost" id="histBtn">📜 Verlauf</button></div>
+      ${persons().filter(([k])=>tasks.some(t=>t.person===k)).map(([k,n])=>`<button class="btn ghost" data-vorschau="${k}" style="width:100%;margin:6px 0">👀 So sieht ${esc(n)} die App</button>`).join("")}
       ${persons().filter(([k])=>spielAbzugCfg()[k]).map(([k])=>nachholHTML(k)).join("")}
       ${tageHTML()}
       ${radHTML()}
@@ -1675,6 +1679,7 @@ function renderStars(){
     </div>`;
   document.querySelectorAll("[data-svt]").forEach(b=>b.onclick=()=>{const k=b.dataset.svt;lsSet("fk-sv",k);const w=document.querySelector(".svwrap");w.className="svwrap sv-"+k;document.querySelectorAll("[data-svt]").forEach(x=>x.setAttribute("aria-selected",String(x===b)))});
   document.querySelectorAll("[data-kp]").forEach(b=>b.onclick=kidPackSheet);
+  document.querySelectorAll("[data-vorschau]").forEach(b=>b.onclick=()=>vorschauStart(b.dataset.vorschau));
   document.querySelectorAll("[data-tadd]").forEach(b=>b.onclick=()=>openTaskSheet(null));
   document.querySelectorAll("[data-radd]").forEach(b=>b.onclick=()=>openRewardSheet(null));
   }
@@ -1920,7 +1925,8 @@ async function fotoSpeichern(bild,p){
 async function fotoLaden(id){if(_fotoLokal[id])return _fotoLokal[id];const col=fotoCol();if(!col)return "";const s=await col.doc(id).get();return s.exists?s.data().bild:""}
 async function fotoWeg(id){if(!id)return;delete _fotoLokal[id];const col=fotoCol();if(col)try{await col.doc(id).delete()}catch(e){}}
 const abgelehntVon=t=>taskLogs.filter(l=>l.aufgabe===t.id&&l.abgelehnt&&l.datum===today).pop();
-function kidFoto(t){
+function kidFoto(t){if(VORSCHAU){toast("👀 Vorschau: Hier wird nichts gespeichert");return}return kidFoto0(t)}
+function kidFoto0(t){
   const inp=document.createElement("input");inp.type="file";inp.accept="image/*";inp.setAttribute("capture","environment");inp.style.display="none";document.body.appendChild(inp);
   inp.onchange=async()=>{const f=inp.files&&inp.files[0];inp.remove();if(!f)return;let bild="";
     try{bild=await bildKlein(f)}catch(e){toast("Das Foto ging nicht · bitte nochmal");return}
@@ -2853,7 +2859,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v127";
+const APP_VER="v128";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -3583,8 +3589,12 @@ function showModulWahl(then){
   <div class="actions"><button class="btn" id="mwOk">Weiter</button></div>`);
   document.getElementById("mwOk").onclick=async()=>{const m={};document.querySelectorAll("[data-mw]").forEach(c=>m[c.dataset.mw]=c.checked);
     FAMCONF=FAMCONF||{};FAMCONF.module=m;try{await store.conf({module:m})}catch(e){}closeSheet();applyModule();render();if(then)setTimeout(then,300)}}
+function vorschauBar(){if(!VORSCHAU||document.getElementById("vsBar"))return;const b=document.createElement("div");b.id="vsBar";b.className="vsbar";
+  b.innerHTML=`<span>👀 Vorschau: So sieht ${esc(PNAME[KID]||"das Kind")} die App</span><button id="vsEnd">Beenden</button>`;document.body.prepend(b);
+  document.getElementById("vsEnd").onclick=()=>{location.hash="";location.reload()}}
+function vorschauStart(p){location.hash="vorschau="+p;location.reload()}
 function renderInner(){
-  today=iso(new Date());updBrandDate();applyModule();
+  today=iso(new Date());updBrandDate();applyModule();vorschauBar();
   document.querySelectorAll(".tabs [data-view]").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.view===view)));
   document.getElementById("vWoche").hidden=view!=="woche";
   document.getElementById("vOther").hidden=view==="woche";
@@ -4716,6 +4726,7 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-27b",d:"2026-11-27",t:"👀 Vorschau: So sieht das Kind die App",items:["👀 Unter Sterne → Übersicht gibt es „So sieht … die App“. Damit seht ihr genau die Ansicht des Kindes. In der Vorschau wird nichts gespeichert"]},
   {v:"2026-11-27a",d:"2026-11-27",t:"🧒 Einfachere Ansicht für Kinder",items:[
     "🧒 Der Sterne-Bereich des Kindes ist jetzt eine einfache Liste: oben die Sterne, dann „📌 Muss ich heute machen“ (Pflichten plus Mathe und Deutsch) und „⭐ Sterne verdienen“",
     "▶ Mathe-Blitz und Deutsch-Detektiv starten direkt aus der Pflichtliste und sind grün abgehakt, wenn geschafft",
