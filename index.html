@@ -618,6 +618,9 @@ body.mod-aus-sterne .tabs [data-view="sterne"],body.mod-aus-familie .tabs [data-
 .minus{border-left:3px solid #e5484d;padding:4px 10px}
 .einzeln{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px}.einzeln .actions{margin-top:8px;flex-wrap:wrap}.chip.ausfall{opacity:.55}.chip.ausfall .chip-label,.chip.ausfall .t{text-decoration:line-through}
 .pflichtb{font-size:.8em;font-weight:700;padding:2px 7px;border-radius:999px;background:color-mix(in srgb,var(--accent) 22%,transparent);white-space:nowrap}
+.kidtop{border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:6px 0 12px;display:grid;gap:6px}.kidstern{display:flex;align-items:center;gap:8px;font-size:34px;line-height:1}.kidstern b{font-size:40px}
+.ksec{display:flex;align-items:center;justify-content:space-between;gap:8px}.ksec.pfl{color:#f0b429}.kz2{font-size:.8em;font-weight:700;padding:2px 10px;border-radius:999px;background:color-mix(in srgb,#f0b429 18%,transparent)}
+.task.kt .chk{font-size:16px}.mehrliste{display:grid;gap:8px;margin-top:14px}.mehrk{border:1px solid var(--line);border-radius:14px;padding:0 12px}.mehrk>summary{cursor:pointer;font-weight:700;padding:12px 0}.mehrk[open]{padding-bottom:12px}
 .nachhol{border:1px solid #f0b42966;background:color-mix(in srgb,#f0b429 8%,transparent);border-radius:14px;padding:10px 12px;margin:10px 0}
 .tage{border:1px solid var(--line);border-radius:14px;padding:4px 12px 10px;margin:10px 0}.tage>summary{cursor:pointer;font-weight:700;padding:8px 0}.tagzeile{border-top:1px solid var(--line);padding:7px 0}.tagkopf{display:flex;justify-content:space-between}.tagdet{display:grid;gap:2px;font-size:.92em;margin-top:2px}.leerhin{opacity:.6}.plus{color:#3fb950;font-weight:700}.minus2{color:#e5484d;font-weight:700}
 .umfan{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.umfwer{display:grid;gap:6px}.umfp{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.95em}.umfp button{flex:0 0 auto}
@@ -1613,21 +1616,33 @@ function renderStars(){
     kidH=levelHTML(KID)+`<div class="kidbar">${sternPause(KID)?(manuellAus(KID,today)?`<div class="pausebox">⏸️ <b>Das Sterne-System macht gerade Pause.</b><br>Du musst nichts abhaken, und es werden keine Sterne abgezogen. Deine Sterne bleiben dir erhalten.</div>`:`<div class="pausebox">🏠 <b>Heute bist du bei Papa.</b><br>Das Sterne-System macht Pause: keine Aufgaben, kein Abzug. Morgen geht es weiter!</div>`):""}<b>Hallo ${esc(PNAME[KID]||"")}! 👋</b><div class="kidsum"><span>⭐ Heute verdient<b>+${sF(heute)}</b></span><span>🎯 Noch möglich<b>${sF(noch)}</b></span><span>💰 Kontostand<b>${sF(b)}</b></span></div>${nx?`<div class="pbar"><i style="width:${Math.min(100,Math.round(b/(+nx.kosten)*100))}%"></i></div><span class="meta">${zr&&nx===zr?"🎯 Dein Sparziel":"Nächstes Ziel"}: <b>${esc(nx.titel)}</b> · noch ${sF(+nx.kosten-b)} ⭐</span>`:rewards.length?`<br><span class="meta">Du kannst dir jede Belohnung leisten! 🎉</span>`:""}${np?`<br><span class="meta">⏳ ${np} ⭐ warten noch auf Bestätigung</span>`:""}${limitHTML(KID)}${abzugHTML()}${bonusHTML()}</div>`}
   const tlH=tl||'<p class="hint">Noch keine Aufgaben. Leg zum Beispiel „Zimmer aufräumen“ für dein Kind mit 2 Sternen an. Wer eine Aufgabe erledigt, tippt auf den Kreis und bekommt die Sterne.</p>';
   if(KID){
-  document.getElementById("vOther").innerHTML=`<div class="starcards">${cards}</div>${kidH}${geldWahlHTML(KID)}${nachholHTML(KID)}${umfKidHTML()}
-      ${KID?`<h3 class="sec">✅ Deine Aufgaben</h3>${hilfe(KID,"fokus")?jetztH():""}${hilfe(KID,"fokus")?`<details class="spaeter"><summary>📋 Alle Aufgaben ansehen</summary>${tlH}</details>`:tlH}${radHTML()}`:""}
-      <div class="actions" style="margin:8px 0">${TTS_OK&&tasks.length?`<button class="btn${KID?"":" ghost"}" id="ttsBtn">🔊 Vorlesen</button>`:""}<button class="btn ghost" id="histBtn">📜 Verlauf</button></div>
-      ${KID?"":radHTML()}
-      ${kontoHTML()}
-      ${spieleHTML()}
-      ${KID?`<h3 class="sec">🏅 Deine Abzeichen · ${abzVon(KID).filter(b=>b.ok).length}/${ABZ.length}</h3>${abzHTML(KID,true)}<button class="btn ghost" data-abzshow="${KID}" style="width:100%;margin-top:8px">Alle Abzeichen ansehen</button>`:""}
-      ${KID?"":abzugHTML()+bonusHTML()+limitEinst()+hilfenEinst()}
-      <div class="actions"><button class="btn" id="tAdd">+ Aufgabe</button><button class="btn ghost" id="rAdd">+ Belohnung</button></div>
-      ${pendH}
-      ${KID?"":`<h3 class="sec">Aufgaben</h3>${tlH}`}
-      <h3 class="sec">${KID?"🎁 Deine Belohnungen":"Belohnungen"}</h3>
-      <div class="tasklist">${rws||'<p class="hint">Noch keine Belohnungen. Zum Beispiel: „30 Minuten länger aufbleiben“ für 10 Sterne oder „Kinobesuch“ für 40 Sterne.</p>'}</div>
-      ${last?`<h3 class="sec">Zuletzt eingelöst</h3><ul class="hint" style="margin:0;padding-left:18px">${last}</ul>`:""}
-      <button class="btn ghost" id="kpBtn" style="margin-top:12px">🎒 Startpaket: Kinder-Aufgaben & Belohnungen</button>`;
+  const b=starBalance(KID),zr=rewards.find(r=>r.id===zielGet()),nx=zr&&+zr.kosten>b?zr:rewards.filter(r=>+r.kosten>b).sort((a,b2)=>(+a.kosten)-(+b2.kosten))[0],np=taskLogs.filter(l=>l.offen&&!l.abgelehnt&&+l.sterne>0).reduce((a,l)=>a+(+l.sterne||0),0);
+  const meine=vis.filter(t=>t.person===KID),pf=meine.filter(t=>t.pflicht),fr=meine.filter(t=>!t.pflicht).sort((a,c)=>(logFor(a)?1:0)-(logFor(c)?1:0));
+  const sp=spielAbzugCfg()[KID]?PFLICHT_SPIELE:[];
+  const spRow=x=>{const ok=spielGemacht(KID,today,x);return `<div class="task kt${ok?" done":""}"><button class="chk" data-spielstart="${x}" aria-label="${SPIELE[x].n} starten">${ok?"✓":"▶"}</button><button class="tt" data-spielstart="${x}">${esc(SPIELE[x].n)}<br><span class="meta">${ok?"Heute geschafft":"10 Aufgaben, mindestens 8 richtig · antippen zum Starten"}</span></button></div>`};
+  const pfDone=pf.filter(t=>logFor(t)).length+sp.filter(x=>spielGemacht(KID,today,x)).length,pfAll=pf.length+sp.length;
+  const pause=sternPause(KID)?(manuellAus(KID,today)?`<div class="pausebox">⏸️ <b>Das Sterne-System macht gerade Pause.</b><br>Du musst nichts abhaken, und es werden keine Sterne abgezogen.</div>`:`<div class="pausebox">🏠 <b>Heute bist du bei Papa.</b><br>Das Sterne-System macht Pause. Morgen geht es weiter!</div>`):"";
+  const mehr=(ic,t,inner,open)=>`<details class="mehrk"${open?" open":""}><summary>${ic} ${t}</summary><div class="mehrin">${inner}</div></details>`;
+  document.getElementById("vOther").innerHTML=`
+    <div class="kidtop"><div class="kidstern"><span>⭐</span><b>${sF(b)}</b></div>
+      ${nx?`<div class="pbar"><i style="width:${Math.min(100,Math.round(b/(+nx.kosten)*100))}%"></i></div><span class="meta">${zr&&nx===zr?"🎯 Dein Ziel":"Nächstes Ziel"}: <b>${esc(nx.titel)}</b> · noch ${sF(+nx.kosten-b)} ⭐</span>`:rewards.length?`<span class="meta">Du kannst dir jede Belohnung leisten! 🎉</span>`:""}
+      ${np?`<span class="meta">⏳ ${sF(np)} ⭐ warten noch auf Bestätigung</span>`:""}</div>
+    ${pause}
+    ${pfAll?`<h3 class="sec ksec pfl">📌 Muss ich heute machen <span class="kz2">${pfDone} von ${pfAll}</span></h3>
+      <div class="tasklist">${sp.map(spRow).join("")}${pf.map(row).join("")}</div>`:""}
+    <h3 class="sec ksec">⭐ Sterne verdienen</h3>
+    <div class="tasklist">${fr.map(row).join("")||'<p class="hint">Gerade keine Aufgaben mit Sternen.</p>'}</div>
+    ${geldWahlHTML(KID)}${nachholHTML(KID)}
+    <div class="mehrliste">
+    ${mehr("🎁","Belohnungen",`<div class="tasklist">${rws||'<p class="hint">Noch keine Belohnungen.</p>'}</div>${last?`<p class="hint" style="margin:8px 0 0">Zuletzt eingelöst:</p><ul class="hint" style="margin:0;padding-left:18px">${last}</ul>`:""}${radHTML()}`)}
+    ${mehr("🎮","Spiele (auch Uhr & Geld)",spieleHTML())}
+    ${mehr("💶","Mein Geld",kontoHTML())}
+    ${mehr("🏅",`Abzeichen · ${abzVon(KID).filter(x=>x.ok).length}/${ABZ.length}`,`${levelHTML(KID)}${abzHTML(KID,true)}<button class="btn ghost" data-abzshow="${KID}" style="width:100%;margin-top:8px">Alle Abzeichen ansehen</button>`)}
+    ${mehr("📏","Regeln",`${limitHTML(KID)}${abzugHTML()}${bonusHTML()}`)}
+    </div>
+    <div class="actions" style="margin:10px 0">${TTS_OK&&tasks.length?`<button class="btn ghost" id="ttsBtn">🔊 Alles vorlesen</button>`:""}<button class="btn ghost" id="histBtn">📜 Verlauf</button></div>
+    <span hidden><button id="tAdd"></button><button id="rAdd"></button></span>`;
+  document.querySelectorAll("[data-spielstart]").forEach(x=>x.onclick=()=>{if(sternPause(KID)){pauseToast(KID);return}spielRunde(x.dataset.spielstart,KID)});
   }else{
   const SV=[["ueb","Übersicht"],["auf","Aufgaben"],["bel","Belohnungen"],["geld","Geld"],["spiel","Spiele"],["einst","Einstellungen"]];
   let sv=lsGet("fk-sv")||"ueb";if(!SV.some(x=>x[0]===sv))sv="ueb";
@@ -1679,7 +1694,7 @@ document.getElementById("vOther").addEventListener("click",async ev=>{
     if(l){if(KID&&!l.offen){toast("Schon bestätigt ✓ Super gemacht!");return}
       if(!await askConfirm(l.offen?"Abhaken zurücknehmen?":(t.pflicht?`Erledigt zurücknehmen?`:`Erledigt zurücknehmen? ${PNAME[t.person]} verliert dafür ${sF(+l.sterne||0)} ⭐.`),"Zurücknehmen"))return;await store.del(l.id);toast("Zurückgenommen")}
     else if(KID&&t.foto){kidFoto(t)}
-    else if(KID){const w=tW(t),st=capSterne(t.person,today,artVon(t),w);await store.add({typ:"erledigt",aufgabe:t.id,person:t.person,sterne:st,datum:today,titel:t.titel,...(t.pflicht?{pflicht:true}:{})});render();toast(t.pflicht?"✅ Erledigt! Danke, das war eine Pflicht-Aufgabe.":st?`⏳ Super! +${st} ⭐, sobald ${ELT()} bestätigt haben${capTxt(st,w)}`:"✅ Super gemacht! Für heute ist das Sterne-Limit erreicht.");if(ttsAuto())speak(t.pflicht?`Danke, ${PNAME[KID]||""}! ${t.titel} ist erledigt.`:`Super gemacht, ${PNAME[KID]||""}! ${t.titel} ist abgehakt. Du bekommst ${sternTxt(tW(t))}, sobald ${ELT()} bestätigt haben.`)}
+    else if(KID){const w=tW(t),st=capSterne(t.person,today,artVon(t),w);try{await store.add({typ:"erledigt",aufgabe:t.id,person:t.person,sterne:st,datum:today,titel:t.titel,...(t.pflicht?{pflicht:true}:{})})}catch(e){console.error(e);toast("⚠️ Abhaken hat nicht geklappt. Bitte Internet prüfen oder "+ELT()+" Bescheid sagen. ("+(e&&e.code||e&&e.message||"Fehler")+")");return}render();toast(t.pflicht?"✅ Erledigt! Danke, das war eine Pflicht-Aufgabe.":st?`⏳ Super! +${st} ⭐, sobald ${ELT()} bestätigt haben${capTxt(st,w)}`:"✅ Super gemacht! Für heute ist das Sterne-Limit erreicht.");if(ttsAuto())speak(t.pflicht?`Danke, ${PNAME[KID]||""}! ${t.titel} ist erledigt.`:`Super gemacht, ${PNAME[KID]||""}! ${t.titel} ist abgehakt. Du bekommst ${sternTxt(tW(t))}, sobald ${ELT()} bestätigt haben.`)}
     else{const voll=tW(t);
       const buche=async hilfe=>{closeSheet();const w=hilfe?halb(voll):voll,st=capSterne(t.person,today,artVon(t),w);await store.add({typ:"erledigt",aufgabe:t.id,person:t.person,sterne:st,datum:today,titel:t.titel,...(hilfe?{mitHilfe:true}:{})});popPerson=t.person;render();if(premOn(3)&&!hilfe)confetti();toast(`${hilfe?"🤝":"⭐"} +${sF(st)} für ${PNAME[t.person]}!${capTxt(st,w)}`)};
       sheet(`✅ ${esc(t.titel)}`,`<p class="hint" style="margin-top:0">Wie hat ${esc(PNAME[t.person]||"")} das geschafft?</p>
@@ -2838,7 +2853,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v126";
+const APP_VER="v127";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -4701,6 +4716,11 @@ setTimeout(greetUser,2600);
 /* ---------- Was ist neu? (Sammel-Übersicht aller Updates) ---------- */
 // Neue Einträge immer OBEN als NEUEN Block anfügen (nie an einen freigegebenen Block anhängen). v = eindeutige Kennung, d = Datum.
 const CHANGELOG=[
+  {v:"2026-11-27a",d:"2026-11-27",t:"🧒 Einfachere Ansicht für Kinder",items:[
+    "🧒 Der Sterne-Bereich des Kindes ist jetzt eine einfache Liste: oben die Sterne, dann „📌 Muss ich heute machen“ (Pflichten plus Mathe und Deutsch) und „⭐ Sterne verdienen“",
+    "▶ Mathe-Blitz und Deutsch-Detektiv starten direkt aus der Pflichtliste und sind grün abgehakt, wenn geschafft",
+    "📂 Belohnungen, Spiele, Geld, Abzeichen und Regeln sind unten eingeklappt",
+    "⚠️ Klappt das Abhaken nicht, zeigt die App jetzt eine klare Meldung"]},
   {v:"2026-11-26e",d:"2026-11-26",t:"💶 Geld-Profi zahlt aufs Sparkonto",items:[
     "💶 Wer beim Geld-Profi 10 von 10 richtig hat, sammelt 5 Cent",
     "📅 Am letzten Tag des Monats entscheidet das Kind: 🐷 sparen (aufs Sparkonto „… hat gespart“) oder 💶 bar auszahlen. Ohne Entscheidung wird nach 7 Tagen automatisch gespart"]},
