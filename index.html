@@ -924,7 +924,7 @@ function splitData(all){
 }
 function pendingCount(){return taskLogs.filter(l=>l.offen&&!l.abgelehnt).length+redeems.filter(r=>r.offen).length}
 const KIDKEY=/^[a-z0-9_-]{1,20}$/;
-function setKid(p,g){p=p&&KIDKEY.test(p)?p:"";g=!!(g&&p);if(p===KID&&g===KIDGEM)return;KID=p;KIDGEM=g;
+function setKid(p,g){if(VORSCHAU)return;p=p&&KIDKEY.test(p)?p:"";g=!!(g&&p);if(p===KID&&g===KIDGEM)return;KID=p;KIDGEM=g;
   try{p?localStorage.setItem("fk-kind",JSON.stringify({p,g})):localStorage.removeItem("fk-kind")}catch(e){}
   document.documentElement.classList.toggle("kidmode",!!p);FILTER="";
   applyNames(NAMES);try{applyPersonStyles()}catch(e){}splitData(_ALL);if(p)view="sterne";render();try{showNews();renderAnn()}catch(e){}if(p)setTimeout(showKidNews,1500)}
@@ -2859,7 +2859,7 @@ function openRewardSheet(r){
 let FS=null,LESE=[],memberOK=null,memberErr="",mirrorTimer=null;
 
 /* ---------- Support ---------- */
-const APP_VER="v128";
+const APP_VER="v129";
 const IS_MAIN_SITE=location.hostname==="robertpahl1987-creator.github.io";
 function supDB(){
   if(FS)return FS;
@@ -3120,7 +3120,7 @@ async function _ensureMember(cfg){
     }
     try{sessionStorage.removeItem("fk-joined")}catch(e){}
     if(cfg.wtok||cfg.kind){const c2=getCfg();if(c2){delete c2.wtok;delete c2.kind;setCfg(c2)}}
-    if(!RULES_OLD&&!memberSub)memberSub=ref.onSnapshot(s=>{if(!s.exists){if(s.metadata.fromCache)return;memberOK=false;try{memberSub()}catch(e){}memberSub=null;setTimeout(()=>ensureMember(getCfg()),1500);return}MY_MEMBER=s.data();applyRole(MY_MEMBER.rolle==="lesen"?"lesen":"schreiben");setKid(MY_MEMBER.kind||"",MY_MEMBER.kindGem);setTimeout(maybeAskName,3500)},()=>{});
+    if(!RULES_OLD&&!memberSub)memberSub=ref.onSnapshot(s=>{if(!s.exists){if(s.metadata.fromCache)return;memberOK=false;try{memberSub()}catch(e){}memberSub=null;setTimeout(()=>ensureMember(getCfg()),1500);return}MY_MEMBER=s.data();applyRole(MY_MEMBER.rolle==="lesen"?"lesen":"schreiben");if(!VORSCHAU)setKid(MY_MEMBER.kind||"",MY_MEMBER.kindGem);setTimeout(maybeAskName,3500)},()=>{});
     memberOK=true;if(ROLE!=="lesen")scheduleMirror();setTimeout(checkAdmin,2000);if(!RULES_OLD)startPriv();setTimeout(()=>{sendPendingRef();refreshPremium()},3000);return true;
   }catch(e){memberOK=false;memberErr=e&&e.code||"";console.warn("Mitglied",e);return false}
 }
